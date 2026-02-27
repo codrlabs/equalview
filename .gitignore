@@ -1,12 +1,64 @@
-# Obsidian settings (user-specific, should not be committed)
-obsidian/.obsidian/
+# Dependencies
+node_modules/
 
-# Optional: Obsidian trash folder
-# obsidian/.trash/
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Cache
+*.cache
+.parcel-cache/
+.vite/
+.turbo/
+.eslintcache
+
+# Test and coverage
+coverage/
+.nyc_output/
+*.lcov
 
 # OS-generated files
 .DS_Store
+.DS_Store?
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# Cache folders
-*.cache
+# Obsidian (user-specific, do not commit)
+.obsidian/
+obsidian/.obsidian/
+# Optional: Obsidian trash
+# obsidian/.trash/
+
+# Editor and IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# Optional: keep shared VSCode extensions recommendation
+# !.vscode/extensions.json
+
+# Misc
+*.local
+.cache/

@@ -1,0 +1,24 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+
+# Backend service will be added later
+# backend:
+#   build:
+#     context: ./backend
+#     dockerfile: Dockerfile
+#   ports:
+#     - "3000:3000"
+#   environment:
+#     - NODE_ENV=development
