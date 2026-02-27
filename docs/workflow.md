@@ -4,7 +4,7 @@
 
 **ASCII Version:**
 ```
-        Task
+   Issue/Feature
          ↓
   Pull recent main
          ↓
