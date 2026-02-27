@@ -11,6 +11,15 @@ export default function LandingPage() {
 
   const handleScan = () => {
     if (!url.trim()) return
+    
+    // Validate URL format
+    try {
+      new URL(url)
+    } catch {
+      alert('Please enter a valid URL (e.g., https://example.com)')
+      return
+    }
+    
     setScanStatus('scanning')
     setScanResults(null)
     // Simulate scan delay; replace with real API call later
@@ -18,6 +27,11 @@ export default function LandingPage() {
       setScanResults(mockScanResults)
       setScanStatus('done')
     }, 1200)
+  }
+
+  const handleDownloadPdf = () => {
+    // TODO: Implement PDF generation with library like jspdf or html2pdf
+    alert('PDF download feature coming soon!')
   }
 
   const handleBackFromSolution = () => setSelectedProblem(null)
@@ -39,7 +53,7 @@ export default function LandingPage() {
       <header className="landing-header">
         <h1 className="landing-title">Healcode</h1>
         {hasResults && (
-          <button type="button" className="landing-download-pdf" aria-label="Download results as PDF">
+          <button type="button" className="landing-download-pdf" onClick={handleDownloadPdf} aria-label="Download results as PDF">
             Download PDF
           </button>
         )}
@@ -80,7 +94,7 @@ export default function LandingPage() {
         <h2 id="problems-heading">Problems</h2>
         <div className="problems-grid">
           <ProblemCategoryBox
-            title="Virtual Accessibility"
+            title="Visual Accessibility"
             problems={scanResults?.problems?.visualAccessibility}
             showPlaceholder={showPlaceholder}
             onSelectProblem={setSelectedProblem}

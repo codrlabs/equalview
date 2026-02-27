@@ -220,6 +220,12 @@
   color: #535bf2;
 }
 
+.problem-link:focus {
+  outline: 2px solid #646cff;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 /* What's Good */
 .landing-whats-good {
   text-align: left;
