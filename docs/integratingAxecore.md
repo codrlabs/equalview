@@ -1,12 +1,24 @@
 # Integrating Axe-core into Healcode
 
-Axe-core is an accessibility testing engine for websites and other HTML-based user interfaces. It is the agreed-upon tool for the backend of this application.
+## What is Axe-Core and Why Does it Matter?
+Axe‑core is an industry‑standard accessibility testing engine used to automatically detect WCAG violations in web applications.
+
+Healcode uses axe‑core to analyze websites and generate structured accessibility reports. Understanding how axe‑core works — and how to integrate it into both the frontend and backend — ensures consistent, meaningful accessibility testing across the app.
+
+
+## Why Axe‑core Matters
+Axe‑core is important because:
+- It automates accessibility testing using WCAG 2.1+ rules.
+-  It integrates seamlessly with React, Node, and testing frameworks.
+- It helps developers catch issues early, improving usability for all users, including those with disabilities.
+
+In Healcode, axe‑core is the engine behind the accessibility scan results shown to users.
 
 ## Prerequisites
-
-- A JavaScript codebase
-- An npm package codebase
-
+Before integrating Axe-core, make sure your program includes:
+- A JavaScript/Typescript codebase
+- Node.js + npm
+- A frontend framework (React) or backend environment (Node/Puppeteer)
 ## General Steps (Axe-core Documentation)
 
 ### 1. Install the npm package
