@@ -3,29 +3,31 @@ import LandingPage from '../LandingPage';
 import { mockScanResults } from '../data/mockScanResults';
 
 // Mock ProblemSolutionPage so we don't render the full component
-jest.mock('../components/ProblemSolutionPage', () => {
-  return function MockSolutionPage({ problem, onBack }) {
-    return (
-      <div data-testid="solution-page">
-        <p>Solution for: {problem.name}</p>
-        <button onClick={onBack}>Back</button>
-      </div>
-    );
+vi.mock('../components/ProblemSolutionPage', () => {
+  return {
+    default: function MockSolutionPage({ problem, onBack }) {
+      return (
+        <div data-testid="solution-page">
+          <p>Solution for: {problem.name}</p>
+          <button onClick={onBack}>Back</button>
+        </div>
+      );
+    }
   };
 });
 
 // Mock window.alert to avoid actual popups
-window.alert = jest.fn();
+window.alert = vi.fn();
 
 describe('LandingPage Component', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     window.alert.mockClear();
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
   test('renders initial UI correctly', () => {
@@ -71,7 +73,7 @@ describe('LandingPage Component', () => {
 
     // Fast-forward the timeout
     act(() => {
-      jest.advanceTimersByTime(1200);
+      vi.advanceTimersByTime(1200);
     });
 
     // Now results should appear
@@ -95,7 +97,7 @@ describe('LandingPage Component', () => {
     fireEvent.click(screen.getByText('Scan'));
 
     act(() => {
-      jest.advanceTimersByTime(1200);
+      vi.advanceTimersByTime(1200);
     });
 
     // Click the first problem in Visual Accessibility
