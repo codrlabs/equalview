@@ -54,6 +54,8 @@ export default function LandingPage() {
         <h1 className="landing-title">Healcode</h1>
       </header>
 
+      <button onClick={handleDownloadPdf}>Download PDF</button>
+
       <p className="landing-subtitle">
         {hasResults ? 'Users can download the PDF version of the results.' : 'Scan a website to check accessibility and structure.'}
       </p>
