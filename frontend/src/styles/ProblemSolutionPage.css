@@ -1,0 +1,144 @@
+/* Problem Solution Page Styles */
+
+.problem-solution-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.problem-solution-header {
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 1rem;
+}
+
+.problem-solution-back {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.problem-solution-back:hover {
+  text-decoration: underline;
+}
+
+.problem-solution-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+}
+
+.problem-solution-intro {
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.problem-solution-section {
+  margin-bottom: 2rem;
+}
+
+.problem-solution-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #374151;
+}
+
+.problem-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.problem-category {
+  display: inline-block;
+  background-color: #e5e7eb;
+  color: #374151;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.root-cause-description {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0 0 1rem 0;
+}
+
+.root-cause-code {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.code-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.code-block {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875rem;
+  color: #1f2937;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.solution-content {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.solution-steps {
+  margin: 0;
+  padding-left: 1.5rem;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #334155;
+}
+
+.solution-steps li {
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .problem-solution-page {
+    padding: 1rem;
+  }
+  
+  .problem-solution-title {
+    font-size: 1.5rem;
+  }
+  
+  .problem-solution-section {
+    margin-bottom: 1.5rem;
+  }
+  
+  .solution-content {
+    padding: 1rem;
+  }
+}

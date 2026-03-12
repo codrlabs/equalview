@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ProblemSolutionPage from './components/ProblemSolutionPage'
 import { mockScanResults } from './data/mockScanResults'
-import './LandingPage.css'
+import './styles/LandingPage.css'
 
 export default function LandingPage() {
   const [url, setUrl] = useState('')
@@ -52,11 +52,6 @@ export default function LandingPage() {
     <div className="landing-container">
       <header className="landing-header">
         <h1 className="landing-title">Healcode</h1>
-        {hasResults && (
-          <button type="button" className="landing-download-pdf" onClick={handleDownloadPdf} aria-label="Download results as PDF">
-            Download PDF
-          </button>
-        )}
       </header>
 
       <p className="landing-subtitle">

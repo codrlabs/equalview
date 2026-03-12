@@ -4,6 +4,6 @@ import ProblemSolutionPage from './components/ProblemSolutionPage.jsx';
 
 function App() {
   return <LandingPage />
-}
+};
 
 export default App
