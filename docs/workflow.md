@@ -33,13 +33,12 @@
         │                                                                            │
         │                                                                            │
         │                                                                            │
-        │                                                                            │
         └────────────────→ Update                                                    │
                          code/tests                                                  │
                              ↓                                                       │
                        git commit/push ──────────────────────────────────────────────┘
                       (update existing)          (Repeat until [OK?] is 'yes' →)
-                           
+                            
                 
 ```
 
@@ -110,3 +109,63 @@ git push -u origin feature/task-name
 **Force push to specific PR branch:**
 ```bash
 git push --force-with-lease origin feature/task-name
+```
+
+## Keeping Branches Clean
+
+### Always Branch from Main
+
+Never branch from an existing feature branch - always start from main to avoid carrying over unwanted commits:
+
+```bash
+# CORRECT - starts fresh from main
+git checkout main
+git pull origin main
+git checkout -b feature/issue-description
+
+# WRONG - inherits commits from old branch
+git checkout feature/old-branch
+git checkout -b new-branch  # carries over old commits
+```
+
+### Syncing with Remote
+
+```bash
+# Fetch latest and prune deleted branches
+git fetch --all --prune
+
+# View current remote branches
+git branch -r
+
+# Clean stale local tracking branches
+git remote prune origin
+```
+
+### Handling Uncommitted Work
+
+If you have work in progress that needs to be moved to a new branch:
+
+```bash
+# 1. Commit the work first
+git add .
+git commit -m "WIP: work description"
+
+# 2. Update main to latest
+git checkout main
+git pull origin main
+
+# 3. Create new clean branch from main
+git checkout -b feature/issue-description
+
+# 4. Cherry-pick only needed commit(s)
+git cherry-pick <commit-hash>
+
+# 5. Push new branch
+git push -u origin feature/issue-description
+```
+
+### One Issue = One Branch = One PR
+
+- Each GitHub issue should have its own branch
+- Each branch should only contain changes for that specific issue
+- Never mix multiple issues in one branch
