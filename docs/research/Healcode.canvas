@@ -13,13 +13,11 @@
 		{"id":"45f5c29ca9dff389","type":"text","text":"**Competitors**\n\n- Axe / axe-core (open source, dev tool)\n- WAVE (free, good, but limited automation)\n- AccessiBe (expensive)\n- Lighthouse (built-in, dev-focused, no auto-fix)","x":-1271,"y":259,"width":411,"height":208,"color":"4"},
 		{"id":"1c33ee0874e03ef3","type":"text","text":"Frontend","x":-246,"y":152,"width":250,"height":60,"color":"6"},
 		{"id":"78d61ba8a3c12d6a","type":"text","text":"Backend","x":560,"y":152,"width":250,"height":60,"color":"6"},
-		{"id":"8e8a490fda3845f7","type":"text","text":"**Tech stack**\n\n- Backend\n\t- Javascript (NodeJS + Express)\n\t- Axe-core (accessibility package)\n\t\t- WCAG (starting with contrast, headings, alt text, etc...)\n\t\t- ✅ Licence review (commercial use compatibility)\n\t\t  https://choosealicense.com/licenses/mpl-2.0/\t  ","x":548,"y":360,"width":512,"height":420,"color":"6"},
-		{"id":"adb187451e66bc9e","type":"text","text":"**Tech stack**\n\n- React","x":-352,"y":360,"width":462,"height":420,"color":"6"},
+		{"id":"8e8a490fda3845f7","type":"text","text":"**Tech stack**\n\n- Backend\n\t- Javascript (NodeJS + Express)\n\t- Axe-core (accessibility package)\n\t\t- WCAG (starting with contrast, headings, alt text, etc...)\n\t\t- ✅ Licence review (commercial use compatibility)\n\t\t  https://choosealicense.com/licenses/mpl-2.0/\t  \n\nDescription :\nJust went through the setup stage using nodejs and express. \n\nNext Step : \nSetup axe-core to scan users websites instead of using mockScanresults.","x":548,"y":360,"width":512,"height":420,"color":"6"},
+		{"id":"adb187451e66bc9e","type":"text","text":"**Tech stack**\n\n- React and vite.\n\nDescription :\nThere is a total of 2 components in the frontend directory, the landingPage components and the problemSolutionPage component.\n\nAs the name implies, the landingPage provides a input for users to enter their websites URL and the page provides problems wrong with the site and each problem is a link to the problemSolutionPage components, explaining the problem in full details and solution to it.\n\nNote : The backend is not completely setup, so the codebase currently use a mockScanResult.\n\nNext Step : Link the backend and the frontend together and then use real scanning results instead of a mock scan results.","x":-352,"y":360,"width":462,"height":420,"color":"6"},
 		{"id":"1f701fdb84b93502","type":"text","text":"Development","x":200,"y":10,"width":250,"height":60,"color":"6"},
 		{"id":"165679bf5d0ac436","type":"text","text":"**DevOps**","x":1480,"y":20,"width":250,"height":60},
-		{"id":"4c29f2703238b076","type":"text","text":"- Mindmap (version control through Git)","x":1425,"y":225,"width":360,"height":275},
-		{"id":"5d06b3b6c1a19738","x":-14,"y":2830,"width":614,"height":370,"type":"text","text":"BACKEND\n\n"},
-		{"id":"58dea865d9b81fd2","x":-1880,"y":2830,"width":705,"height":370,"type":"text","text":"FRONTEND\n"}
+		{"id":"4c29f2703238b076","type":"text","text":"- Mindmap (version control through Git)","x":1425,"y":225,"width":360,"height":275}
 	],
 	"edges":[
 		{"id":"964ae8ec0443907a","fromNode":"c5c5ded59f297e34","fromSide":"bottom","toNode":"079a6f4d537495dc","toSide":"top"},
@@ -36,8 +34,6 @@
 		{"id":"d4700d9179d31955","fromNode":"1c33ee0874e03ef3","fromSide":"bottom","toNode":"adb187451e66bc9e","toSide":"top","color":"6"},
 		{"id":"ab5cdccf98281a2a","fromNode":"079a6f4d537495dc","fromSide":"bottom","toNode":"88b4087ea79e1b38","toSide":"top","color":"1"},
 		{"id":"ceda9fd3a04d15b3","fromNode":"a9c3219cfa82784d","fromSide":"bottom","toNode":"88b4087ea79e1b38","toSide":"top","color":"1"},
-		{"id":"3aafff65b30323ba","fromNode":"165679bf5d0ac436","fromSide":"bottom","toNode":"4c29f2703238b076","toSide":"top"},
-		{"id":"df692b5e326987ef","fromNode":"88b4087ea79e1b38","fromSide":"bottom","toNode":"58dea865d9b81fd2","toSide":"top"},
-		{"id":"7501f15bb9a131f4","fromNode":"88b4087ea79e1b38","fromSide":"bottom","toNode":"5d06b3b6c1a19738","toSide":"top"}
+		{"id":"3aafff65b30323ba","fromNode":"165679bf5d0ac436","fromSide":"bottom","toNode":"4c29f2703238b076","toSide":"top"}
 	]
 }
