@@ -1,4 +1,4 @@
-# Healcode
+# equalview
 
 An accessibility-focused web application that helps make the web more inclusive for everyone.
 
@@ -13,8 +13,8 @@ An accessibility-focused web application that helps make the web more inclusive 
 **Option 1: Using Docker (Recommended)**
 ```bash
 # Clone the repository
-git clone https://github.com/codrlabs/healcode.git
-cd healcode
+git clone https://github.com/codrlabs/equalview.git
+cd equalview
 
 # Start the application
 docker compose up --build
@@ -37,7 +37,7 @@ The application will be available at `http://localhost:5173`
 ## 📁 Project Structure
 
 ```
-healcode/
+equalview/
 ├── frontend/              # React frontend application
 │   ├── src/
 │   │   ├── landingPage.jsx           # Main landing page
@@ -58,7 +58,7 @@ healcode/
 │   ├── reviewing.md                # Code review process
 │   └── architecture.md             # System architecture
 └── obsidian/                       # Planning and documentation
-    └── Healcode.canvas             # Project mindmap
+    └── equalview.canvas             # Project mindmap
 ```
 
 ## 🎯 Overview
@@ -157,7 +157,7 @@ Following WCAG guidelines:
 
 ## 📈 Project Planning
 
-For detailed project planning, architecture, and marketing notes, see [`obsidian/Healcode.canvas`](obsidian/Healcode.canvas).
+For detailed project planning, architecture, and marketing notes, see [`obsidian/equalview.canvas`](obsidian/equalview.canvas).
 
 ## 📄 License
 
