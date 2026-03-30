@@ -4,7 +4,7 @@ This folder contains Obsidian vault files used for brainstorming, diagramming, a
 
 ## Contents
 
-- **`Healcode.canvas`** - Obsidian canvas with visual diagrams and notes
+- **`equalview.canvas`** - Obsidian canvas with visual diagrams and notes
 - **`*.png`** - Images pasted into the canvas for reference
 
 ## Purpose

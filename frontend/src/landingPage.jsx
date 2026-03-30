@@ -51,7 +51,7 @@ export default function LandingPage() {
   return (
     <div className="landing-container">
       <header className="landing-header">
-        <h1 className="landing-title">Healcode</h1>
+        <h1 className="landing-title">equalview</h1>
       </header>
 
       <p className="landing-subtitle">
