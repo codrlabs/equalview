@@ -164,6 +164,34 @@ git cherry-pick <commit-hash>
 git push -u origin feature/issue-description
 ```
 
+### Fixing a Branch That Carries Over Commits From Another Branch
+
+If you accidentally branched from a feature branch instead of `main`, your PR will include duplicate commits from the other branch. Use interactive rebase to drop them:
+
+```bash
+# 1. Make sure you have the latest main
+git fetch origin
+
+# 2. Start interactive rebase against main
+git rebase -i origin/main
+
+# 3. An editor opens listing all commits. Change "pick" to "drop" for
+#    any commits that don't belong to this PR:
+#
+#    drop a05a243 chore: initialize backend package.json  <-- not for this PR
+#    drop 368449f chore: update package.json description   <-- not for this PR
+#    pick 1fc712d refactor: reorganize research canvas     <-- keep this one
+#    pick 2e1c515 chore: update tech stack descriptions    <-- keep this one
+#
+# 4. Save and close the editor
+
+# 5. Force push the cleaned-up branch
+git push --force-with-lease
+```
+
+> **Tip:** If you're unsure which commits belong, compare your branch to main:
+> `git log --oneline origin/main..HEAD`
+
 ### One Issue = One Branch = One PR
 
 - Each GitHub issue should have its own branch
