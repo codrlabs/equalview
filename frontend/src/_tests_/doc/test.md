@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document explains how to test the mockScanResults and ProblemSolutionPage components in the Healcode frontend application.
+This document explains how to test the mockScanResults and ProblemSolutionPage components in the equalview frontend application.
 
 ## Test Setup
 
@@ -126,7 +126,7 @@ describe('ProblemSolutionPage', () => {
 describe('LandingPage Component', () => {
   it('renders initial UI correctly', () => {
     render(<LandingPage />);
-    expect(screen.getByText('Healcode')).toBeInTheDocument();
+    expect(screen.getByText('equalview')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Website URL')).toBeInTheDocument();
     expect(screen.getByText('Scan')).toBeInTheDocument();
   })
