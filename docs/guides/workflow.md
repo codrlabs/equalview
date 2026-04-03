@@ -166,34 +166,82 @@ git push -u origin feature/issue-description
 
 ### Fixing a Branch That Carries Over Commits From Another Branch
 
-If you accidentally branched from a feature branch instead of `main`, your PR will include duplicate commits from the other branch. Use interactive rebase to drop them:
+If you accidentally branched from a feature branch instead of `main`, your PR will include duplicate commits from the other branch. Use interactive rebase to drop them.
+
+**This is the exact procedure that works, including all the pitfalls we hit:**
 
 ```bash
-# 1. Make sure you have the latest main
+# 1. First make sure you are on the CORRECT BRANCH
+git checkout your-branch-name
+
+# 2. Reset it EXACTLY to what's on GitHub first (undo any previous failed attempts)
 git fetch origin
+git reset --hard origin/your-branch-name
 
-# 2. Start interactive rebase against main
+# 3. Verify you see all commits including duplicates
+git log --oneline origin/main..HEAD
+
+# 4. Start interactive rebase against main
 git rebase -i origin/main
+```
 
-# 3. An editor opens listing all commits. Change "pick" to "drop" for
-#    any commits that don't belong to this PR:
-#
-#    drop a05a243 chore: initialize backend package.json  <-- not for this PR
-#    drop 368449f chore: update package.json description   <-- not for this PR
-#    pick 1fc712d refactor: reorganize research canvas     <-- keep this one
-#    pick 2e1c515 chore: update tech stack descriptions    <-- keep this one
-#
-# 4. Save and close the editor
+#### ✅ In Vim Editor:
+1.  Press `Esc` once (very important!)
+2.  **DELETE ALL LINES** that don't belong to this PR (`d` `d` deletes a line)
+    - Or change `pick` to `drop`
+3.  **LEAVE ONLY THE COMMITS THAT ACTUALLY BELONG TO THIS PR**
+4.  Type `:wq` and press Enter (DO NOT USE `Ctrl+C`, `:q!` or `:qa!` - they abort everything)
 
-# 5. Force push the cleaned-up branch
-git push --force-with-lease
+#### ❌ Common Mistakes:
+- ❌ Pressing `Ctrl+C` / `:q!` aborts rebase completely
+- ❌ Forgetting to `git reset --hard origin/your-branch-name` before starting
+- ❌ Being on the wrong branch entirely
+- ❌ Running `git pull` after rebase creates messy merge commit
+
+#### If you get conflicts:
+This is normal! It means the rebase is working correctly.
+```bash
+# Keep your branch's version of files
+git checkout --theirs path/to/conflicted/file
+
+# Or keep main version
+git checkout --ours path/to/conflicted/file
+
+# Mark resolved
+git add .
+git rebase --continue
+```
+
+#### After rebase completes successfully:
+```bash
+# VERIFY FIRST - this should show ONLY the commits you kept
+git log --oneline origin/main..HEAD
+
+# Then push
+git push --force-with-lease origin your-branch-name
+```
+
+---
+
+#### ✅ Recovery from failed rebase:
+```bash
+# If rebase is stuck and you want to completely start over:
+git rebase --abort
+
+# If that doesn't work, reset completely:
+git reset --hard origin/your-branch-name
+
+# Never run `git pull` after a rebase, always force push
 ```
 
 > **Tip:** If you're unsure which commits belong, compare your branch to main:
 > `git log --oneline origin/main..HEAD`
+
+---
 
 ### One Issue = One Branch = One PR
 
 - Each GitHub issue should have its own branch
 - Each branch should only contain changes for that specific issue
 - Never mix multiple issues in one branch
+- Always branch from `main`, never from another feature branch
