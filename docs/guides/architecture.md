@@ -1,4 +1,4 @@
-# Healcode Architecture
+# equalview Architecture
 
 ## System Overview
 

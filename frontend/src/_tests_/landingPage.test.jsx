@@ -33,7 +33,7 @@ describe('LandingPage Component', () => {
   test('renders initial UI correctly', () => {
     render(<LandingPage />);
 
-    expect(screen.getByText('Healcode')).toBeInTheDocument();
+    expect(screen.getByText('equalview')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Website URL')).toBeInTheDocument();
     expect(screen.getByText('Scan')).toBeInTheDocument();
     expect(screen.getByText("Run a scan to see what's good about this site.")).toBeInTheDocument();
