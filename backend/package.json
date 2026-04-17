@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "equalview",
   "version": "1.0.0",
   "description": "An accessibility-focused web application that helps make the web more inclusive for everyone.",
   "main": "index.js",
