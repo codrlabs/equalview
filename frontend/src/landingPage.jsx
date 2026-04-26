@@ -23,13 +23,6 @@ export default function LandingPage() {
     }, 1200)
   }
 
-  const handleDownloadPdf = () => {
-    // TODO: Implement PDF generation with library like jspdf or html2pdf
-    alert('PDF download feature coming soon!')
-  }
-
-  const showPlaceholder = scanStatus === 'idle' || scanStatus === 'scanning'
-
   return (
     <div className="landing-container">
       <header className="landing-header">

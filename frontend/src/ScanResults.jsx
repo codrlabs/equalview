@@ -81,14 +81,17 @@ export default function ScanResults() {
           <ProblemCategoryBox
             title="Visual Accessibility"
             problems={results.problems?.visualAccessibility}
+            onSelectProblem={setSelectedProblem}
           />
           <ProblemCategoryBox
             title="Structure and Semantics"
             problems={results.problems?.structureAndSemantics}
+            onSelectProblem={setSelectedProblem}
           />
           <ProblemCategoryBox
             title="Multi-media"
             problems={results.problems?.multimedia}
+            onSelectProblem={setSelectedProblem}
           />
         </div>
       </section>
@@ -111,7 +114,7 @@ export default function ScanResults() {
   )
 }
 
-function ProblemCategoryBox({ title, problems }) {
+function ProblemCategoryBox({ title, problems, onSelectProblem }) {
   const list = problems || []
 
   return (
@@ -127,7 +130,7 @@ function ProblemCategoryBox({ title, problems }) {
                 <button
                   type="button"
                   className="problem-link"
-                  onClick={() => setSelectedProblem(p)}
+                  onClick={() => onSelectProblem(p)}
                 >
                   {p.name}
                 </button>
