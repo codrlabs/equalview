@@ -6,158 +6,165 @@ An accessibility-focused web application that helps make the web more inclusive 
 
 ### Prerequisites
 - Docker and Docker Compose
-- Node.js (optional, for local development)
+- Node.js 22+ (for local development without Docker)
 
 ### Running the Application
 
 **Option 1: Using Docker (Recommended)**
 ```bash
-# Clone the repository
 git clone https://github.com/codrlabs/equalview.git
 cd equalview
-
-# Start the application
 docker compose up --build
 ```
 
 **Option 2: Local Development**
+
+Run the backend and frontend in two terminals.
+
 ```bash
-# Navigate to frontend
-cd frontend
-
-# Install dependencies
+# Terminal 1 — backend (Express API on :3000)
+cd backend
 npm install
+npm run dev
 
-# Start development server
+# Terminal 2 — frontend (Vite dev server on :5173)
+cd frontend
+npm install
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
+The frontend will be available at `http://localhost:5173` and proxies
+`/api` and `/problems` to the backend at `http://localhost:3000`.
 
 ## 📁 Project Structure
 
 ```
 equalview/
-├── frontend/              # React frontend application
+├── backend/                          # Node + Express API
+│   ├── data/
+│   │   └── mockScanResults.js        # Mock scan payload (placeholder for axe-core)
+│   ├── index.js                      # Express app + routes
+│   ├── package.json
+│   └── Dockerfile
+├── frontend/                         # React + Vite app
 │   ├── src/
-│   │   ├── landingPage.jsx           # Main landing page
+│   │   ├── App.jsx                   # Pathname-based view switch
+│   │   ├── landingPage.jsx           # Landing page
+│   │   ├── ScanResults.jsx           # Scan results page
 │   │   ├── components/
-│   │   │   └── ProblemSolutionPage.jsx  # Detailed problem view
+│   │   │   └── ProblemSolutionPage.jsx
 │   │   ├── data/
-│   │   │   └── mockScanResults.js    # Mock accessibility data
+│   │   │   └── mockScanResults.js    # Frontend mock fallback
 │   │   ├── styles/
-│   │   │   ├── LandingPage.css       # Landing page styles
-│   │   │   └── ProblemSolutionPage.css # Problem page styles
-│   │   └── main.jsx                  # Application entry point
-│   ├── package.json                  # Dependencies and scripts
-│   ├── vite.config.js               # Vite configuration
-│   └── Dockerfile                   # Docker container setup
-├── docker-compose.yml               # Docker orchestration
-├── docs/                           # Documentation
-│   ├── workflow.md                 # Development workflow
-│   ├── reviewing.md                # Code review process
-│   └── architecture.md             # System architecture
-└── obsidian/                       # Planning and documentation
-    └── equalview.canvas             # Project mindmap
+│   │   ├── _tests_/
+│   │   └── main.jsx
+│   ├── vite.config.js
+│   └── Dockerfile
+├── docs/
+│   ├── README.md                     # Documentation index
+│   ├── guides/                       # How-to guides
+│   │   ├── workflow.md
+│   │   ├── axecore-integration.md
+│   │   └── ...
+│   ├── plans/                        # Tracked implementation roadmaps
+│   │   └── axecore-integration-roadmap.md
+│   └── research/                     # Obsidian canvas + scratch notes
+└── docker-compose.yml
 ```
 
 ## 🎯 Overview
 
-This project addresses the gap in web accessibility tools. Many websites unintentionally exclude people with disabilities, and existing solutions are often expensive or limited.
+This project addresses the gap in web accessibility tools. Many websites
+unintentionally exclude people with disabilities, and existing solutions
+are often expensive or limited.
 
 ### Value Proposition
 - Make accessibility testing available to everyone without high costs
-- Support developers, testers, and businesses who cannot afford $500-5000+/month solutions
+- Support developers, testers, and businesses who cannot afford
+  $500–5000+/month solutions
 - Provide actionable insights and fix suggestions
 
 ### Current Status
-- **Frontend Prototype**: Basic React application structure
-- **Mock Data**: Sample accessibility issues for demonstration
-- **UI Components**: Landing page and problem solution views
-- **Styling**: CSS-based design with accessibility considerations
+- **Frontend**: React + Vite app with landing page and scan results view.
+  Navigation is currently a `window.location.pathname` switch in
+  `App.jsx` (no client-side router yet).
+- **Backend**: Express API exposing `/health`, `POST /api/scan`,
+  `GET /api/scan-results`, and `GET /problems/:id`. Currently returns
+  hardcoded mock data from `backend/data/mockScanResults.js`.
+- **Real scanning**: Not yet implemented. See
+  [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md).
 
 ### Planned Features
-- Real website analysis and scanning
-- Automated accessibility testing
+- Real website analysis using Puppeteer + axe-core
 - PDF report generation
-- Backend API integration
-- Team collaboration features
+- Authentication and rate limiting
+- Caching and queueing for scans
 
 ## 🛠️ Tech Stack
 
 ### Current Stack
-- **Frontend**: React 19.2.0 + Vite 7.3.1
-- **Styling**: CSS modules (pure CSS)
-- **Development**: ESLint with React Hooks
-- **Container**: Docker with Node.js 22-alpine
-- **Orchestration**: Docker Compose
+- **Frontend**: React 19 + Vite 7
+- **Backend**: Node 22 + Express 5
+- **Styling**: Plain CSS
+- **Testing**: Jest + React Testing Library (frontend)
+- **Container**: Docker (Node 22-alpine) + Docker Compose
 
 ### Future Stack
-- **Backend**: Express.js with JWT authentication
-- **Database**: PostgreSQL 16
-- **Monitoring**: Prometheus integration
-- **Email**: Nodemailer for notifications
-- **Webhooks**: Custom webhook system
+- **Scanner**: Puppeteer + axe-core
+- **Database**: PostgreSQL (planned)
+- **Auth**: JWT (planned)
 
 ## 📋 Development Workflow
 
-1. **Create Feature Branch**: `git checkout -b feature/task-name`
-2. **Implement Changes**: Make your modifications
-3. **Test Locally**: `docker compose up --build`
-4. **Create Pull Request**: Push to GitHub and create PR
-5. **Review Process**: Team reviews and approves
-6. **Auto-merge**: Automatically merges to main
-7. **Clean Up**: Delete feature branch
+1. **Branch from main**: `git checkout -b feat/task-name` (or `fix/`,
+   `chore/`, `docs/`)
+2. **Implement changes** and add tests where appropriate
+3. **Test locally**: `docker compose up --build` or run backend +
+   frontend separately
+4. **Open a PR**: push the branch and open a pull request — `main` is
+   protected
+5. **Review and merge**
 
-For detailed workflow documentation, see [`docs/workflow.md`](docs/workflow.md).
+For details and recovery from common Git mistakes, see
+[`docs/guides/workflow.md`](docs/guides/workflow.md).
 
 ## 🧪 Testing
 
-### Local Testing
 ```bash
-# Start development server
-npm run dev
-
-# Run linting
+# Frontend
+cd frontend
+npm test          # Jest + React Testing Library
 npm run lint
-
-# Build for production
 npm run build
-```
 
-### Docker Testing
-```bash
-# Build and run with Docker
-docker compose up --build
-
-# View logs
-docker compose logs frontend
+# Backend
+cd backend
+npm run dev       # nodemon
+# (No test runner wired up yet — see roadmap.)
 ```
 
 ## 📚 Documentation
 
-- **[Workflow Guide](docs/workflow.md)**: Development process and best practices
-- **[Code Review](docs/reviewing.md)**: How to review pull requests
-- **[Architecture](docs/architecture.md)**: System design and component structure
+See [`docs/README.md`](docs/README.md) for an index. Highlights:
+
+- [`docs/guides/workflow.md`](docs/guides/workflow.md) — Git/GitHub workflow
+- [`docs/guides/axecore-integration.md`](docs/guides/axecore-integration.md) — How-to for the real scanner
+- [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md) — Tracked roadmap
+- [`docs/research/`](docs/research/) — Obsidian canvas and supporting notes
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+2. Create a feature branch from `main`
+3. Commit your changes
+4. Open a Pull Request
 
 ## 📋 Accessibility Standards
 
 Following WCAG guidelines:
 - **Visual Accessibility**: Contrast ratios, focus indicators
-- **Structure & Semantics**: Proper heading hierarchy, landmarks
+- **Structure & Semantics**: Heading hierarchy, landmarks
 - **Multi-media**: Alt text, captions, transcripts
-
-## 📈 Project Planning
-
-For detailed project planning, architecture, and marketing notes, see [`obsidian/equalview.canvas`](obsidian/equalview.canvas).
 
 ## 📄 License
 
@@ -165,4 +172,5 @@ MPL-2.0 (compatible with commercial use)
 
 ## 🙏 Acknowledgments
 
-Built with ❤️ for a more accessible web. Special thanks to the accessibility community for their invaluable work in making the web inclusive for everyone.
+Built with ❤️ for a more accessible web. Thanks to the accessibility
+community for their work in making the web inclusive for everyone.
