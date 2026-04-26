@@ -26,6 +26,12 @@ Time-bounded, trackable work. Each plan has phases, concrete
 deliverables, and a status. When a plan is complete, archive it but
 leave it in place for history.
 
+- [`plans/project-roadmap.md`](plans/project-roadmap.md) — Top-level
+  map of phases (housekeeping → real scanner → UX → reliability →
+  productionization) with intern-friendly tasks after each phase.
+- [`plans/architecture-map.md`](plans/architecture-map.md) — Visual
+  map: every screen, what it does, what the backend does for it, and
+  how frontend/backend code is organized.
 - [`plans/axecore-integration-roadmap.md`](plans/axecore-integration-roadmap.md)
   — Replace mock scan data with a real axe-core scanner.
 
