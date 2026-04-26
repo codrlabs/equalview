@@ -55,7 +55,8 @@ Create `backend/controllers/scanController.js`:
 
 ```javascript
 const puppeteer = require('puppeteer');
-const axeCore = require('axe-core');
+// Note: axe-core is injected into the page via `require.resolve('axe-core')`
+// inside performScan(), so we only need it as a dependency, not as an import here.
 
 class ScanController {
   async scanWebsite(req, res) {
@@ -267,7 +268,11 @@ const scanController = require('../controllers/scanController');
 
 const router = express.Router();
 
-router.post('/', scanController.scanWebsite);
+// IMPORTANT: bind `this` so that `scanWebsite` can call `this.isValidUrl`,
+// `this.performScan`, etc. when Express invokes the handler. Without
+// `.bind(scanController)` the handler would be called with `this === undefined`
+// (in strict mode) and the request would crash.
+router.post('/', scanController.scanWebsite.bind(scanController));
 
 module.exports = router;
 ```
@@ -285,7 +290,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+// In development, restrict CORS to the Vite dev server origin. For production
+// replace this with the deployed frontend origin (or a list of allowed origins).
+app.use(cors({ origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 
 // Routes
@@ -557,6 +564,7 @@ Update `backend/.env`:
 ```env
 PORT=3000
 BACKEND_BASE_URL=http://localhost:3000
+FRONTEND_ORIGIN=http://localhost:5173
 NODE_ENV=development
 ```
 
