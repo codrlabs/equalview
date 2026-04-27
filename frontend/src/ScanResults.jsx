@@ -106,10 +106,6 @@ export default function ScanResults() {
           </ul>
         </div>
       </section>
-
-      <button className="landing-scan-btn" onClick={() => {/* PDF TODO */}}>
-        Download PDF Report
-      </button>
     </div>
   )
 }

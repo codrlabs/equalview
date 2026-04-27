@@ -408,6 +408,19 @@ These don't belong to a single phase — pick them up opportunistically.
 
 ## Change log for this roadmap
 
+- _2026-04-27_ — Phase 0 housekeeping followup: removed dead UI from
+  `landingPage.jsx` (placeholder Problems / What's Good sections that
+  never render once the page redirects) and the no-op "Download PDF
+  Report" button from `ScanResults.jsx` (PDF is Phase 6); deleted the
+  stale `landingPage.test.jsx` (case-mismatched import + assertions
+  against UI that no longer exists — replaced by the Phase 1 intern
+  task to test `ScanResults.jsx`); trimmed dead mocks from
+  `problemSolutionPage.test.jsx`; clarified that
+  `frontend/src/data/mockScanResults.js` is a Vitest-only fixture
+  mirroring the backend mock; fixed the `docs/research/README.md`
+  guides link; corrected the README project-structure tree (no
+  `backend/Dockerfile` yet, surfaced `main.jsx` / `setupTests.js`,
+  listed all three plans).
 - _2026-04-26_ — Phase 0 housekeeping cleanup pass landed: tests
   folder renamed to `__tests__/`, stale `docs/guides/architecture.md`
   retired, research canvas renamed to `equalview.canvas`,

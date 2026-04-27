@@ -44,20 +44,21 @@ equalview/
 │   ├── data/
 │   │   └── mockScanResults.js        # Mock scan payload (placeholder for axe-core)
 │   ├── index.js                      # Express app + routes
-│   ├── package.json
-│   └── Dockerfile
+│   └── package.json
+│   # Dockerfile [planned, Phase 1]
 ├── frontend/                         # React + Vite app
 │   ├── src/
+│   │   ├── main.jsx                  # React bootstrap
 │   │   ├── App.jsx                   # Pathname-based view switch
 │   │   ├── landingPage.jsx           # Landing page
 │   │   ├── ScanResults.jsx           # Scan results page
 │   │   ├── components/
 │   │   │   └── ProblemSolutionPage.jsx
 │   │   ├── data/
-│   │   │   └── mockScanResults.js    # Frontend mock fallback
-│   │   ├── styles/
-│   │   ├── __tests__/
-│   │   └── main.jsx
+│   │   │   └── mockScanResults.js    # Test-only fixture (mirrors backend)
+│   │   ├── styles/                   # Per-screen CSS
+│   │   ├── __tests__/                # Vitest + React Testing Library
+│   │   └── setupTests.js
 │   ├── vite.config.js
 │   └── Dockerfile
 ├── docs/
@@ -67,9 +68,11 @@ equalview/
 │   │   ├── axecore-integration.md
 │   │   └── ...
 │   ├── plans/                        # Tracked implementation roadmaps
+│   │   ├── project-roadmap.md
+│   │   ├── architecture-map.md
 │   │   └── axecore-integration-roadmap.md
 │   └── research/                     # Obsidian canvas + scratch notes
-└── docker-compose.yml
+└── docker-compose.yml                # Frontend only today; backend [planned, Phase 1]
 ```
 
 ## 🎯 Overview

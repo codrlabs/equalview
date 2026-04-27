@@ -9,8 +9,8 @@ This folder contains Obsidian vault files used for brainstorming, diagramming, a
 
 ## Purpose
 
-This is supplementary research material, not the primary documentation. The main documentation lives in the [`../guides/`](guides) folder.
+This is supplementary research material, not the primary documentation. The main documentation lives in the [`../guides/`](../guides/) folder.
 
 ## Editing
 
-Open this folder in Obsidian to edit the canvas and diagrams. For the markdown documentation, see the [`../guides/`](guides) folder.
+Open this folder in Obsidian to edit the canvas and diagrams. For the markdown documentation, see the [`../guides/`](../guides/) folder.

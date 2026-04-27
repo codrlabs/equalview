@@ -1,6 +1,7 @@
 /**
- * Mock scan results for development and UI demo.
- * Replace with real API response when backend is ready.
+ * Offline scan-results fixture used by the frontend Vitest suite.
+ * Mirrors the shape returned by the backend's GET /api/scan-results
+ * (see backend/data/mockScanResults.js); not imported by app code.
  */
 export const mockScanResults = {
   problems: {
