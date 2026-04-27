@@ -56,7 +56,7 @@ equalview/
 │   │   ├── data/
 │   │   │   └── mockScanResults.js    # Frontend mock fallback
 │   │   ├── styles/
-│   │   ├── _tests_/
+│   │   ├── __tests__/
 │   │   └── main.jsx
 │   ├── vite.config.js
 │   └── Dockerfile
@@ -149,7 +149,9 @@ See [`docs/README.md`](docs/README.md) for an index. Highlights:
 
 - [`docs/guides/workflow.md`](docs/guides/workflow.md) — Git/GitHub workflow
 - [`docs/guides/axecore-integration.md`](docs/guides/axecore-integration.md) — How-to for the real scanner
-- [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md) — Tracked roadmap
+- [`docs/plans/project-roadmap.md`](docs/plans/project-roadmap.md) — Phased roadmap (housekeeping → real scanner → UX → reliability → accounts)
+- [`docs/plans/architecture-map.md`](docs/plans/architecture-map.md) — Per-screen architecture map and code organization
+- [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md) — Sub-roadmap for replacing the mock scanner
 - [`docs/research/`](docs/research/) — Obsidian canvas and supporting notes
 
 ## 🤝 Contributing
