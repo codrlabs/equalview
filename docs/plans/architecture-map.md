@@ -476,10 +476,7 @@ frontend/src/
 ├── data/
 │   └── mockScanResults.js         # offline fallback for tests / dev
 ├── styles/                        # plain CSS per screen
-└── _tests_/                       # Vitest + React Testing Library
-                                   #   (folder name is a typo of the
-                                   #   __tests__ convention — rename
-                                   #   in Phase 0 housekeeping)
+└── __tests__/                     # Vitest + React Testing Library
 ```
 
 **Responsibilities.**
