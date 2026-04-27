@@ -6,11 +6,10 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No test runner wired up yet — see docs/plans/project-roadmap.md Phase 1\" && exit 0"
   },
-  "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MPL-2.0",
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",

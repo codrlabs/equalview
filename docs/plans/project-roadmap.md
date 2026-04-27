@@ -125,39 +125,30 @@ Goal: a clean repo that an outsider can read in 10 minutes.
 - [x] Add `docs/plans/axecore-integration-roadmap.md`.
 - [x] Add this file (`docs/plans/project-roadmap.md`).
 - [x] Add `docs/plans/architecture-map.md` (screens, flow, code map).
-- [ ] **Repo cleanup pass** (lands on `chore/repo-housekeeping`, not on
-      this docs branch — keeps one-issue-one-PR honest):
-  - [ ] Rename `frontend/src/_tests_/` → `frontend/src/__tests__/`
-        (single-underscore folder is a typo of the standard convention;
-        Vitest still picks tests up via the `*.test.jsx` glob, but the
-        folder name should match what every contributor expects).
-  - [ ] Move or delete `frontend/src/_tests_/doc/test.md` — a stray
-        markdown file inside the tests folder that doesn't belong
-        there. If it's notes worth keeping, move under `docs/`.
-  - [ ] Retire `docs/guides/architecture.md`. It predates the real
-        backend ("Future: Express.js"), lists a stale frontend file
-        tree, and is now superseded by
-        [`docs/plans/architecture-map.md`](../plans/architecture-map.md).
-        Either delete it or replace its body with a one-line redirect
-        to the new map.
-  - [ ] Fix `docs/research/README.md`: it points at
-        `equalview.canvas`, but the file on disk is `Healcode.canvas`.
-        Either rename the canvas to match the doc or update the doc to
-        match the canvas — pick one and make them agree.
-  - [ ] Tidy `backend/package.json`: fill in `author`
-        (`"Codr Labs"`), drop the placeholder `"keywords": []`, and
-        replace the `npm init` placeholder `test` script with the real
-        runner once Phase 1 picks one (until then, leave the
-        placeholder but file a follow-up issue).
-  - [ ] Confirm `frontend/`'s `react-router` / `react-router-dom`
-        deps stay (they're already installed even though `App.jsx`
-        still uses a `pathname` switch — they unblock the Phase 3
-        routing work without re-running `npm install`). No action
-        unless the routing decision lands on "no router".
-- [ ] Open PR for `chore/repo-housekeeping` and merge.
-- [ ] Open PR for `docs/project-roadmap` and merge.
+- [x] **Repo cleanup pass**:
+  - [x] Rename `frontend/src/_tests_/` → `frontend/src/__tests__/`
+        (single-underscore folder was a typo of the standard
+        convention; Vitest picks tests up via the `*.test.jsx` glob).
+  - [x] Delete `frontend/src/_tests_/doc/test.md` — a stray markdown
+        file inside the tests folder describing tests that no longer
+        match the current components.
+  - [x] Retire `docs/guides/architecture.md`. It predated the real
+        backend ("Future: Express.js"), listed a stale frontend file
+        tree, and is now fully superseded by
+        [`docs/plans/architecture-map.md`](architecture-map.md).
+  - [x] Rename `docs/research/Healcode.canvas` →
+        `docs/research/equalview.canvas` so it matches the project
+        name and the reference in `docs/research/README.md`.
+  - [x] Tidy `backend/package.json`: set `author` to `"Codr Labs"`,
+        drop the placeholder `"keywords": []`, fix the `license` to
+        `MPL-2.0`, and replace the failing-by-default `test` script
+        with a no-op note pointing at Phase 1.
+  - [x] Confirm `frontend/`'s `react-router` / `react-router-dom`
+        deps stay (already installed; unblocks the Phase 3 routing
+        work without re-running `npm install`).
+- [ ] Open PR for the cleanup + this roadmap update and merge.
 
-**Done when:** both housekeeping PRs are merged into `main` and
+**Done when:** the cleanup PR is merged into `main` and
 `frontend/src/__tests__/` is the canonical test folder.
 
 ### 🎓 Intern tasks after Phase 0
@@ -220,8 +211,8 @@ section of [`axecore-integration-roadmap.md`](axecore-integration-roadmap.md).
       the mock.
 - [ ] Add a `backend/README.md` with "how to run", "how to test", and
       the env-var table from `.env.example`.
-- [ ] Add a frontend Jest test for `ScanResults.jsx` that renders the
-      mock fixture and asserts the three buckets are visible.
+- [ ] Add a frontend Vitest test for `ScanResults.jsx` that renders
+      the mock fixture and asserts the three buckets are visible.
 - [ ] Replace the 1.2 s `setTimeout` in `landingPage.jsx` with a named
       constant + comment (no behavior change), so Phase 3 has a clear
       thing to delete.
@@ -295,7 +286,7 @@ state, and land on a results page they can share by URL.
 - [ ] Add focus-visible styles and a "skip to main content" link on
       the landing page.
 - [ ] Add basic `<title>` and `<meta name="description">` per route.
-- [ ] Write a Jest test asserting the "Needs manual review" bucket
+- [ ] Write a Vitest test asserting the "Needs manual review" bucket
       renders when the fixture contains `incomplete` items.
 - [ ] Add a small "About / How this works" page reachable from the
       landing page.
@@ -417,6 +408,10 @@ These don't belong to a single phase — pick them up opportunistically.
 
 ## Change log for this roadmap
 
+- _2026-04-26_ — Phase 0 housekeeping cleanup pass landed: tests
+  folder renamed to `__tests__/`, stale `docs/guides/architecture.md`
+  retired, research canvas renamed to `equalview.canvas`,
+  `backend/package.json` tidied, README links to all three plans.
 - _2026-04-26_ — Initial version. Phase 0 in flight; Phases 1–5
   drafted; product definition and axe-core output shape pinned down;
   open decisions enumerated.
