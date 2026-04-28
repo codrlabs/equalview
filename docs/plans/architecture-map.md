@@ -224,6 +224,171 @@ which phase of [`project-roadmap.md`](project-roadmap.md):
 | Loading / error / empty polish                 | [Phase 3](project-roadmap.md#phase-3--ux--ui-on-real-data) + [Phase 4 — reliability](project-roadmap.md#phase-4--reliability--ops) |
 | Sign in / Sign up, My scans, auth gating, scan history | [Phase 5 — accounts & scan history](project-roadmap.md#phase-5--accounts--scan-history)      |
 
+### 1.6 Per-screen possibility mindmaps
+
+§1.5.1 covers transitions **between** screens. This section is the
+exhaustive view **inside** each screen: every user action, every state
+the UI can be in, every error/edge case, and every side-effect that
+leaves the screen. Use these as the spec when wiring a page up — every
+node should map to either a piece of UI, a piece of state, or a code
+path. **Solid = built today. Italic + `[Pn]` = planned in Phase n.**
+
+#### Landing — `/`
+
+```mermaid
+mindmap
+  root((Landing))
+    User actions
+      paste / type URL
+      press Enter
+      click "Scan"
+      *click "Sign in" [P5]*
+      *click "My scans" [P5]*
+    States
+      idle
+        button disabled when input empty
+      scanning
+        button shows "Redirecting…"
+        button aria-busy=true
+        input disabled
+      *authed [P5]*
+        *header shows "My scans · Log out"*
+    Validation
+      empty trim → no-op
+      invalid URL → window.alert (today)
+      *inline error [P3]*
+    Side effects
+      setTimeout 1200ms (P1 intern: name the constant)
+      window.location.href = /scan-results?url=...
+      *POST /api/scan { url } [P2]*
+      *GET /api/auth/me on mount [P5]*
+    Carries forward
+      ?url=<encoded> in query string
+```
+
+#### Scan results — `/scan-results?url=...`
+
+```mermaid
+mindmap
+  root((Scan results))
+    Inputs
+      ?url= from query string
+    Network
+      GET /api/scan-results?url=...
+      *GET /api/scans/:id [P5, history]*
+    States
+      loading: "Fetching scan results..."
+      ready: three buckets + What's Good
+      error: HTTP error or missing ?url=
+      *empty: zero violations [P3]*
+    User actions
+      click problem card → in-page detail
+      click "← New Scan" → /
+      *click "Learn more" → axe helpUrl [P3]*
+      *click WCAG tag chip → filter [P3]*
+      *click severity badge → filter [P3]*
+      *click "View saved scan" [P5]*
+    Edge cases
+      results.problems.<bucket> missing → "No issues in this category"
+      results.whatsGood missing → "No positives found"
+      *axe incomplete bucket [P3]*
+      *backend timeout / DNS failure category [P4]*
+    Side effects
+      sets selectedProblem (lost on refresh today)
+      *navigates to /problems/:id [P3]*
+      *navigates to /scan-results?scanId=... [P5]*
+```
+
+#### Problem detail — in-page today, `/problems/:id` later
+
+```mermaid
+mindmap
+  root((Problem detail))
+    Inputs
+      problem prop (today, from ScanResults state)
+      *:id path param [P3]*
+    What it shows
+      name (axe `help`)
+      category
+      rootCause (axe `description`)
+      codeSnippet (one example today; *all axe `nodes[]` [P2]*)
+      solution steps
+      *severity badge (axe `impact`) [P3]*
+      *WCAG tag chips (axe `tags`) [P3]*
+      *"Learn more" → axe `helpUrl` [P3]*
+      *list of offending nodes: html + selector + failureSummary [P2]*
+    User actions
+      click "← Back to results"
+      *copy CSS selector [P3]*
+      *open helpUrl in new tab [P3]*
+    Edge cases
+      problem prop missing → renders null
+      *unknown :id (deep link) → 404 page [P3]*
+    Side effects
+      none today (pure render)
+      *history.back() / router nav [P3]*
+```
+
+#### Sign in / Sign up — `/login`, `/signup` *[P5]*
+
+```mermaid
+mindmap
+  root((Auth))
+    User actions
+      submit email + password
+      toggle sign in ↔ sign up
+      click "continue without account" → /
+    States
+      idle
+      submitting
+      success → redirect to /
+      error: inline message
+    Validation
+      email format
+      password length
+      signup: confirm password matches
+    Network
+      POST /api/auth/login
+      POST /api/auth/signup
+    Side effects
+      Set-Cookie (httpOnly JWT) on success
+      AuthContext refetches /api/auth/me
+    Edge cases
+      already-logged-in user lands here → redirect to /
+      rate-limited → friendly inline error
+```
+
+#### My scans — `/my-scans` *[P5]*
+
+```mermaid
+mindmap
+  root((My scans))
+    Auth gate
+      GET /api/auth/me 401 → redirect /login
+    User actions
+      click row → /scan-results?scanId=...
+      click Delete (with confirm modal)
+      click "New Scan" → /
+      paginate next / prev
+    States
+      loading
+      ready: list of past scans
+      empty: "No scans yet" + CTA
+      error: HTTP error
+    Network
+      GET /api/scans?page=N
+      DELETE /api/scans/:id
+    Per row shows
+      scanned URL
+      date
+      headline counts (critical · serious · review)
+      View link
+      Delete button
+    Edge cases
+      deleted scan opened from stale link → 404
+      pagination overflow → empty page
+```
+
 ---
 
 ## 2. Per-screen breakdown
@@ -578,3 +743,420 @@ moves.
 | "MODULE_NOT_FOUND: cors" on backend start                  | `backend/package.json` (dep must live there, not at repo root) |
 | Scan returns 500 on a real URL                             | `controllers/scanController.js` Puppeteer error handling [planned, Phase 4] |
 | Same mock returned for every URL                           | expected today — until Phase 2 lands     |
+
+---
+
+## 6. Code architecture — modules, classes, and types
+
+§4 lays out the directory tree. This section answers the next
+question: **what should live in those files, and how do the pieces
+talk to each other?** The goal is an architecture that scales from
+"mock scanner" today to "real scanner + auth + history + queue"
+without rewrites — by drawing the layer boundaries cleanly now.
+
+> **Why some things are classes and some aren't.** OOP isn't the
+> goal; *clear seams* are. We use classes where there is **identity
+> + state** (a Puppeteer browser, a database connection, a request
+> handler that needs to be bound). We use **pure modules of
+> functions** for stateless transforms (axe → API shape, URL
+> validation). The frontend is React, so pages are functional
+> components and side-effects live in **hooks**; only the network
+> client is a class because it owns a base URL and credentials.
+
+### 6.1 Abstraction strategy at a glance
+
+| Concern                                  | Today                            | Target shape                              |
+| ---------------------------------------- | -------------------------------- | ----------------------------------------- |
+| Express routing                          | inline in `backend/index.js`     | `routes/*.js` (P1)                        |
+| HTTP request/response handling           | inline                           | `controllers/*Controller.js` **classes**, methods bound in constructor (P1) |
+| Browser lifecycle                        | n/a (mock)                       | `services/browserPool.js` **class** (P2/P4) |
+| Scan orchestration                       | n/a (mock)                       | `services/scanRunner.js` **class** (P2)   |
+| axe → API shape                          | n/a (mock returns final shape)   | `services/axeTransformer.js` **pure module** (P1/P2) |
+| SSRF / URL allow-list                    | none                             | `services/ssrfGuard.js` **pure module** (P2) |
+| Auth                                     | n/a                              | `services/authService.js` **class** (P5)  |
+| Database access                          | n/a                              | `db/repositories/*.js` **classes** (P5)   |
+| Frontend HTTP                            | inline `fetch` calls             | `lib/apiClient.js` **class** singleton    |
+| Frontend page state                      | `useState` per page              | same, plus **hooks** (`useScan`, `useAuth`) |
+| Frontend global state (auth)             | none                             | **`AuthContext`** + `useAuth()` hook (P5) |
+| Domain shapes                            | implicit                         | **JSDoc `@typedef`** in `shared/types.js` |
+
+### 6.2 Shared domain types
+
+The wire format is the only contract between frontend and backend.
+Define it **once**, in a shared file that both sides can `@import`
+from JSDoc. No runtime cost; full editor autocomplete; survives the
+move to TypeScript later if we want it.
+
+Suggested location: `shared/types.js` at the repo root (re-exported
+from `backend/types.js` and `frontend/src/types.js` as thin
+wrappers, since neither tool resolves outside its own folder by
+default).
+
+```js
+// shared/types.js  [planned, P1]
+
+/**
+ * @typedef {'minor'|'moderate'|'serious'|'critical'} Impact
+ *
+ * @typedef {Object} AxeNode
+ * @property {string}   html            Offending HTML snippet.
+ * @property {string[]} target          CSS selector(s) (handles iframes / shadow DOM).
+ * @property {string}   failureSummary  Pre-formatted "Fix any of the following: …".
+ *
+ * @typedef {Object} Violation
+ * @property {string}     id            axe rule id, e.g. "color-contrast".
+ * @property {string}     help          One-line title.
+ * @property {string}     helpUrl       Deque University remediation link.
+ * @property {Impact}     impact        Drives sort order + badge color.
+ * @property {string[]}   tags          e.g. "wcag2a", "wcag21aa", "best-practice".
+ * @property {AxeNode[]}  nodes
+ * @property {string}    [description]  Body copy for the detail page.
+ *
+ * @typedef {Violation} IncompleteCheck   // same shape, different bucket
+ *
+ * @typedef {Object} BucketedProblems
+ * @property {Violation[]} visualAccessibility
+ * @property {Violation[]} structureAndSemantics
+ * @property {Violation[]} multimedia
+ *
+ * @typedef {Object} ScanResult
+ * @property {string}            url        The URL that was scanned.
+ * @property {string}            timestamp  ISO 8601.
+ * @property {BucketedProblems}  problems
+ * @property {string[]}          whatsGood
+ * @property {IncompleteCheck[]} [incomplete]   // P3
+ * @property {Object}            [raw]          // full axe payload (Option C)
+ *
+ * @typedef {Object} ScanError
+ * @property {'invalid_url'|'ssrf_blocked'|'navigation_timeout'|'http_error'|'internal'} code
+ * @property {string} message
+ *
+ * @typedef {Object} User              // P5
+ * @property {string} id
+ * @property {string} email
+ * @property {string} createdAt
+ *
+ * @typedef {Object} StoredScan        // P5
+ * @property {string}     id
+ * @property {string}     userId
+ * @property {string}     url
+ * @property {string}     createdAt
+ * @property {ScanResult} results
+ */
+```
+
+The exact shape of `ScanResult` is locked by the open "Scan API
+shape" decision in
+[`project-roadmap.md`](project-roadmap.md#open-decisions-lock-in-before-they-block-a-phase).
+Whatever wins, **per-violation fields are fixed by axe** (id, help,
+helpUrl, impact, tags, nodes).
+
+### 6.3 Backend class graph
+
+```mermaid
+classDiagram
+    direction LR
+
+    class App {
+        <<composition root>>
+        +start(env)
+    }
+
+    class ScanRouter {
+        <<express.Router>>
+        +mount(controller)
+    }
+
+    class ScanController {
+        -runner: ScanRunner
+        +postScan(req, res, next)
+        +getScanResults(req, res, next)
+        +getProblem(req, res, next)
+    }
+
+    class ScanRunner {
+        -pool: BrowserPool
+        -guard: typeof validateUrl
+        -transform: typeof axeTransform
+        +run(url) ScanResult
+    }
+
+    class BrowserPool {
+        -browser: Browser
+        -inFlight: number
+        -maxConcurrency: number
+        +acquire() Page
+        +release(page)
+        +shutdown()
+    }
+
+    class AxeTransformerModule {
+        <<module>>
+        +transform(rawAxe, opts) ScanResult
+        +bucketize(violations) BucketedProblems
+    }
+
+    class SsrfGuardModule {
+        <<module>>
+        +validateUrl(url) URL
+    }
+
+    class AuthController {
+        <<P5>>
+        -auth: AuthService
+        -users: UsersRepo
+        +signup() / +login() / +logout() / +me()
+    }
+
+    class AuthService {
+        <<P5>>
+        +hashPassword(p) string
+        +verifyPassword(p, h) boolean
+        +signToken(user) string
+        +verifyToken(t) UserId
+    }
+
+    class UsersRepo {
+        <<P5>>
+        +findByEmail(email) User?
+        +create(email, hash) User
+    }
+
+    class ScansRepo {
+        <<P5>>
+        +list(userId, page) StoredScan[]
+        +get(userId, scanId) StoredScan?
+        +save(userId, url, results) StoredScan
+        +delete(userId, scanId) void
+    }
+
+    class RequireAuth {
+        <<middleware, P5>>
+        +middleware(authService) Handler
+    }
+
+    App --> ScanRouter
+    App --> ScanController
+    App --> ScanRunner
+    App --> BrowserPool
+    ScanRouter --> ScanController
+    ScanController --> ScanRunner
+    ScanRunner --> BrowserPool
+    ScanRunner --> AxeTransformerModule
+    ScanRunner --> SsrfGuardModule
+    App --> AuthController
+    AuthController --> AuthService
+    AuthController --> UsersRepo
+    RequireAuth --> AuthService
+```
+
+**Rules of thumb:**
+
+- **Routers know URLs and HTTP verbs**; they don't know how axe
+  works.
+- **Controllers know request/response**; they delegate everything
+  else. They are classes so methods can be bound once in the
+  constructor — `app.post('/api/scan', ctrl.postScan)` would lose
+  `this` otherwise. See [`axecore-integration.md`](../guides/axecore-integration.md)
+  for the bug pattern.
+- **Services are the brain**: `ScanRunner` is the only thing that
+  talks to Puppeteer + axe. `AxeTransformer` is a *pure module* —
+  it takes a raw axe object in, returns a `ScanResult` out, has no
+  side effects, and is unit-testable with a captured fixture.
+- **`BrowserPool` owns Chromium's lifecycle**: one browser, many
+  pages, capped concurrency. Every other layer borrows pages from
+  it and gives them back. Phase 4 reliability work bolts onto this
+  class without touching the rest.
+- **Repositories own SQL** (P5). Controllers never write SQL;
+  services never write SQL. Swapping Postgres for SQLite is a
+  one-file change.
+
+### 6.4 Frontend abstractions
+
+React's natural unit is the **functional component + hook**, not
+the class. The only class on the frontend is the network client —
+it owns a base URL and (P5) credentials, and centralizing it makes
+mocking trivial in tests.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class App {
+        <<root component>>
+        +render()
+    }
+
+    class Router {
+        <<react-router, P3>>
+    }
+
+    class LandingPage {
+        <<page component>>
+    }
+    class ScanResultsPage {
+        <<page component>>
+    }
+    class ProblemPage {
+        <<page component>>
+    }
+    class LoginPage {
+        <<page component, P5>>
+    }
+    class MyScansPage {
+        <<page component, P5>>
+    }
+
+    class useScan {
+        <<hook>>
+        +useScan(url) {data, loading, error}
+    }
+    class useAuth {
+        <<hook, P5>>
+        +useAuth() {user, login, logout, signup}
+    }
+    class useScans {
+        <<hook, P5>>
+        +useScans(page) {scans, loading, error}
+    }
+
+    class ApiClient {
+        <<class, singleton>>
+        -baseUrl: string
+        +runScan(url) ScanResult
+        +getScanResults(url) ScanResult
+        +getProblem(id) Violation
+        +login(email, pw) User       %% P5
+        +signup(email, pw) User      %% P5
+        +me() User?                  %% P5
+        +listScans(page) StoredScan[] %% P5
+        +deleteScan(id) void         %% P5
+    }
+
+    class ScanValidator {
+        <<pure module>>
+        +isValidUrl(s) boolean
+    }
+
+    class ErrorFormatter {
+        <<pure module>>
+        +toUserMessage(err) string
+    }
+
+    class AuthContext {
+        <<context, P5>>
+        +Provider
+        +useContext()
+    }
+
+    App --> Router
+    Router --> LandingPage
+    Router --> ScanResultsPage
+    Router --> ProblemPage
+    Router --> LoginPage
+    Router --> MyScansPage
+    LandingPage --> ScanValidator
+    LandingPage --> ApiClient
+    ScanResultsPage --> useScan
+    useScan --> ApiClient
+    useScan --> ErrorFormatter
+    LoginPage --> useAuth
+    MyScansPage --> useScans
+    useAuth --> AuthContext
+    useAuth --> ApiClient
+    useScans --> ApiClient
+    AuthContext --> ApiClient
+```
+
+**Rules of thumb:**
+
+- **Pages own layout + which hooks/services they call.** No `fetch`
+  inside a page component.
+- **Hooks own loading/error/data state machines.** A page that
+  uses `useScan(url)` reads a `{ data, loading, error }` triple and
+  renders accordingly — same pattern for `useAuth`, `useScans`.
+- **`ApiClient` is the only file that imports `fetch`.** Everything
+  else imports the singleton instance. Tests substitute a fake
+  client at the module level.
+- **`AuthContext` is the only place auth state lives.** `useAuth()`
+  reads from it; `LoginPage` writes to it after a successful
+  `POST /api/auth/login` (which sets the httpOnly cookie — the
+  frontend never sees the token itself).
+- **Domain types come from `shared/types.js`** via JSDoc imports —
+  the frontend doesn't redefine `Violation` / `ScanResult`.
+
+### 6.5 Composition root and test seams
+
+A "composition root" is *the one place* that constructs concrete
+classes and wires them together. Everywhere else takes its
+dependencies via constructor or function arguments. This is what
+makes the layers unit-testable without a DI framework.
+
+**Backend composition root (`backend/app.js` or `backend/index.js`):**
+
+```js
+// pseudo-code — [planned, P1/P2]
+const pool       = new BrowserPool({ maxConcurrency: 2 });
+const runner     = new ScanRunner({ pool, transform, validateUrl });
+const scanCtrl   = new ScanController({ runner });
+const authSvc    = new AuthService({ jwtSecret: env.JWT_SECRET });   // P5
+const usersRepo  = new UsersRepo(db);                                 // P5
+const scansRepo  = new ScansRepo(db);                                 // P5
+const authCtrl   = new AuthController({ authSvc, usersRepo });        // P5
+const requireAuth = makeRequireAuth(authSvc);                         // P5
+
+app.use('/api/scan',  makeScanRouter(scanCtrl));
+app.use('/api/auth',  makeAuthRouter(authCtrl));                      // P5
+app.use('/api/scans', requireAuth, makeScansRouter(scanCtrl, scansRepo)); // P5
+```
+
+**Frontend composition root (`frontend/src/main.jsx`):**
+
+```jsx
+// pseudo-code — [planned, P3/P5]
+const api = new ApiClient({ baseUrl: '/api' });
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <ApiProvider value={api}>
+    <AuthProvider api={api}>           {/* P5 */}
+      <RouterProvider router={router}/>
+    </AuthProvider>
+  </ApiProvider>
+);
+```
+
+**Test seams (what you can fake at each layer):**
+
+| Layer under test       | What you fake                                | How                                      |
+| ---------------------- | -------------------------------------------- | ---------------------------------------- |
+| `AxeTransformer`       | nothing — pure function                      | feed a captured axe payload fixture      |
+| `SsrfGuard`            | nothing — pure function                      | string inputs                            |
+| `ScanRunner`           | `BrowserPool`, `transform`, `validateUrl`    | constructor injection                    |
+| `ScanController`       | `ScanRunner`                                 | constructor injection                    |
+| `routes/scan.js`       | `ScanController`                             | supertest + a stub controller            |
+| `UsersRepo`            | nothing                                      | spin up a real ephemeral Postgres (or mock pg) |
+| `AuthService`          | clock / `jwt`                                | inject a clock; pin a fixed `jwtSecret`  |
+| `ApiClient` (frontend) | `fetch`                                      | `vi.spyOn(global, 'fetch')` or MSW       |
+| `useScan`              | `ApiClient`                                  | render in a test wrapper with a stub api |
+| Page components        | hooks                                        | `vi.mock('../hooks/useScan', …)`         |
+
+### 6.6 Mapping back to today's repo
+
+Today the backend has none of the above classes — it has one file
+(`backend/index.js`) with three inline route handlers reading a
+mock module. **That's fine.** The point of §6 is to make the
+direction-of-travel explicit so each new piece lands in the right
+slot:
+
+| Today                          | Goes to (phase)                                       |
+| ------------------------------ | ----------------------------------------------------- |
+| inline `app.post('/api/scan')` | `routes/scan.js` + `ScanController.postScan` (P1)     |
+| `mockScanResults` import       | replaced by `runner.run(url)` (P2); kept as a P1 test fixture |
+| `cors({ origin: 'http://...' })` | reads `FRONTEND_ORIGIN` env (P1)                    |
+| `fetch('/api/scan-results…')` in `ScanResults.jsx` | `useScan(url)` → `ApiClient.getScanResults(url)` (P3 refactor, optional earlier) |
+| `selectedProblem` in component state | `/problems/:id` route + `useProblem(id)` hook (P3) |
+| `window.location.href = …` in `landingPage.jsx` | `useNavigate()` + `apiClient.runScan(url)` (P2/P3) |
+
+Each row above is a small, mechanical refactor — not a rewrite.
+That's the test of whether the architecture in §6 is right: if
+adopting it requires throwing today's code away, it's wrong.
