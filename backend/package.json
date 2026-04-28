@@ -1,14 +1,14 @@
 {
-  "name": "equalview",
+  "name": "equalview-backend",
   "version": "1.0.0",
-  "description": "An accessibility-focused web application that helps make the web more inclusive for everyone.",
+  "description": "EqualView API — Express backend that will host the axe-core scanner.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"No test runner wired up yet — see docs/plans/project-roadmap.md Phase 1\" && exit 0"
+    "test": "node --test tests/"
   },
-  "author": "",
+  "author": "Codr Labs",
   "license": "MPL-2.0",
   "type": "commonjs",
   "dependencies": {
@@ -17,6 +17,7 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }
