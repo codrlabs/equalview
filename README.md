@@ -41,38 +41,62 @@ The frontend will be available at `http://localhost:5173` and proxies
 ```
 equalview/
 ├── backend/                          # Node + Express API
+│   ├── index.js                      # Bootstrap (load .env, listen)
+│   ├── app.js                        # Composition root (DI wiring)
+│   ├── routes/                       # Express routers
+│   │   ├── index.js                  # Mount /api and /problems
+│   │   ├── scan.js                   # POST /api/scan, GET /api/scan-results
+│   │   └── problems.js               # GET /problems/:id
+│   ├── controllers/
+│   │   └── scanController.js         # Class with bound handlers
+│   ├── services/
+│   │   ├── axeTransformer.js         # Pure: axe → ScanResult shape
+│   │   └── ssrfGuard.js              # Pure: URL allow/deny rules
 │   ├── data/
-│   │   └── mockScanResults.js        # Mock scan payload (placeholder for axe-core)
-│   ├── index.js                      # Express app + routes
+│   │   └── mockScanResults.js        # Phase-1 fixture
+│   ├── tests/                        # node:test + supertest
+│   ├── .env.example
+│   ├── Dockerfile
+│   ├── README.md
 │   └── package.json
-│   # Dockerfile [planned, Phase 1]
 ├── frontend/                         # React + Vite app
 │   ├── src/
 │   │   ├── main.jsx                  # React bootstrap
-│   │   ├── App.jsx                   # Pathname-based view switch
-│   │   ├── landingPage.jsx           # Landing page
-│   │   ├── ScanResults.jsx           # Scan results page
+│   │   ├── App.jsx                   # BrowserRouter + Routes
+│   │   ├── pages/
+│   │   │   ├── LandingPage.jsx
+│   │   │   ├── ScanResultsPage.jsx
+│   │   │   └── ProblemPage.jsx
 │   │   ├── components/
-│   │   │   └── ProblemSolutionPage.jsx
+│   │   │   ├── ProblemSolutionPage.jsx
+│   │   │   ├── ProblemCategoryBox.jsx
+│   │   │   └── WhatsGood.jsx
+│   │   ├── hooks/
+│   │   │   ├── useScan.js
+│   │   │   └── useProblem.js
+│   │   ├── lib/
+│   │   │   └── apiClient.js          # The only file that imports `fetch`
+│   │   ├── utils/
+│   │   │   └── urlValidator.js
 │   │   ├── data/
-│   │   │   └── mockScanResults.js    # Test-only fixture (mirrors backend)
-│   │   ├── styles/                   # Per-screen CSS
+│   │   │   └── mockScanResults.js    # Test-only fixture
+│   │   ├── styles/
 │   │   ├── __tests__/                # Vitest + React Testing Library
 │   │   └── setupTests.js
 │   ├── vite.config.js
 │   └── Dockerfile
+├── shared/
+│   └── types.js                      # JSDoc Problem / ScanResult / Impact
 ├── docs/
 │   ├── README.md                     # Documentation index
 │   ├── guides/                       # How-to guides
-│   │   ├── workflow.md
-│   │   ├── axecore-integration.md
-│   │   └── ...
 │   ├── plans/                        # Tracked implementation roadmaps
 │   │   ├── project-roadmap.md
 │   │   ├── architecture-map.md
-│   │   └── axecore-integration-roadmap.md
+│   │   ├── axecore-integration-roadmap.md
+│   │   └── codebase-reorganization.md
 │   └── research/                     # Obsidian canvas + scratch notes
-└── docker-compose.yml                # Frontend only today; backend [planned, Phase 1]
+└── docker-compose.yml                # Frontend + backend
 ```
 
 ## 🎯 Overview
@@ -88,12 +112,19 @@ are often expensive or limited.
 - Provide actionable insights and fix suggestions
 
 ### Current Status
-- **Frontend**: React + Vite app with landing page and scan results view.
-  Navigation is currently a `window.location.pathname` switch in
-  `App.jsx` (no client-side router yet).
+- **Frontend**: React + Vite app with landing page, scan results view,
+  and problem detail route. Routing is `react-router-dom` v7
+  (`BrowserRouter` + `Routes` in `src/App.jsx`); pages live in
+  `src/pages/`, the scan state machine lives in
+  `src/hooks/useScan.js`, and `src/lib/apiClient.js` is the only file
+  that calls `fetch`.
 - **Backend**: Express API exposing `/health`, `POST /api/scan`,
-  `GET /api/scan-results`, and `GET /problems/:id`. Currently returns
-  hardcoded mock data from `backend/data/mockScanResults.js`.
+  `GET /api/scan-results`, and `GET /problems/:id`. Layered into
+  `routes/` → `controllers/` → `services/` with a composition root in
+  `backend/app.js`. SSRF guard rejects non-http URLs and private hosts
+  today; controller still serves the mock fixture from
+  `backend/data/mockScanResults.js` until Phase 2 adds the real
+  scanner.
 - **Real scanning**: Not yet implemented. See
   [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md).
 
@@ -142,8 +173,9 @@ npm run build
 
 # Backend
 cd backend
+npm install
 npm run dev       # nodemon
-# (No test runner wired up yet — see roadmap.)
+npm test          # node --test (node:test + supertest)
 ```
 
 ## 📚 Documentation
@@ -155,6 +187,7 @@ See [`docs/README.md`](docs/README.md) for an index. Highlights:
 - [`docs/plans/project-roadmap.md`](docs/plans/project-roadmap.md) — Phased roadmap (housekeeping → real scanner → UX → reliability → accounts)
 - [`docs/plans/architecture-map.md`](docs/plans/architecture-map.md) — Per-screen architecture map and code organization
 - [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md) — Sub-roadmap for replacing the mock scanner
+- [`docs/plans/codebase-reorganization.md`](docs/plans/codebase-reorganization.md) — Final repo layout after the Phase 1 / Phase 3 reorg
 - [`docs/research/`](docs/research/) — Obsidian canvas and supporting notes
 
 ## 🤝 Contributing
