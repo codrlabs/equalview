@@ -34,6 +34,9 @@ leave it in place for history.
   how frontend/backend code is organized.
 - [`plans/axecore-integration-roadmap.md`](plans/axecore-integration-roadmap.md)
   — Replace mock scan data with a real axe-core scanner.
+- [`plans/codebase-reorganization.md`](plans/codebase-reorganization.md)
+  — Phase-1 + Phase-3 router reorg log; final repo layout and the
+  migration mapping from old → new file paths.
 
 ## Research
 
