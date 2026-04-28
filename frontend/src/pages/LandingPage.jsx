@@ -1,26 +1,34 @@
 import { useState } from 'react'
-import './styles/LandingPage.css'
+import { useNavigate } from 'react-router-dom'
+import { isValidUrl } from '../utils/urlValidator'
+import '../styles/LandingPage.css'
 
+/** Visual delay so users can see the "Scanning…" state on local dev. */
+const SCAN_REDIRECT_DELAY_MS = 1200
 
 export default function LandingPage() {
   const [url, setUrl] = useState('')
   const [scanStatus, setScanStatus] = useState('idle')
+  const [validationError, setValidationError] = useState('')
+  const navigate = useNavigate()
 
   const handleScan = () => {
     if (!url.trim()) return
-    
-    // Validate URL format
-    try {
-      new URL(url)
-    } catch {
-      alert('Please enter a valid URL (e.g., https://example.com)')
+
+    if (!isValidUrl(url)) {
+      setValidationError(
+        'That doesn’t look like a URL — try https://example.com'
+      )
       return
     }
-    
+    setValidationError('')
+
     setScanStatus('scanning')
+    // TODO(Phase 3): drive navigation off the real submit promise
+    // instead of a hard-coded delay.
     setTimeout(() => {
-      window.location.href = `/scan-results?url=${encodeURIComponent(url)}`
-    }, 1200)
+      navigate(`/scan-results?url=${encodeURIComponent(url)}`)
+    }, SCAN_REDIRECT_DELAY_MS)
   }
 
   return (
@@ -34,7 +42,9 @@ export default function LandingPage() {
       </p>
 
       <section className="landing-scan-section" aria-label="Website scan">
-        <label htmlFor="website-url" className="visually-hidden">Website URL</label>
+        <label htmlFor="website-url" className="visually-hidden">
+          Website URL
+        </label>
         <input
           id="website-url"
           type="url"
@@ -45,6 +55,7 @@ export default function LandingPage() {
           onKeyDown={(e) => e.key === 'Enter' && handleScan()}
           disabled={scanStatus === 'scanning'}
           aria-describedby="scan-hint"
+          aria-invalid={validationError ? 'true' : 'false'}
         />
         <button
           type="button"
@@ -55,11 +66,16 @@ export default function LandingPage() {
         >
           {scanStatus === 'scanning' ? 'Redirecting…' : 'Scan'}
         </button>
+        {validationError && (
+          <p role="alert" className="landing-validation-error">
+            {validationError}
+          </p>
+        )}
         <p id="scan-hint" className="landing-scan-hint visually-hidden">
-          Enter a full URL (e.g. https://example.com) and press Scan to analyze the site.
+          Enter a full URL (e.g. https://example.com) and press Scan to analyze
+          the site.
         </p>
       </section>
     </div>
   )
 }
-
