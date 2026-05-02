@@ -49,6 +49,7 @@ obsidian/.obsidian/
 # Editor and IDE
 .idea/
 .vscode/
+.kilo/
 *.suo
 *.ntvs*
 *.njsproj

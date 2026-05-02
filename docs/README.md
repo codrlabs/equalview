@@ -19,6 +19,12 @@ Stable, "how do I do X" content. Update when the answer changes.
 - [`guides/axecore-integration.md`](guides/axecore-integration.md) —
   Reference for how the Puppeteer + axe-core scanner is meant to be wired
   in (architecture, code samples, troubleshooting).
+- [`guides/intern-onboarding-post-reorg.md`](guides/intern-onboarding-post-reorg.md)
+  — Deep dive: every folder, why it exists, and the call chain through
+  both halves of the app.
+- [`guides/thinking-in-architecture.md`](guides/thinking-in-architecture.md)
+  — 5-minute intern primer on the layered model, with each open GitHub
+  issue mapped to "which layer does this change live in?"
 
 ## Plans
 
