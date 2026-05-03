@@ -206,10 +206,10 @@ and
 
 ### Issue #23 — "Update Obsidian canvas with current codebase state"
 
-**Layer:** docs only — `docs/research/equalview.canvas`.
+**Layer:** docs only — `docs/obsidian/equalview.canvas`.
 
 > Pattern: docs are a layer too. They have their own home
-> (`docs/guides`, `docs/plans`, `docs/research`). Don't sneak
+> (`docs/guides`, `docs/plans`, `docs/obsidian`). Don't sneak
 > architecture diagrams into source files.
 
 ---
