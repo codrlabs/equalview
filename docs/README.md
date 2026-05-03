@@ -7,7 +7,7 @@ into three kinds of documents, by intent:
 docs/
 ├── guides/      # How-to and reference. Stable, evergreen, no checkboxes.
 ├── plans/       # Tracked roadmaps with phases, deliverables, status.
-└── research/    # Obsidian canvas and supporting scratch notes.
+└── obsidian/    # Obsidian vault: canvas + supporting scratch notes.
 ```
 
 ## Guides
@@ -47,12 +47,13 @@ leave it in place for history.
   [`README.md`](../README.md); the architectural target lives in
   [`plans/architecture-map.md`](plans/architecture-map.md) §6.
 
-## Research
+## Obsidian
 
 Supplementary brainstorming material — Obsidian canvas, pasted images,
-notes. Not authoritative.
+notes. Not authoritative. Open the folder as a vault in Obsidian to
+edit it.
 
-See [`research/README.md`](research/README.md).
+See [`obsidian/README.md`](obsidian/README.md).
 
 ## When to add what
 
@@ -60,7 +61,7 @@ See [`research/README.md`](research/README.md).
 |------|---------------|
 | "How do I do X in this repo?" | `guides/` |
 | "What work needs to happen, in what order?" | `plans/` |
-| "I'm thinking out loud / sketching" | `research/` |
+| "I'm thinking out loud / sketching" | `obsidian/` |
 | "What is the current behavior?" | Top-level `README.md` |
 
 For lightweight task tracking prefer GitHub Issues. Use `plans/` only
