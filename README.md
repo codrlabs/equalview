@@ -95,7 +95,11 @@ equalview/
 │   │   ├── architecture-map.md
 │   │   ├── axecore-integration-roadmap.md
 │   │   └── codebase-reorganization.md
+<<<<<<< HEAD
 │   └── research/                     # Obsidian canvas + scratch notes
+=======
+│   └── obsidian/                     # Obsidian vault (canvas + scratch notes)
+>>>>>>> f359da1901acc6d3eb5ce19b469ec3fa3f3834de
 └── docker-compose.yml                # Frontend + backend
 ```
 
@@ -188,7 +192,11 @@ See [`docs/README.md`](docs/README.md) for an index. Highlights:
 - [`docs/plans/architecture-map.md`](docs/plans/architecture-map.md) — Per-screen architecture map and code organization
 - [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md) — Sub-roadmap for replacing the mock scanner
 - [`docs/plans/codebase-reorganization.md`](docs/plans/codebase-reorganization.md) — Final repo layout after the Phase 1 / Phase 3 reorg
+<<<<<<< HEAD
 - [`docs/research/`](docs/research/) — Obsidian canvas and supporting notes
+=======
+- [`docs/obsidian/`](docs/obsidian/) — Obsidian vault (canvas + supporting notes)
+>>>>>>> f359da1901acc6d3eb5ce19b469ec3fa3f3834de
 
 ## 🤝 Contributing
 

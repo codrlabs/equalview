@@ -7,7 +7,11 @@ into three kinds of documents, by intent:
 docs/
 ├── guides/      # How-to and reference. Stable, evergreen, no checkboxes.
 ├── plans/       # Tracked roadmaps with phases, deliverables, status.
+<<<<<<< HEAD
 └── research/    # Obsidian canvas and supporting scratch notes.
+=======
+└── obsidian/    # Obsidian vault: canvas + supporting scratch notes.
+>>>>>>> f359da1901acc6d3eb5ce19b469ec3fa3f3834de
 ```
 
 ## Guides
@@ -47,12 +51,22 @@ leave it in place for history.
   [`README.md`](../README.md); the architectural target lives in
   [`plans/architecture-map.md`](plans/architecture-map.md) §6.
 
+<<<<<<< HEAD
 ## Research
 
 Supplementary brainstorming material — Obsidian canvas, pasted images,
 notes. Not authoritative.
 
 See [`research/README.md`](research/README.md).
+=======
+## Obsidian
+
+Supplementary brainstorming material — Obsidian canvas, pasted images,
+notes. Not authoritative. Open the folder as a vault in Obsidian to
+edit it.
+
+See [`obsidian/README.md`](obsidian/README.md).
+>>>>>>> f359da1901acc6d3eb5ce19b469ec3fa3f3834de
 
 ## When to add what
 
@@ -60,7 +74,11 @@ See [`research/README.md`](research/README.md).
 |------|---------------|
 | "How do I do X in this repo?" | `guides/` |
 | "What work needs to happen, in what order?" | `plans/` |
+<<<<<<< HEAD
 | "I'm thinking out loud / sketching" | `research/` |
+=======
+| "I'm thinking out loud / sketching" | `obsidian/` |
+>>>>>>> f359da1901acc6d3eb5ce19b469ec3fa3f3834de
 | "What is the current behavior?" | Top-level `README.md` |
 
 For lightweight task tracking prefer GitHub Issues. Use `plans/` only

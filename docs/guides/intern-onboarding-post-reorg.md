@@ -106,7 +106,11 @@ equalview/
 ├── backend/        Express API (Node 22)
 ├── frontend/       React 19 + Vite 7 SPA
 ├── shared/         JSDoc types referenced by both sides
+<<<<<<< HEAD
 ├── docs/           guides, plans, research
+=======
+├── docs/           guides, plans, obsidian
+>>>>>>> f359da1901acc6d3eb5ce19b469ec3fa3f3834de
 ├── docker-compose.yml
 └── README.md
 ```
@@ -223,12 +227,22 @@ docs/
 ├── README.md
 ├── guides/                  how-to + onboarding
 ├── plans/                   tracked roadmaps and post-mortems
+<<<<<<< HEAD
 └── research/                Obsidian canvas + scratch notes
 ```
 
 Convention: **`guides/`** is durable how-to content; **`plans/`** is
 where roadmaps and architecture maps live; **`research/`** is the
 "thinking out loud" area that may or may not survive.
+=======
+└── obsidian/                Obsidian vault (canvas + scratch notes)
+```
+
+Convention: **`guides/`** is durable how-to content; **`plans/`** is
+where roadmaps and architecture maps live; **`obsidian/`** is the
+"thinking out loud" vault that may or may not survive — open the
+folder in Obsidian to edit it.
+>>>>>>> f359da1901acc6d3eb5ce19b469ec3fa3f3834de
 
 ### 3.5 Top level
 
