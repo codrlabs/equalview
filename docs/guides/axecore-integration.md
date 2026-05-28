@@ -84,56 +84,66 @@ constructor({ mockScanResults, ssrfGuard, scanRunner })
 
 ### Backend: Existing Transformer Service (`backend/services/axeTransformer.js`)
 
-**Status:** Already implements the target contract
+  **Status:** Already implements the target contract
 
-This file already contains the `transform(axeResults)` function that:
-- Maps axe violations to equalView problem buckets (`visualAccessibility`, `structureAndSemantics`, `multimedia`)
-- Extracts "what's good" from passing rules
-- Handles `bucketFor(tags)` categorization logic
+  This file already contains the `transform(axeResults)` function that:
+  - Maps axe violations to equalView problem buckets (`visualAccessibility`, `structureAndSemantics`, `multimedia`)
+  - Extracts "what's good" from passing rules
+  - Handles `bucketFor(tags)` categorization logic
 
-**No changes required.** The transformer was designed ahead of the runner.
+  **No changes required.** The transformer was designed ahead of the runner.
 
 ### Backend: SSRF Guard (`backend/services/ssrfGuard.js`)
 
-**Status:** No changes required
+  **Status:** No changes required
 
-The existing guard already:
-- Validates HTTP/HTTPS protocols
-- Blocks private IP ranges (RFC1918, loopback, link-local)
-- Returns typed `{ ok: boolean, reason?: string }` results
+  The existing guard already:
+  - Validates HTTP/HTTPS protocols
+  - Blocks private IP ranges (RFC1918, loopback, link-local)
+  - Returns typed `{ ok: boolean, reason?: string }` results
 
-The runner will use this before launching Puppeteer to prevent SSRF attacks.
+  The runner will use this before launching Puppeteer to prevent SSRF attacks.
 
 ### Backend: App Composition Root (`backend/app.js`)
 
-**Changes Required:**
+  **Changes Required:**
 
-| Line Reference | Change | Rationale |
-|----------------|--------|-----------|
-| Dependencies | Add `puppeteer` import | Required for browser automation |
-| Composition | Instantiate `ScanRunner` | Wire the new orchestration service |
-| Injection | Pass `scanRunner` to `ScanController` | Enable live scanning in controller |
+  | Line Reference | Change | Rationale |
+  |----------------|--------|-----------|
+  | Dependencies | Add `puppeteer` import | Required for browser automation |
+  | Composition | Instantiate `ScanRunner` | Wire the new orchestration service |
+  | Injection | Pass `scanRunner` to `ScanController` | Enable live scanning in controller |
 
-### New File: Puppeteer Pool Service (`backend/services/browserPool.js`)
+### New File: Scan Runner Service (`backend/services/scanRunner.js`)
 
-**Purpose:** Manage Chromium instances for concurrent scans.
+  **Purpose:** Orchestrate the Puppeteer + axe-core scanning lifecycle.
 
-**Responsibilities:**
-- Singleton browser instance (recommended for memory efficiency)
-- Page-level isolation (new page per scan)
-- Graceful shutdown handling
+  **Responsibilities:**
+  1. Validate URL via SSRF guard
+  2. Launch headless Chromium via Puppeteer
+  3. Navigate to the target URL
+  4. Inject axe-core library
+  5. Execute `axe.run()` with WCAG 2.1 AA tags
+  6. Transform raw results via `axeTransformer.transform()`
+  7. Return the equalView-compatible `ScanResult`
 
-**Dependencies:**
-- `puppeteer`
+  **Dependencies:**
+  - `puppeteer` (new browser instance per scan in Phase 2; pool recommended for production in Phase 4)
+  - `axe-core` (injected at runtime, not imported)
+  - `ssrfGuard` service for URL validation
+  - `axeTransformer` service for result shaping
 
 ### Backend: Data Layer (`backend/data/mockScanResults.js`)
 
-**Status:** No changes required
+  **Status:** No changes required
 
-The mock fixture serves as seed data for local development. In Phase 2:
-- Controller checks if `scanRunner` exists
-- If absent (tests/mocking), falls back to mock data
-- If present, uses live runner (production)
+  The mock fixture serves as seed data for local development. In Phase 2:
+  - Controller checks if `scanRunner` exists
+  - If absent (tests/mocking), falls back to mock data
+  - If present, uses live runner (production)
+
+> Note: The `browserPool.js` service is deferred to Phase 4.
+
 
 ## Frontend Impact
 
@@ -170,29 +180,29 @@ The transformer's `transform()` function returns this exact shape.
 
 ```
 User clicks "Scan"
-      ↓
+       ↓
 [LandingPage.jsx] → navigate(`/scan-results?url=${url}`)
-      ↓
+       ↓
 [ScanResultsPage.jsx] → useScan(url)
-      ↓
+       ↓
 [apiClient.getScanResults(url)] → GET /api/scan-results
-      ↓
+       ↓
 [routes/scan.js] → controller.getScanResults()
-      ↓
+       ↓
 [scanController.js] → scanRunner.run(url)
-      ↓
+       ↓
 [scanRunner.run(url)]
-      │  ├─ ssrfGuard.validate(url) → guard against SSRF
-      │  ├─ browserPool.getBrowser() → singleton Chromium
-      │  ├─ page.goto(url) → networkidle2
-      │  ├─ page.addScriptTag(axe-core) → inject
-      │  ├─ page.evaluate(axe.run) → violations + passes
-      │  └─ axeTransformer.transform(results) → ScanResult
-      ↓
+       │  ├─ ssrfGuard.validate(url) → guard against SSRF
+       │  ├─ launchBrowser() → new Chromium instance
+       │  ├─ page.goto(url) → networkidle2
+       │  ├─ page.addScriptTag(axe-core) → inject
+       │  ├─ page.evaluate(axe.run) → violations + passes
+       │  └─ axeTransformer.transform(results) → ScanResult
+       ↓
 [scanController.js] → res.json(ScanResult)
-      ↓
+       ↓
 [apiClient] ← ScanResult
-      ↓
+       ↓
 [ScanResultsPage.jsx] → renders ProblemCategoryBox ×3 + WhatsGood
 ```
 
@@ -209,8 +219,9 @@ User clicks "Scan"
 
 | File | Layer | Purpose |
 |------|-------|---------|
-| `backend/services/scanRunner.js` | Service | Orchestrate Puppeteer + axe-core |
-| `backend/services/browserPool.js` | Service | Manage browser instance lifecycle |
+| `backend/services/scanRunner.js` | Service | Orchestrate Puppeteer + axe-core (direct browser launch) |
+
+> Note: `browserPool.js` is deferred to Phase 4.
 
 ### Files Unchanged
 
@@ -232,9 +243,6 @@ scanRunner.js
     ├─ ssrfGuard.js
     └─ axeTransformer.js
 
-browserPool.js
-    └─ puppeteer (external)
-
 scanController.js
     ├─ scanRunner.js (new)
     ├─ ssrfGuard.js (existing)
@@ -242,7 +250,6 @@ scanController.js
 
 app.js
     ├─ scanController.js
-    ├─ browserPool.js (new)
     └─ scanRunner.js (new)
 ```
 
@@ -254,8 +261,9 @@ app.js
 |-----------|-------|
 | `backend/tests/axeTransformer.test.js` | Transform violations to problems |
 | `backend/tests/ssrfGuard.test.js` | Block private IPs, allow public |
-| `backend/tests/browserPool.test.js` | Singleton behavior, cleanup |
 | `backend/tests/scanRunner.test.js` | Mock puppeteer, verify flow |
+
+> Note: `browserPool.test.js` is deferred to Phase 4.
 
 ### Integration Tests
 
@@ -288,11 +296,11 @@ app.js
 ## Rollout Sequence
 
 1. Add `puppeteer` and `axe-core` to `backend/package.json`
-2. Implement `browserPool.js` (singleton browser)
-3. Implement `scanRunner.js` (orchestration logic)
-4. Wire runner in `app.js` composition root
-5. Update `scanController.js` to use runner
-6. Remove mock data from production path (keep for tests)
-7. Add queue system for concurrent scan handling
+2. Implement `scanRunner.js` (orchestration logic)
+3. Wire runner in `app.js` composition root
+4. Update `scanController.js` to use runner
+5. Remove mock data from production path (keep for tests)
+6. Add queue system for concurrent scan handling
+7. Implement `browserPool.js` (singleton browser)   [Phase 4]
 
 This architecture ensures the axe-core integration slots cleanly into equalView's existing layers without disrupting the frontend's data contract or the shared type definitions.
