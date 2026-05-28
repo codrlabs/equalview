@@ -14,10 +14,12 @@ class ScanController {
    * @param {object} deps
    * @param {object} deps.mockScanResults  Phase-1 fixture; replaced in Phase 2
    * @param {{ validate: (s: string) => { ok: boolean, reason?: string } }} [deps.ssrfGuard]
+   * @param {object} deps.scanRunner  Phase-2 implementation; replaced the mock in Phase 1
    */
-  constructor({ mockScanResults, ssrfGuard }) {
+  constructor({ mockScanResults, ssrfGuard, scanRunner }) {
     this.mockScanResults = mockScanResults;
     this.ssrfGuard = ssrfGuard;
+    this.scanRunner = scanRunner;
 
     // Bind handlers once so router wiring stays clean.
     this.postScan = this.postScan.bind(this);
@@ -39,7 +41,7 @@ class ScanController {
     }
     console.log(`Received scan request for URL: ${url}`);
     // TODO(Phase 2): call this.runner.run(url) and return the result.
-    return res.json(this.mockScanResults);
+    return res.json(this.scanRunner.run(url));
   }
 
   /**
@@ -57,7 +59,7 @@ class ScanController {
       }
     }
     console.log(`Received request for scan results of URL: ${url}`);
-    return res.json(this.mockScanResults);
+    return res.json(this.scanRunner.getResults(url));
   }
 
   /**
