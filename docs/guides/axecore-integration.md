@@ -114,25 +114,6 @@ constructor({ mockScanResults, ssrfGuard, scanRunner })
   | Composition | Instantiate `ScanRunner` | Wire the new orchestration service |
   | Injection | Pass `scanRunner` to `ScanController` | Enable live scanning in controller |
 
-### New File: Scan Runner Service (`backend/services/scanRunner.js`)
-
-  **Purpose:** Orchestrate the Puppeteer + axe-core scanning lifecycle.
-
-  **Responsibilities:**
-  1. Validate URL via SSRF guard
-  2. Launch headless Chromium via Puppeteer
-  3. Navigate to the target URL
-  4. Inject axe-core library
-  5. Execute `axe.run()` with WCAG 2.1 AA tags
-  6. Transform raw results via `axeTransformer.transform()`
-  7. Return the equalView-compatible `ScanResult`
-
-  **Dependencies:**
-  - `puppeteer` (new browser instance per scan in Phase 2; pool recommended for production in Phase 4)
-  - `axe-core` (injected at runtime, not imported)
-  - `ssrfGuard` service for URL validation
-  - `axeTransformer` service for result shaping
-
 ### Backend: Data Layer (`backend/data/mockScanResults.js`)
 
   **Status:** No changes required
