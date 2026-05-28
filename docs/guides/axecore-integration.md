@@ -31,6 +31,11 @@ equalView follows a clean, layered architecture where dependencies flow inward:
 - `axeTransformer` transforms real axe results into equalView's `ScanResult` type
 - SSRF guard validates URLs before browser launch
 
+> Notes:
+>
+> - `ScanRunner` owns the `#browser` field
+> - No frontend changes required
+
 ## Layer-by-Layer Impact Analysis
 
 ### Backend: Route Layer (`backend/routes/scan.js`)
@@ -257,6 +262,10 @@ app.js
 | Test File | Scenario |
 |-----------|----------|
 | `backend/tests/scan.test.js` | POST `/api/scan` returns real results |
+
+### Notes
+
+- Use `overrides` pattern to stub runner in tests"
 
 ## Production Considerations
 
