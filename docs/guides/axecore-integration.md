@@ -77,7 +77,7 @@ constructor({ mockScanResults, ssrfGuard, scanRunner })
 7. Return the equalView-compatible `ScanResult`
 
 **Dependencies:**
-- `puppeteer` (singleton browser pool recommended for production)
+- `puppeteer` (direct launch in Phase 2; pool upgrade in Phase 4)
 - `axe-core` (injected at runtime, not imported)
 - `ssrfGuard` service for URL validation
 - `axeTransformer` service for result shaping
@@ -113,8 +113,6 @@ constructor({ mockScanResults, ssrfGuard, scanRunner })
   | Dependencies | Add `puppeteer` import | Required for browser automation |
   | Composition | Instantiate `ScanRunner` | Wire the new orchestration service |
   | Injection | Pass `scanRunner` to `ScanController` | Enable live scanning in controller |
-
-### Backend: Data Layer (`backend/data/mockScanResults.js`)
 
   **Status:** No changes required
 
