@@ -17,45 +17,52 @@ const { transform } = require('./axeTransformer');
 const axe = require('axe-core');
 
 
-async function runner(url) {
+class ScanRunner {
+  async run(url) {
     // Validate the URL against SSRF policy before proceeding.
     const guard = validate(url);
 
     if (!guard.ok) {
-        throw new Error(`SSRF validation failed: ${guard.reason}`);
+      throw new Error(`SSRF validation failed: ${guard.reason}`);
     }
 
     // Launch headless Chromium via Puppeteer
     let browser;
 
     browser = await puppeteer.launch({ headless: true });
-      const page = await browser.newPage();
-      await page.goto(url, { waitUntil: 'networkidle0' });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle0' });
 
-      // Inject axe-core library into the page context and execute axe.run()
-      try {
-        await page.addScriptTag({ content: axe.source });
-        const axeResults = await page.evaluate(() => {
-            return new Promise((resolve) => {
-            axe.run((err, results) => {
-                if (err) throw err;
-                resolve(results);
-                });
+    // Inject axe-core library into the page context and execute axe.run()
+    try {
+      await page.addScriptTag({ content: axe.source });
+      const axeResults = await page.evaluate(() => {
+        return new Promise((resolve) => {
+          axe.run((err, results) => {
+            if (err) throw err;
+            resolve(results);
             });
-
-        // Transform raw results via axeTransformer.transform() and return the ScanResult
-        const scanResult = transform(axeResults);
-        return scanResult;
         });
-      }catch (err) {
-        console.error(err);
-        return null;
-      }
+      });
 
-    // Ensure the browser is closed even if an error occurs.
-    finally {
+      // Transform raw results via axeTransformer.transform() and return the ScanResult
+      const scanResult = transform(axeResults);
+      return scanResult;
+    } catch (err) {
+      console.error(err);
+      return null;
+    } finally {
+      // Ensure the browser is closed even if an error occurs.
       if (browser) {
         await browser.close();
       }
     }
+  }
+
+  async getResults(url) {
+    // TODO: implement getResults
+    return null;
+  }
 }
+
+module.exports = ScanRunner;
