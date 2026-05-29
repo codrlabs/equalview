@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "EqualView API — Express backend that will host the axe-core scanner.",
   "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "node --test tests/"
-  },
+   "scripts": {
+     "start": "node index.js",
+     "dev": "nodemon index.js",
+     "test": "node --test"
+   },
   "author": "Codr Labs",
   "license": "MPL-2.0",
   "type": "commonjs",

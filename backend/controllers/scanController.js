@@ -31,36 +31,50 @@ class ScanController {
    * POST /api/scan
    * Body: { url: string }
    */
-  postScan(req, res) {
-    const { url } = req.body || {};
-    if (this.ssrfGuard) {
-      const guard = this.ssrfGuard.validate(url);
-      if (!guard.ok) {
-        return res.status(400).json({ error: guard.reason });
-      }
-    }
-    console.log(`Received scan request for URL: ${url}`);
-    // TODO(Phase 2): call this.runner.run(url) and return the result.
-    return res.json(this.scanRunner.run(url));
-  }
+   async postScan(req, res) {
+     const { url } = req.body || {};
+     if (this.ssrfGuard) {
+       const guard = this.ssrfGuard.validate(url);
+       if (!guard.ok) {
+         return res.status(400).json({ error: guard.reason });
+       }
+     }
+     console.log(`Received scan request for URL: ${url}`);
+     try {
+       const result = await this.scanRunner.run(url);
+       return res.json(result);
+     } catch (err) {
+       console.error(err);
+       return res.status(500).json({ error: 'Internal server error' });
+     }
+   }
 
-  /**
-   * GET /api/scan-results?url=...
-   */
-  getScanResults(req, res) {
-    const { url } = req.query;
-    if (!url) {
-      return res.status(400).json({ error: 'Missing required ?url=' });
-    }
-    if (this.ssrfGuard) {
-      const guard = this.ssrfGuard.validate(url);
-      if (!guard.ok) {
-        return res.status(400).json({ error: guard.reason });
-      }
-    }
-    console.log(`Received request for scan results of URL: ${url}`);
-    return res.json(this.scanRunner.getResults(url));
-  }
+   /**
+    * GET /api/scan-results?url=...
+    */
+   async getScanResults(req, res) {
+     const { url } = req.query;
+     if (!url) {
+       return res.status(400).json({ error: 'Missing required ?url=' });
+     }
+     if (this.ssrfGuard) {
+       const guard = this.ssrfGuard.validate(url);
+       if (!guard.ok) {
+         return res.status(400).json({ error: guard.reason });
+       }
+     }
+     console.log(`Received request for scan results of URL: ${url}`);
+     try {
+       const result = await this.scanRunner.getResults(url);
+       if (result === null) {
+         return res.status(404).json({ error: 'No scan results found for URL' });
+       }
+       return res.json(result);
+     } catch (err) {
+       console.error(err);
+       return res.status(500).json({ error: 'Internal server error' });
+     }
+   }
 
   /**
    * GET /problems/:id

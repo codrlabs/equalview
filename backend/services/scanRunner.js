@@ -60,8 +60,7 @@ class ScanRunner {
   }
 
   async getResults(url) {
-    // TODO: implement getResults
-    return null;
+    return await this.run(url);
   }
 }
 
