@@ -12,9 +12,12 @@ export class ApiClient {
    * @param {string} [opts.baseUrl]
    * @param {typeof fetch} [opts.fetchImpl]
    */
-  constructor({ baseUrl = '', fetchImpl = globalThis.fetch } = {}) {
+  constructor({ baseUrl = '', fetchImpl } = {}) {
     this.baseUrl = baseUrl
-    this.fetchImpl = fetchImpl
+    // `window.fetch` must be invoked with `window` as its receiver, otherwise
+    // browsers throw "Illegal invocation". Binding here keeps callers free to
+    // do `this.fetchImpl(...)` without worrying about the receiver.
+    this.fetchImpl = fetchImpl ?? globalThis.fetch.bind(globalThis)
   }
 
   /**
