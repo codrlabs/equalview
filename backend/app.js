@@ -11,6 +11,9 @@ const ScanController = require('./controllers/scanController');
 const mountRoutes = require('./routes');
 const ssrfGuard = require('./services/ssrfGuard');
 const mockScanResults = require('./data/mockScanResults');
+const puppeteer = require('puppeteer');
+const ScanRunner = require('./services/scanRunner');
+const scanRunner = new ScanRunner();
 
 /**
  * Build a fully-wired Express app. Exported separately from `index.js`
@@ -35,10 +38,11 @@ function buildApp(overrides = {}) {
   // will be constructed with a real ScanRunner instead.
   const scanController =
     overrides.scanController ||
-    new ScanController({
-      mockScanResults: overrides.mockScanResults || mockScanResults,
-      ssrfGuard: overrides.ssrfGuard || ssrfGuard,
-    });
+     new ScanController({
+       mockScanResults: overrides.mockScanResults || mockScanResults,
+       ssrfGuard: overrides.ssrfGuard || ssrfGuard,
+       scanRunner: scanRunner,
+     });
 
   mountRoutes(app, { scanController });
 

@@ -12,9 +12,11 @@
   "license": "MPL-2.0",
   "type": "commonjs",
   "dependencies": {
+    "axe-core": "^4.10.2",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "puppeteer": "^24.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
