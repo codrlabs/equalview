@@ -26,11 +26,24 @@ class ScanRunner {
       throw new Error(`SSRF validation failed: ${guard.reason}`);
     }
 
-    // Launch headless Chromium via Puppeteer
+    // Launch headless Chromium via Puppeteer.
+    //
+    // In Docker we use the system Chromium installed via apk (see Dockerfile)
+    // because Puppeteer's bundled download doesn't run on Alpine/musl.
+    // `--no-sandbox` is required when the container runs as root.
     let browser;
 
-    browser = await puppeteer.launch({ headless: true });
+    browser = await puppeteer.launch({
+      headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
+    // Many sites (e.g. facebook.com) ship a strict Content-Security-Policy
+    // that blocks the inline <script> tag `addScriptTag({content})` injects,
+    // which would leave `axe` undefined in the page context. Bypassing CSP
+    // for this page lets us inject axe-core reliably.
+    await page.setBypassCSP(true);
     await page.goto(url, { waitUntil: 'networkidle0' });
 
     // Inject axe-core library into the page context and execute axe.run()
