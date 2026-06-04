@@ -190,8 +190,7 @@ See [`docs/README.md`](docs/README.md) for an index. Highlights:
 - [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md) — Sub-roadmap for replacing the mock scanner
 - [`docs/plans/codebase-reorganization.md`](docs/plans/codebase-reorganization.md) — Final repo layout after the Phase 1 / Phase 3 reorg
 - [`docs/obsidian/`](docs/obsidian/) — Obsidian vault (canvas + supporting notes)
-=======
->>>>>>> 8323fb7 (Update README and documentation structure; rename 'research' to 'obsidian' for clarity and consistency. Enhance content in the Obsidian vault README to reflect current project status and tech stack. Revise equalview.canvas for improved clarity on tech stack and product details.)
+- [https://deepwiki.com/codrlabs/equalview](https://deepwiki.com/codrlabs/equalview) — Interactive knowledge platform that helps navigate the codebase and makes it accessble for others to contribute.
 
 ## 🤝 Contributing
 
