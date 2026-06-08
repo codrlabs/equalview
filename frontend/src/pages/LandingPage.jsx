@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isValidUrl } from '../utils/urlValidator'
+import { normalizeUrl } from '../utils/urlValidator'
 import '../styles/LandingPage.css'
 
 /** Visual delay so users can see the "Scanning…" state on local dev. */
@@ -14,20 +15,17 @@ export default function LandingPage() {
 
   const handleScan = () => {
     if (!url.trim()) return
-
-    if (!isValidUrl(url)) {
-      setValidationError(
-        'That doesn’t look like a URL — try https://example.com'
-      )
+  
+    const normalized = normalizeUrl(url)
+    if (!isValidUrl(normalized)) {
+      setValidationError('Please enter a valid website address')
       return
     }
     setValidationError('')
-
+  
     setScanStatus('scanning')
-    // TODO(Phase 3): drive navigation off the real submit promise
-    // instead of a hard-coded delay.
     setTimeout(() => {
-      navigate(`/scan-results?url=${encodeURIComponent(url)}`)
+      navigate(`/scan-results?url=${encodeURIComponent(normalized)}`)
     }, SCAN_REDIRECT_DELAY_MS)
   }
 
