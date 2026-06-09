@@ -18,7 +18,7 @@ export default function LandingPage() {
   
     const normalized = normalizeUrl(url)
     if (!isValidUrl(normalized)) {
-      setValidationError('Please enter a valid website address')
+      setValidationError('Please enter a valid website address (e.g. https://example.com)')
       return
     }
     setValidationError('')
