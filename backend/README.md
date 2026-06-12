@@ -1,9 +1,11 @@
 # EqualView — Backend
 
-Express API that today serves the mock fixture from
-`backend/data/mockScanResults.js`. Phase 2 of the
-[project roadmap](../docs/plans/project-roadmap.md) replaces it with a
-real Puppeteer + axe-core scanner without changing the HTTP shape.
+Express API that runs real accessibility scans: `services/scanRunner.js`
+drives a headless Chromium via Puppeteer, injects axe-core into the
+target page, and returns results transformed into the shared
+`ScanResult` shape. The mock fixture in `backend/data/mockScanResults.js`
+remains only as the data source for the legacy `/problems/:id` lookup
+and for tests.
 
 ## Layout
 
@@ -18,10 +20,11 @@ backend/
 ├── controllers/
 │   └── scanController.js       # Request/response only — class with bound methods
 ├── services/
+│   ├── scanRunner.js           # Puppeteer + axe-core scan lifecycle
 │   ├── axeTransformer.js       # Pure: axe results → API ScanResult shape
 │   └── ssrfGuard.js            # Pure: URL allow/deny rules
 ├── data/
-│   └── mockScanResults.js      # Phase-1 fixture
+│   └── mockScanResults.js      # Legacy fixture (problems route + tests)
 ├── tests/                      # node:test + supertest
 │   ├── health.test.js
 │   ├── scan.test.js
@@ -56,12 +59,12 @@ See [`.env.example`](.env.example) for the full list (Phase 5 adds
 
 ## Endpoints
 
-| Method | Path                      | Notes                                      |
-| ------ | ------------------------- | ------------------------------------------ |
-| GET    | `/health`                 | liveness probe                             |
-| POST   | `/api/scan`               | run a scan (mock today; axe in Phase 2)    |
-| GET    | `/api/scan-results?url=`  | fetch scan results for a URL               |
-| GET    | `/problems/:id`           | look up a single problem                   |
+| Method | Path                      | Notes                                          |
+| ------ | ------------------------- | ---------------------------------------------- |
+| GET    | `/health`                 | liveness probe                                 |
+| POST   | `/api/scan`               | run a live Puppeteer + axe-core scan           |
+| GET    | `/api/scan-results?url=`  | re-run a scan for a URL (used by deep links)   |
+| GET    | `/problems/:id`           | look up a single problem (legacy mock lookup)  |
 
 ## See also
 

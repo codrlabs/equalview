@@ -22,9 +22,10 @@ You also need:
 - A modern browser (Chrome, Firefox, or Edge — the dev tools matter
   more than the brand).
 
-You do **not** need: Postgres, Puppeteer, axe-core, a `.env` file, or
-any cloud account. Phase 5 will add Postgres; nothing else is on the
-horizon.
+You do **not** need: Postgres, a `.env` file, or any cloud account.
+Puppeteer and axe-core install with `npm install` in `backend/`
+(Puppeteer downloads its own Chromium; in Docker the image installs
+Alpine Chromium instead).
 
 ---
 
@@ -96,17 +97,22 @@ Vite hot-reloads the frontend the same way. Open <http://localhost:5173>.
 
 ## 4. Smoke-test it end-to-end
 
-You should see this much working today, with **mock data** behind
-every scan (the real scanner is Phase 2):
+You should see this much working today, with a **real Puppeteer +
+axe-core scan** behind every submission:
 
-1. Open <http://localhost:5173>. The landing page loads.
-2. Paste any valid URL (e.g. `https://example.com`) and submit.
-3. You land on `/scan-results?url=https://example.com`.
-4. The page shows three buckets — Visual Accessibility, Structure &
-   Semantics, Multi-media — populated from the mock fixture in
-   [`backend/data/mockScanResults.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/data/mockScanResults.js).
-5. Click any problem card. You navigate to `/problems/:id` and see
-   the detail view.
+1. Open <http://localhost:5173>. The landing page loads
+   ("Accessibility, made visible.").
+2. Type a URL — bare domains work too (e.g. `example.com`) — and hit
+   Scan. The spinner runs while the backend scans the live page
+   (typically 5–20 s depending on the site).
+3. You land on `/results?url=https://example.com`: a score dial,
+   severity badges, and findings grouped into Visual Accessibility,
+   Structure & Semantics, and Multi-media (empty categories are
+   hidden), plus a "What's good" list of passing checks.
+4. Click any finding. You navigate to `/problem/:id` with the root
+   cause, the offending code, fix steps, and a WCAG reference link.
+5. Try the theme toggle (sun/moon in the header) — light/dark
+   persists across reloads.
 
 If any of those steps doesn't work, jump to **§7 Troubleshooting**.
 
@@ -118,6 +124,7 @@ curl http://localhost:3000/health
 
 curl "http://localhost:3000/api/scan-results?url=https://example.com"
 # → JSON with { problems: { ... }, whatsGood: [...] }
+#   (this runs a real scan — expect it to take several seconds)
 
 curl "http://localhost:3000/api/scan-results?url=http://127.0.0.1"
 # → 400 {"error":"Private/loopback hosts are not allowed"}

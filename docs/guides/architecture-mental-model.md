@@ -1,5 +1,14 @@
 # Architecture Mental Model — No Analogies
 
+> **Note (2026-06):** parts of this guide describe the frontend as it
+> was before the design-system UI landed (`pages/` + `components/`,
+> `/scan-results`, `/problems/:id`, mock scan data). The concepts and
+> the backend walkthroughs still hold; for the current frontend layout
+> (`design-system/` + `views/`, `/results`, `/problem/:id`, live
+> Puppeteer + axe-core scans) see the top-level [README](../../README.md)
+> and [architecture-map.md §4.1](../plans/architecture-map.md).
+
+
 > How to think through frontend and backend as connected systems. No metaphors — just what each folder does, when you use it, and how it connects to the rest.
 
 ---

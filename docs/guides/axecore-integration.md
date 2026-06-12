@@ -1,5 +1,14 @@
 # Axe Core Integration Architecture
 
+> **Note (2026-06):** parts of this guide describe the frontend as it
+> was before the design-system UI landed (`pages/` + `components/`,
+> `/scan-results`, `/problems/:id`, mock scan data). The concepts and
+> the backend walkthroughs still hold; for the current frontend layout
+> (`design-system/` + `views/`, `/results`, `/problem/:id`, live
+> Puppeteer + axe-core scans) see the top-level [README](../../README.md)
+> and [architecture-map.md §4.1](../plans/architecture-map.md).
+
+
 This document describes how axe-core integrates into equalView's layered architecture. The integration transforms equalView from a mock demonstration into a real accessibility scanning engine by injecting axe-core into the backend's scanning pipeline.
 
 ## Architecture Overview
