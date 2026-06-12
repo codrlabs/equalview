@@ -50,10 +50,11 @@ equalview/
 │   ├── controllers/
 │   │   └── scanController.js         # Class with bound handlers
 │   ├── services/
+│   │   ├── scanRunner.js             # Puppeteer + axe-core scan lifecycle
 │   │   ├── axeTransformer.js         # Pure: axe → ScanResult shape
 │   │   └── ssrfGuard.js              # Pure: URL allow/deny rules
 │   ├── data/
-│   │   └── mockScanResults.js        # Phase-1 fixture
+│   │   └── mockScanResults.js        # Legacy fixture (problem lookup route)
 │   ├── tests/                        # node:test + supertest
 │   ├── .env.example
 │   ├── Dockerfile
@@ -61,26 +62,32 @@ equalview/
 │   └── package.json
 ├── frontend/                         # React + Vite app
 │   ├── src/
-│   │   ├── main.jsx                  # React bootstrap
-│   │   ├── App.jsx                   # BrowserRouter + Routes
-│   │   ├── pages/
-│   │   │   ├── LandingPage.jsx
-│   │   │   ├── ScanResultsPage.jsx
-│   │   │   └── ProblemPage.jsx
-│   │   ├── components/
-│   │   │   ├── ProblemSolutionPage.jsx
-│   │   │   ├── ProblemCategoryBox.jsx
-│   │   │   └── WhatsGood.jsx
+│   │   ├── main.jsx                  # React bootstrap (loads fonts + theme)
+│   │   ├── App.jsx                   # BrowserRouter, routes, theme + auth state
+│   │   ├── design-system/            # Reusable UI kit components
+│   │   │   ├── Logo / Badge / Button / Card / Input
+│   │   │   └── CodeBlock / ProblemRow / ScoreDial / SeverityBadge
+│   │   ├── views/                    # One component per screen
+│   │   │   ├── AppShell.jsx          # Header + footer chrome
+│   │   │   ├── LandingView.jsx       # URL entry, runs the scan
+│   │   │   ├── ResultsView.jsx       # Score dial + categorised findings
+│   │   │   ├── ProblemView.jsx       # Root cause + how-to-fix detail
+│   │   │   ├── StoryView / DonateView / LegalView / NotFoundView
+│   │   │   └── SignInView / ConnectView / DashboardView / AccountView
 │   │   ├── hooks/
-│   │   │   ├── useScan.js
-│   │   │   └── useProblem.js
+│   │   │   └── useScan.js            # Loading / error / data state machine
 │   │   ├── lib/
-│   │   │   └── apiClient.js          # The only file that imports `fetch`
+│   │   │   ├── apiClient.js          # The only file that imports `fetch`
+│   │   │   ├── scanAdapter.js        # Backend ScanResult → report view model
+│   │   │   └── icons.jsx             # lucide wrapper + GitHub / Google marks
 │   │   ├── utils/
-│   │   │   └── urlValidator.js
+│   │   │   └── urlValidator.js       # isValidUrl + normalizeUrl
 │   │   ├── data/
-│   │   │   └── mockScanResults.js    # Test-only fixture
+│   │   │   └── placeholders.js       # Auth/storage placeholder data
 │   │   ├── styles/
+│   │   │   ├── theme.css             # Design tokens, light/dark, base layer
+│   │   │   └── fonts.css             # Self-hosted Public Sans + JetBrains Mono
+│   │   ├── assets/fonts/             # woff2 files
 │   │   ├── __tests__/                # Vitest + React Testing Library
 │   │   └── setupTests.js
 │   ├── vite.config.js
@@ -96,7 +103,6 @@ equalview/
 │   │   ├── axecore-integration-roadmap.md
 │   │   └── codebase-reorganization.md
 │   └── obsidian/                     # Obsidian vault (canvas + scratch notes)
-<<<<<<< HEAD
 └── docker-compose.yml                # Frontend + backend
 ```
 
@@ -113,41 +119,50 @@ are often expensive or limited.
 - Provide actionable insights and fix suggestions
 
 ### Current Status
-- **Frontend**: React + Vite app with landing page, scan results view,
-  and problem detail route. Routing is `react-router-dom` v7
-  (`BrowserRouter` + `Routes` in `src/App.jsx`); pages live in
-  `src/pages/`, the scan state machine lives in
-  `src/hooks/useScan.js`, and `src/lib/apiClient.js` is the only file
-  that calls `fetch`.
+- **Frontend**: full design-system UI (ported from the design kit in
+  `EqualView_App.html`). Routes mirror the product flow — `/` (scan
+  entry), `/results`, `/problem/:id`, `/story`, `/donate`, `/signin`,
+  `/connect`, `/dashboard`, `/account`, `/privacy`, `/terms`, and a
+  404 fallback — with light/dark theming persisted in `localStorage`.
+  `src/lib/scanAdapter.js` maps the backend `ScanResult` into the
+  report view model (severity counts, weighted 0–100 score, WCAG
+  criteria derived from axe tags); `src/lib/apiClient.js` remains the
+  only file that calls `fetch`.
 - **Backend**: Express API exposing `/health`, `POST /api/scan`,
   `GET /api/scan-results`, and `GET /problems/:id`. Layered into
   `routes/` → `controllers/` → `services/` with a composition root in
-  `backend/app.js`. SSRF guard rejects non-http URLs and private hosts
-  today; controller still serves the mock fixture from
-  `backend/data/mockScanResults.js` until Phase 2 adds the real
-  scanner.
-- **Real scanning**: Not yet implemented. See
-  [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md).
+  `backend/app.js`. `services/scanRunner.js` drives a headless
+  Chromium via Puppeteer, injects axe-core, and returns transformed
+  results; the SSRF guard rejects non-http URLs and private hosts.
+- **Real scanning**: Implemented — `POST /api/scan` runs a live
+  Puppeteer + axe-core scan of the submitted URL.
+- **Auth & saved scans**: UI flow ships as a placeholder
+  (SignIn → Connect storage → Dashboard, data in
+  `src/data/placeholders.js`); the real OAuth + user-owned storage
+  backend is Phase 5 of the roadmap.
 
 ### Planned Features
-- Real website analysis using Puppeteer + axe-core
-- PDF report generation
-- Authentication and rate limiting
-- Caching and queueing for scans
+- OAuth sign-in (GitHub / Google) with scans saved to user-owned
+  storage (private repo / Drive)
+- PDF report generation (browser print works today via "Download PDF")
+- Rate limiting, caching and queueing for scans
 
 ## 🛠️ Tech Stack
 
 ### Current Stack
-- **Frontend**: React 19 + Vite 7
+- **Frontend**: React 19 + Vite 7 + react-router 7
+- **Scanner**: Puppeteer + axe-core (headless Chromium)
 - **Backend**: Node 22 + Express 5
-- **Styling**: Plain CSS
-- **Testing**: Vitest + React Testing Library (frontend)
+- **Styling**: design-token CSS (`styles/theme.css`, light/dark) with
+  component-level inline styles; self-hosted Public Sans + JetBrains
+  Mono; lucide-react icons
+- **Testing**: Vitest + React Testing Library (frontend),
+  node:test + supertest (backend)
 - **Container**: Docker (Node 22-alpine) + Docker Compose
 
 ### Future Stack
-- **Scanner**: Puppeteer + axe-core
-- **Database**: PostgreSQL (planned)
-- **Auth**: JWT (planned)
+- **Auth**: OAuth (GitHub / Google) — scans stored in user-owned
+  storage rather than a project database
 
 ## 📋 Development Workflow
 

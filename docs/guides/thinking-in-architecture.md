@@ -1,5 +1,14 @@
 # Thinking in Architecture (intern primer)
 
+> **Note (2026-06):** parts of this guide describe the frontend as it
+> was before the design-system UI landed (`pages/` + `components/`,
+> `/scan-results`, `/problems/:id`, mock scan data). The concepts and
+> the backend walkthroughs still hold; for the current frontend layout
+> (`design-system/` + `views/`, `/results`, `/problem/:id`, live
+> Puppeteer + axe-core scans) see the top-level [README](../../README.md)
+> and [architecture-map.md §4.1](../plans/architecture-map.md).
+
+
 > Hacking your way through "until it works" is a great instinct. This
 > doc adds the second instinct on top: **before you touch a file, ask
 > which layer it belongs to**. If you can name the layer, you'll know

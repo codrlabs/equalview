@@ -1,0 +1,129 @@
+import { useState } from 'react'
+import { Button, Card, Input } from '../design-system'
+import { Ico, GoogleMark } from '../lib/icons'
+import { PROVIDERS, PLACEHOLDER_SAVED_SCANS } from '../data/placeholders'
+
+/**
+ * Account settings — profile + data/storage controls + delete account.
+ * Deliberately framed around using LESS storage, not more.
+ *
+ * NOTE: placeholder — actions mutate local state only until the
+ * storage/auth backend exists.
+ */
+export default function AccountView({ onSignOut, user, provider }) {
+  const pv = PROVIDERS[provider] || PROVIDERS.github
+  const [autoDelete, setAutoDelete] = useState(true)
+  const [scansCleared, setScansCleared] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const savedCount = scansCleared ? 0 : PLACEHOLDER_SAVED_SCANS.length
+
+  const Section = ({ title, desc, children }) => (
+    <section style={{ marginBottom: 22 }}>
+      <h2 style={{ fontSize: 'var(--text-lg)', margin: '0 0 2px' }}>{title}</h2>
+      {desc && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: '0 0 12px' }}>{desc}</p>}
+      {children}
+    </section>
+  )
+
+  const RowItem = ({ icon, title, sub, children }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 0' }}>
+      <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--bg-inset)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{Ico(icon, 17)}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ font: 'var(--font-body)', fontWeight: 'var(--weight-semibold)', color: 'var(--text-strong)' }}>{title}</div>
+        {sub && <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.45 }}>{sub}</div>}
+      </div>
+      {children}
+    </div>
+  )
+
+  const Switch = ({ on, onToggle }) => (
+    <button role="switch" aria-checked={on} onClick={onToggle} style={{
+      width: 44, height: 26, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
+      background: on ? 'var(--accent)' : 'var(--ink-300)', position: 'relative', flexShrink: 0,
+      transition: 'background var(--duration-fast) var(--ease-standard)',
+    }}>
+      <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', boxShadow: 'var(--shadow-sm)', transition: 'left var(--duration-fast) var(--ease-standard)' }} />
+    </button>
+  )
+
+  return (
+    <div style={{ width: '100%', maxWidth: 680, margin: '0 auto', padding: '36px 24px 64px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 28 }}>
+        <div>
+          <div style={{ font: 'var(--font-label)', color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: 'var(--text-xs)', marginBottom: 6 }}>Account</div>
+          <h1 style={{ fontSize: 'var(--text-xl)', margin: 0 }}>Settings</h1>
+        </div>
+        <Button variant="ghost" onClick={onSignOut} iconLeft={Ico('LogOut', 16)}>Sign out</Button>
+      </div>
+
+      {/* Profile */}
+      <Card style={{ marginBottom: 22 }}>
+        <Section title="Profile" desc={`Pulled from your ${pv.name} account.`}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', marginBottom: 16, background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
+            <span style={{ flexShrink: 0, display: 'inline-flex' }}>{provider === 'google' ? GoogleMark(20) : Ico('Github', 20)}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ font: 'var(--font-label)', color: 'var(--text-strong)' }}>Connected with {pv.name}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{user ? user.email : ''}</div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onSignOut}>Disconnect</Button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Input label="Name" defaultValue={user ? user.name : ''} iconLeft={Ico('User', 17)} />
+            <Input label="Email" type="email" defaultValue={user ? user.email : ''} iconLeft={Ico('Mail', 17)} />
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <Button variant="secondary">Save changes</Button>
+          </div>
+        </Section>
+      </Card>
+
+      {/* Data & storage */}
+      <Card style={{ marginBottom: 22 }}>
+        <Section title="Data & storage" desc={`Your scans are saved in ${pv.store} — your space, not ours. Manage what’s kept here.`}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <RowItem icon={pv.destIcon} title={`Saved scans · ${savedCount}`} sub={savedCount ? `Stored in ${pv.storeShort} (${pv.dest}).` : 'No saved scans — nothing is taking up space.'}>
+              <Button variant="secondary" size="sm" disabled={!savedCount} onClick={() => setScansCleared(true)}>
+                {savedCount ? 'Delete all' : 'Cleared'}
+              </Button>
+            </RowItem>
+            <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
+            <RowItem icon="Timer" title="Auto-delete old scans" sub={`Automatically remove scans older than 90 days from ${pv.storeShort}.`}>
+              <Switch on={autoDelete} onToggle={() => setAutoDelete(!autoDelete)} />
+            </RowItem>
+            <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
+            <RowItem icon="Download" title="Download my data" sub="Export your account and saved reports as JSON.">
+              <Button variant="secondary" size="sm">Export</Button>
+            </RowItem>
+          </div>
+        </Section>
+      </Card>
+
+      {/* Danger zone */}
+      <Card style={{ borderColor: 'var(--sev-critical-bg)' }}>
+        <h2 style={{ fontSize: 'var(--text-lg)', margin: '0 0 2px', color: 'var(--sev-critical-fg)' }}>Delete account</h2>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
+          Disconnect EqualView and delete the scans it saved in {pv.storeShort}. Your {pv.name} account itself stays untouched. This can’t be undone.
+        </p>
+        {!confirmDelete ? (
+          <Button variant="danger" onClick={() => setConfirmDelete(true)} iconLeft={Ico('Trash2', 16, '#fff')}>Delete my account</Button>
+        ) : (
+          <div style={{ background: 'var(--sev-critical-bg)', border: '1px solid var(--sev-critical)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)' }}>
+            <p style={{ font: 'var(--font-label)', fontWeight: 'var(--weight-semibold)', color: 'var(--sev-critical-fg)', margin: '0 0 12px' }}>
+              Are you sure? This deletes everything, permanently.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Button variant="danger" onClick={onSignOut} iconLeft={Ico('Trash2', 16, '#fff')}>Yes, delete everything</Button>
+              <Button variant="secondary" onClick={() => setConfirmDelete(false)}>Keep my account</Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <p style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 20, lineHeight: 1.5 }}>
+        <span style={{ color: 'var(--green-600)', marginTop: 1 }}>{Ico('Leaf', 15, 'currentColor')}</span>
+        Because your scans live in {pv.store}, EqualView keeps no database of its own — your data stays yours, and there’s no server cost to pass on.
+      </p>
+    </div>
+  )
+}

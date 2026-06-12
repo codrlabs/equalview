@@ -1,5 +1,14 @@
 # Core Problem: Why Architecture Matters
 
+> **Note (2026-06):** parts of this guide describe the frontend as it
+> was before the design-system UI landed (`pages/` + `components/`,
+> `/scan-results`, `/problems/:id`, mock scan data). The concepts and
+> the backend walkthroughs still hold; for the current frontend layout
+> (`design-system/` + `views/`, `/results`, `/problem/:id`, live
+> Puppeteer + axe-core scans) see the top-level [README](../../README.md)
+> and [architecture-map.md §4.1](../plans/architecture-map.md).
+
+
 When you write code without structure, everything touches everything. Want to change how URLs are validated? You find that logic scattered across 10 files. Want to test just the URL validation? You can't — it's tangled with fetch calls and UI rendering.
 
 **Architecture is boundaries.** Each folder has one job, and it does not peek into other folders.

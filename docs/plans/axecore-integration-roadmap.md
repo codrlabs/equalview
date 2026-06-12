@@ -1,7 +1,9 @@
 # Axe-Core Integration Roadmap
 
-**Status:** Phase 1 scaffolding shipped (PR #38). Phase 2 (real
-Puppeteer + axe wiring) not started.
+**Status:** Phase 1 complete — the real Puppeteer + axe-core scanner
+shipped in PR #50 (`services/scanRunner.js`, transformer implemented,
+Alpine Chromium in the Dockerfile). Phase 2 (reliability) is next; the
+Phase 3 UX items landed with the design-system frontend.
 **Owner:** Eli Iguer
 **Reference guide:** [`../guides/axecore-integration.md`](../guides/axecore-integration.md)
 
@@ -70,15 +72,15 @@ Scaffolding shipped in PR #38. The remaining unchecked items are the
 ones that actually swap the mock for real scans (Phase 2 in the parent
 project-roadmap):
 
-- [ ] Add `puppeteer` and `axe-core` to `backend/package.json`; pin
-      versions.
+- [x] Add `puppeteer` and `axe-core` to `backend/package.json`; pin
+      versions. (PR #50.)
 - [x] Create `backend/controllers/scanController.js` with URL validation
       and an SSRF guard (reject non-http(s), private IPs, localhost).
       (URL validation lives in `services/ssrfGuard.js` and is wired
       into the controller; PR #38.)
-- [ ] Create `backend/services/axeTransformer.js`; cover the mapping in
-      `backend/tests/`. (Stub + contract + unit-test scaffold shipped;
-      body still to write.)
+- [x] Create `backend/services/axeTransformer.js`; cover the mapping in
+      `backend/tests/`. (Implemented in PR #50; emits per-violation
+      `count` for the report UI.)
 - [x] Extract routes into `backend/routes/scan.js`; mount from
       `index.js`. (Done via `routes/index.js` + `app.js` composition
       root; PR #38.)
@@ -110,12 +112,14 @@ tests.
 
 ### Phase 3 — UX upgrades
 
-- [ ] Decide router question above; if yes, migrate `App.jsx`
-- [ ] Loading + progress UI on the scan page (replace the 1.2 s
-      `setTimeout` in the landing page)
+- [x] Decide router question above; if yes, migrate `App.jsx`
+      (react-router v7; design-system frontend.)
+- [x] Loading + progress UI on the scan page — the landing spinner
+      now runs for the real `POST /api/scan` duration.
 - [ ] Surface axe-core `incomplete` results as a "needs manual review"
       bucket
-- [ ] Link each problem to its `helpUrl`
+- [x] Link each problem to its `helpUrl` ("WCAG reference" button in
+      `views/ProblemView.jsx`.)
 
 ### Phase 4 — Productionization
 

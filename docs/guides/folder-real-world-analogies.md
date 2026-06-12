@@ -1,5 +1,14 @@
 # Folder Real-World Analogies & Origins
 
+> **Note (2026-06):** parts of this guide describe the frontend as it
+> was before the design-system UI landed (`pages/` + `components/`,
+> `/scan-results`, `/problems/:id`, mock scan data). The concepts and
+> the backend walkthroughs still hold; for the current frontend layout
+> (`design-system/` + `views/`, `/results`, `/problem/:id`, live
+> Puppeteer + axe-core scans) see the top-level [README](../../README.md)
+> and [architecture-map.md §4.1](../plans/architecture-map.md).
+
+
 > **Purpose:** For every folder in the EqualView codebase, understand: (1) what it does through a real-world analogy, (2) where this pattern came from historically, and (3) why teams structure code this way.
 
 ---

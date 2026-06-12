@@ -1,5 +1,14 @@
 # EqualView Architecture — Line-by-Line Reference
 
+> **Note (2026-06):** parts of this guide describe the frontend as it
+> was before the design-system UI landed (`pages/` + `components/`,
+> `/scan-results`, `/problems/:id`, mock scan data). The concepts and
+> the backend walkthroughs still hold; for the current frontend layout
+> (`design-system/` + `views/`, `/results`, `/problem/:id`, live
+> Puppeteer + axe-core scans) see the top-level [README](../../README.md)
+> and [architecture-map.md §4.1](../plans/architecture-map.md).
+
+
 **Purpose:** A readable reference explaining what every file does, what each layer is for, and why the architecture is structured this way. Use when onboarding, debugging, or planning changes.
 
 **Assumes:** You've seen the codebase but forget what a "controller" or "service" does and how data flows end-to-end.

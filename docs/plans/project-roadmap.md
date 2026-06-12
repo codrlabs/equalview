@@ -235,13 +235,14 @@ policy*. Implementation detail lives in
 [`axecore-integration-roadmap.md`](axecore-integration-roadmap.md);
 this phase is the high-level checkpoint.
 
-- [ ] Complete Phase 1 of `axecore-integration-roadmap.md`
-      (Puppeteer + axe wired in behind the existing API).
-- [ ] `services/axeTransformer.js` implements the chosen response
-      shape (Option A/B/C from the open decision). At minimum it must
-      preserve, per violation: `id`, `help`, `helpUrl`, `impact`,
-      `tags`, and `nodes[].{html, target, failureSummary}`. (Stub +
-      contract shipped in PR #38; body still to write.)
+- [x] Complete Phase 1 of `axecore-integration-roadmap.md`
+      (Puppeteer + axe wired in behind the existing API;
+      `services/scanRunner.js`, PR #50.)
+- [x] `services/axeTransformer.js` implements the response shape:
+      per violation it preserves `id`, `help` (as `name`), `helpUrl`,
+      `impact`, `tags`, the first node's `html` / `failureSummary`,
+      and a `count` of affected nodes. (Full `nodes[]` retention is
+      still open if per-element detail is needed later.)
 - [x] SSRF guard implemented and tested.
       (`backend/services/ssrfGuard.js`, wired into both
       `POST /api/scan` and `GET /api/scan-results`; PR #38.)
@@ -250,9 +251,12 @@ this phase is the high-level checkpoint.
 - [ ] `mockScanResults.js` is only imported by tests, not by the
       running server.
 
-**Done when:** the frontend, unchanged, displays real axe findings —
-each with a title, severity, "learn more" link to `helpUrl`, and the
-offending element(s) — for a real URL submitted from the landing page.
+**Done when:** the frontend displays real axe findings — each with a
+title, severity, "learn more" link to `helpUrl`, and the offending
+element(s) — for a real URL submitted from the landing page.
+**Status: met** — the design-system frontend renders live scans via
+`lib/scanAdapter.js`; the remaining unchecked items above are
+hardening, not blockers.
 
 ### 🎓 Intern tasks after Phase 2
 
@@ -262,35 +266,43 @@ offending element(s) — for a real URL submitted from the landing page.
 - [ ] Write a guide `docs/guides/running-a-scan-locally.md` walking a
       new contributor through firing a scan end-to-end and reading
       the output.
-- [ ] Add empty-state and error-state UI to `ScanResults.jsx` (no
-      findings / scan failed) using the new error responses.
+- [x] Add empty-state and error-state UI for results (no findings /
+      scan failed) — `ResultsView` hides empty categories and
+      `App.jsx`'s results route renders a retryable error state.
 
 ---
 
-## Phase 3 — UX upgrades (router shipped; data-driven UX pending Phase 2)
+## Phase 3 — UX upgrades (design-system UI shipped)
 
 Goal: the app feels like a product, not a demo.
 
-The routing + page-component scaffolding shipped in PR #40 — the rest
-needs real axe data from Phase 2 before it can be wired up.
+The full design-system frontend landed (ported from the design kit in
+`EqualView_App.html`): token-driven theme with light/dark, the
+`design-system/` component kit, one view per screen, and product
+routes (`/results`, `/problem/:id`, `/story`, `/donate`, `/signin`,
+`/connect`, `/dashboard`, `/account`, `/privacy`, `/terms`, 404).
 
 - [x] Resolve the routing question; migrate `App.jsx` and remove the
       pathname switch. (`react-router-dom` v7; PR #40.)
 - [x] Replace the landing-page `setTimeout` with real navigation tied
-      to scan submission state. (`useNavigate()` + `useScan` hook;
-      PR #40.)
+      to scan submission state — the spinner now runs for the real
+      `POST /api/scan` duration.
+- [x] Each problem links to its axe `helpUrl`; severity rendered as
+      a colored badge driven by `impact` (`SeverityBadge`, glyph +
+      label, never color-only).
+- [x] Results page shareable by URL — `/results?url=…` re-runs the
+      fetch on refresh / deep link.
 - [ ] Surface axe-core `incomplete` results as a "Needs manual
-      review" bucket. (Needs Phase 2.)
-- [ ] Each problem links to its axe `helpUrl`; severity rendered as
-      a colored badge driven by `impact`. (Needs Phase 2.)
+      review" bucket.
 - [ ] Sort violations by `impact` (`critical` → `serious` →
       `moderate` → `minor`); allow filtering by WCAG `tags`
-      (`wcag2a`, `wcag2aa`, `best-practice`). (Needs Phase 2.)
+      (`wcag2a`, `wcag2aa`, `best-practice`).
 - [ ] Pass an a11y audit on our own pages — run axe against
       `http://localhost:5173`.
 
 **Done when:** a non-technical user can paste a URL, see a loading
 state, and land on a results page they can share by URL.
+**Status: met** for the core flow; remaining items are enhancements.
 
 ### 🎓 Intern tasks after Phase 3
 
@@ -335,9 +347,14 @@ returns results or returns a categorized error — never a 500.
 
 Goal: a returning user can log in and see every scan they have run.
 
-This is the first phase that requires a database. It also introduces
-two new screens (Sign in / Sign up, My scans) — see
-[`architecture-map.md`](architecture-map.md) §2.4 and §2.5.
+The **frontend for this phase already exists as a placeholder**: the
+design-system UI ships the full Sign in → Connect storage → Dashboard
+→ Account settings flow (`views/SignInView.jsx`, `ConnectView.jsx`,
+`DashboardView.jsx`, `AccountView.jsx`) backed by
+`src/data/placeholders.js`. The product direction baked into that UI:
+OAuth via GitHub or Google, with reports saved to **user-owned
+storage** (a private repo or Drive folder) rather than a project
+database — which would replace the Postgres-centric plan below.
 
 Open decisions for this phase:
 - [ ] **Auth provider**: build it ourselves (JWT + bcrypt + Postgres),
@@ -419,6 +436,15 @@ These don't belong to a single phase — pick them up opportunistically.
 
 ## Change log for this roadmap
 
+- _2026-06-12_ — Design-system frontend refresh: marked Phase 2 as
+  met (real Puppeteer + axe-core scanner shipped in PR #50;
+  `axeTransformer` implemented with per-violation `count`) and
+  Phase 3 core flow as met (full design-kit UI: `design-system/`
+  components, per-screen `views/`, product routes, light/dark theme,
+  shareable `/results?url=…`). Noted that Phase 5's frontend exists
+  as a placeholder flow (SignIn → Connect → Dashboard → Account) and
+  that its UI assumes OAuth + user-owned storage instead of the
+  original Postgres plan.
 - _2026-04-28_ — Post-reorg refresh: marked Phase 0 (cleanup PR),
   Phase 1 (backend reorg, PR #38), and the routing/scaffolding parts
   of Phase 3 (PR #40) as shipped. Split "Open decisions" into

@@ -14,6 +14,25 @@ questions in order:
 Where a feature is not built yet it is marked **[planned]** so the
 current state stays honest.
 
+> **2026-06 update — design-system frontend.** The frontend described
+> in the screen sections below predates the design-system UI that now
+> ships. The planning content (mindmaps, per-screen possibilities,
+> backend architecture in §6) is still valid, but route names and
+> frontend files have moved:
+>
+> | This document says | The app today |
+> |---|---|
+> | `/scan-results?url=…` | `/results?url=…` (`views/ResultsView.jsx`) |
+> | `/problems/:id` | `/problem/:id` (`views/ProblemView.jsx`) |
+> | `/login`, `/signup` [planned] | `/signin` + `/connect` — shipped as a placeholder flow (`views/SignInView.jsx`, `ConnectView.jsx`) |
+> | `/my-scans` [planned] | `/dashboard` — shipped as a placeholder (`views/DashboardView.jsx`) |
+> | `pages/` + `components/` | `design-system/` (UI kit) + `views/` (one per screen) |
+> | mock scan data | live Puppeteer + axe-core scans via `lib/scanAdapter.js` |
+>
+> New routes not anticipated here: `/story`, `/donate`, `/account`,
+> `/privacy`, `/terms`, and a 404 view. §4.1 below reflects the
+> current layout.
+
 ---
 
 ## 1. Screen mindmap
@@ -646,26 +665,33 @@ contract that matters.
 
 ```
 frontend/src/
-├── main.jsx                       # React bootstrap
-├── App.jsx                        # BrowserRouter + Routes
-├── pages/
-│   ├── LandingPage.jsx            # Screen 2.1
-│   ├── ScanResultsPage.jsx        # Screen 2.2
-│   └── ProblemPage.jsx            # Screen 2.3 (route /problems/:id)
-├── components/
-│   ├── ProblemSolutionPage.jsx    # In-results inline detail
-│   ├── ProblemCategoryBox.jsx     # extracted from ScanResults
-│   └── WhatsGood.jsx              # extracted from ScanResults
+├── main.jsx                       # React bootstrap (loads fonts + theme CSS)
+├── App.jsx                        # BrowserRouter, routes, theme + auth state
+├── design-system/                 # Reusable UI kit (token-driven)
+│   ├── Logo / Badge / Button / Card / Input
+│   └── CodeBlock / ProblemRow / ScoreDial / SeverityBadge
+├── views/                         # One component per screen
+│   ├── AppShell.jsx               # Header + footer chrome
+│   ├── LandingView.jsx            # Screen 2.1 (scan entry)
+│   ├── ResultsView.jsx            # Screen 2.2 (/results?url=…)
+│   ├── ProblemView.jsx            # Screen 2.3 (/problem/:id)
+│   ├── SignInView / ConnectView   # Screen 2.4 (placeholder flow)
+│   ├── DashboardView.jsx          # Screen 2.5 (placeholder)
+│   └── Story / Donate / Account / Legal / NotFound views
 ├── hooks/
-│   ├── useScan.js                 # { data, loading, error } for results
-│   └── useProblem.js              # single-problem fetch
+│   └── useScan.js                 # { data, loading, error } for deep links
 ├── lib/
-│   └── apiClient.js               # the only file that imports `fetch`
+│   ├── apiClient.js               # the only file that imports `fetch`
+│   ├── scanAdapter.js             # ScanResult → report view model
+│   └── icons.jsx                  # lucide wrapper + brand marks
 ├── utils/
-│   └── urlValidator.js            # pure URL sanity check
+│   └── urlValidator.js            # isValidUrl + normalizeUrl
 ├── data/
-│   └── mockScanResults.js         # vitest-only fixture
-├── styles/                        # plain CSS per screen
+│   └── placeholders.js            # auth/storage placeholder data
+├── styles/
+│   ├── theme.css                  # design tokens, light/dark, base layer
+│   └── fonts.css                  # self-hosted webfonts
+├── assets/fonts/                  # woff2 files
 └── __tests__/                     # Vitest + React Testing Library
 ```
 

@@ -10,28 +10,30 @@ it as it evolves.
 - **`*.png`** — Images pasted into the canvas for reference
 - **`README.md`** — This file
 
-## Current Snapshot (2026-06-04)
+## Current Snapshot (2026-06-12)
 
 ## Stack
 
-- **Frontend:** React 19 + Vite 7 + react-router-dom v7 (BrowserRouter + Routes)
+- **Frontend:** React 19 + Vite 7 + react-router v7, design-token CSS (light/dark), self-hosted Public Sans + JetBrains Mono, lucide-react icons
 - **Backend:** Node 22 + Express 5 + cors + dotenv
-- **Scanner (ready):** Puppeteer (headless Chromium) + axe-core injected into page context, transformed by `axeTransformer.js`
-- **Styling:** Plain CSS (no UI framework)
+- **Scanner (live):** Puppeteer (headless Chromium) + axe-core injected into page context, transformed by `axeTransformer.js`
 - **Container:** Docker (Node 22-alpine) + Docker Compose
 
 ## What exists today
 
 ### Frontend (`frontend/src/`)
-- `src/App.jsx` — BrowserRouter, routes root, /scan-results, /problems/:id, and catch-all
-- `src/pages/` — LandingPage, ScanResultsPage, ProblemPage
-- `src/components/` — ProblemSolutionPage, ProblemCategoryBox, WhatsGood
-- `src/hooks/` — useScan, useProblem
+- `src/App.jsx` — BrowserRouter; routes /, /results, /problem/:id, /story, /donate, /signin, /connect, /dashboard, /account, /privacy, /terms, 404; theme + placeholder-auth state
+- `src/design-system/` — UI kit: Logo, Badge, Button, Card, Input, CodeBlock, ProblemRow, ScoreDial, SeverityBadge
+- `src/views/` — one component per screen: AppShell, LandingView, ResultsView, ProblemView, StoryView, DonateView, SignInView, ConnectView, DashboardView, AccountView, LegalView, NotFoundView
+- `src/hooks/useScan.js` — loading / error / data state machine (used for /results deep links)
 - `src/lib/apiClient.js` — the only file that calls `fetch`
-- `src/utils/urlValidator.js` — URL checks before hitting the scanner
-- `src/data/mockScanResults.js` — Phase-1 fixture (used by tests)
-- `src/styles/` — LandingPage.css, ProblemSolutionPage.css
+- `src/lib/scanAdapter.js` — backend ScanResult → report view model (counts, score, WCAG from axe tags)
+- `src/lib/icons.jsx` — lucide wrapper + inlined GitHub / Google brand marks
+- `src/utils/urlValidator.js` — isValidUrl + normalizeUrl (bare domains → https://)
+- `src/data/placeholders.js` — auth/storage placeholder data (Phase 5 replaces it)
+- `src/styles/` — theme.css (design tokens, dark mode, base layer), fonts.css
 - Vitest + React Testing Library tests in `src/__tests__/`
+- Root `EqualView_App.html` is the design-kit bundle this UI was ported from
 
 ### Backend (`backend/`)
 - `index.js` — bootstrap, listens on `$PORT`
@@ -58,18 +60,21 @@ it as it evolves.
 - `ssrfGuard.js` is the security boundary that rejects non-http URLs and
   private/internal hosts before a scan is allowed.
 - `axeTransformer.js` is a pure function mapping axe-core result shape into
-  the equalView ScanResult contract.
+  the equalView ScanResult contract (now including per-violation `count`).
 - `scanRunner.js` is the orchestration layer: validate -> launch browser ->
   bypass CSP -> navigate -> inject axe-core -> run axe -> transform -> close browser.
-- The frontend is a single-page app; `/problems/:id` is the main post-scan flow.
-- A Phase-2 / Phase-3 reorganization moved the codebase to its current shape
-  (see `docs/plans/codebase-reorganization.md`).
+- The frontend is a single-page app; Landing runs `POST /api/scan` and the
+  `/results?url=…` route re-fetches on refresh so reports are shareable;
+  `/problem/:id` is the post-scan detail flow.
+- Sign-in → Connect storage → Dashboard is a UI placeholder: the flow and
+  copy are final, but no OAuth or storage backend exists yet.
 
 ## Planned / not yet built
 
-- PostgreSQL persistence (planned for Phase 5+)
-- JWT auth + rate limiting
-- PDF report generation
+- OAuth (GitHub / Google) + scans saved to user-owned storage
+  (private repo / Drive) — replaces `src/data/placeholders.js`
+- Rate limiting
+- PDF report generation (browser print works via "Download PDF")
 - Caching + queueing for scans
 
 ## When this doc gets updated

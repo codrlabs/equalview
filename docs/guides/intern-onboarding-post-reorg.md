@@ -1,5 +1,14 @@
 # EqualView — Post-Reorg Architecture Walkthrough
 
+> **Note (2026-06):** parts of this guide describe the frontend as it
+> was before the design-system UI landed (`pages/` + `components/`,
+> `/scan-results`, `/problems/:id`, mock scan data). The concepts and
+> the backend walkthroughs still hold; for the current frontend layout
+> (`design-system/` + `views/`, `/results`, `/problem/:id`, live
+> Puppeteer + axe-core scans) see the top-level [README](../../README.md)
+> and [architecture-map.md §4.1](../plans/architecture-map.md).
+
+
 **Baseline commit:** `8f72a1f` (pre-reorg).
 **Tip commit:** `f750962` (current `main`).
 **Window covered:** 18 commits, 9 PRs (#35–#41), `+3505 / −906` lines
