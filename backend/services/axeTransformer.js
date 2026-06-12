@@ -101,6 +101,7 @@ function transform(axeResults) {
       solution: v.nodes?.[0]?.failureSummary
         ? [v.nodes[0].failureSummary]
         : [],
+      count: v.nodes?.length || 1,
       impact: v.impact || null,
       helpUrl: v.helpUrl || null,
       tags: v.tags || [],

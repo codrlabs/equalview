@@ -24,6 +24,7 @@
  * @property {string} rootCause
  * @property {string} codeSnippet
  * @property {string[]} solution
+ * @property {number} [count]  occurrences (axe nodes) of this violation
  * @property {Impact} [impact]
  * @property {string|null} [helpUrl]
  * @property {string[]} [tags]

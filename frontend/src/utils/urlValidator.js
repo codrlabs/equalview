@@ -17,3 +17,23 @@ export function isValidUrl(input) {
     return false
   }
 }
+
+/**
+ * Accept the bare-domain form users actually type ("codrlabs.com")
+ * and normalize it to a full https:// URL. Returns null when the input
+ * can't be turned into a valid http(s) URL.
+ *
+ * @param {string} input
+ * @returns {string|null}
+ */
+export function normalizeUrl(input) {
+  if (typeof input !== 'string') return null
+  const trimmed = input.trim()
+  if (trimmed === '') return null
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  if (!isValidUrl(candidate)) return null
+  // Require a dot-separated hostname so bare words don't pass.
+  const { hostname } = new URL(candidate)
+  if (!/^([\w-]+\.)+[\w-]{2,}$/.test(hostname)) return null
+  return candidate
+}
