@@ -103,7 +103,6 @@ equalview/
 │   │   ├── axecore-integration-roadmap.md
 │   │   └── codebase-reorganization.md
 │   └── obsidian/                     # Obsidian vault (canvas + scratch notes)
-├── EqualView_App.html                # Design-kit source the UI was ported from
 └── docker-compose.yml                # Frontend + backend
 ```
 
