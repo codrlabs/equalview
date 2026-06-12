@@ -20,6 +20,19 @@ describe('isValidUrl', () => {
     expect(isValidUrl('file:///etc/passwd')).toBe(false)
     expect(isValidUrl('javascript:alert(1)')).toBe(false)
   })
+
+  it('rejects non-string input', () => {
+    expect(isValidUrl(null)).toBe(false)
+    expect(isValidUrl(undefined)).toBe(false)
+    expect(isValidUrl(123)).toBe(false)
+  })
+
+  it('rejects Windows-style and filesystem paths', () => {
+    expect(isValidUrl('C:\\google.com')).toBe(false)
+    expect(isValidUrl('D:\\path\\to\\file')).toBe(false)
+    expect(isValidUrl('/usr/local/bin')).toBe(false)
+    expect(isValidUrl('./relative/path')).toBe(false)
+  })
 })
 
 describe('normalizeUrl', () => {
@@ -37,5 +50,15 @@ describe('normalizeUrl', () => {
     expect(normalizeUrl('')).toBeNull()
     expect(normalizeUrl('not a url')).toBeNull()
     expect(normalizeUrl('justaword')).toBeNull()
+  })
+
+  it('returns null for non-string input', () => {
+    expect(normalizeUrl(null)).toBeNull()
+    expect(normalizeUrl(undefined)).toBeNull()
+    expect(normalizeUrl(123)).toBeNull()
+  })
+
+  it('rejects localhost — the backend SSRF guard blocks loopback targets', () => {
+    expect(normalizeUrl('localhost:3000')).toBeNull()
   })
 })
