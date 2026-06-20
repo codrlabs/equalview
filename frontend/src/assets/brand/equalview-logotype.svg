@@ -1,0 +1,11 @@
+<svg width="210" height="40" viewBox="0 0 210 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="EqualView">
+  <!-- mark -->
+  <rect width="40" height="40" rx="11" fill="#2563d6"/>
+  <rect x="9" y="15.5" width="22" height="3.6" rx="1.8" fill="#fff"/>
+  <rect x="9" y="21.9" width="14" height="3.6" rx="1.8" fill="#fff"/>
+  <circle cx="27" cy="23.7" r="2.1" fill="#fff"/>
+  <!-- wordmark: Public Sans Bold, "equal" ink + "view" accent -->
+  <text x="53.6" y="20" font-family="'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="28.8" font-weight="700" letter-spacing="-0.576" dominant-baseline="central">
+    <tspan fill="#0a0e13">equal</tspan><tspan fill="#2563d6">view</tspan>
+  </text>
+</svg>
