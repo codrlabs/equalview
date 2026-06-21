@@ -55,7 +55,7 @@ export default function StoryView({ onNav }) {
       <section style={{ marginBottom: 48 }}>
         <H2>It started with one person</H2>
         <P>
-          Every line of EqualView traces back to a single conviction. <strong style={{ color: 'var(--text-strong)' }}>Samual</strong> didn’t set out to start a company — he set out to fix something he couldn’t unsee. The project is his: his idea, his hands, and his to steward from the first commit onward.
+          Every line of EqualView traces back to a single conviction. <strong style={{ color: 'var(--text-strong)' }}>Samuel</strong> didn’t set out to start a company — he set out to fix something he couldn’t unsee. The project is his: his idea, his hands, and his to steward from the first commit onward.
         </P>
         <P>
           He didn’t shape it in isolation. The team at <strong style={{ color: 'var(--text-strong)' }}>Codrlabs</strong> shared their expertise and guided the way, helping turn a stubborn idea into a working tool — without ever taking it out of his hands.
