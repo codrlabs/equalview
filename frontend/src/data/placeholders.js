@@ -6,7 +6,7 @@
  */
 
 /** Signed-in user placeholder — replaced by the OAuth profile later. */
-export const PLACEHOLDER_USER = { name: 'Samual', email: 'samual@equalview.org' }
+export const PLACEHOLDER_USER = { name: 'Samuel', email: 'Samuel@equalview.org' }
 
 /**
  * Storage provider metadata used by the SignIn → Connect → Dashboard
