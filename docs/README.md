@@ -25,6 +25,11 @@ Stable, "how do I do X" content. Update when the answer changes.
 - [`guides/thinking-in-architecture.md`](guides/thinking-in-architecture.md)
   — 5-minute intern primer on the layered model, with each open GitHub
   issue mapped to "which layer does this change live in?"
+- [`guides/auth_storage_guide/`](guides/auth_storage_guide/githubGoogleAuthStorageImplementation.md)
+  — GitHub/Google sign-in + the bring-your-own-storage portable account
+  (browse → select → validate → load/init). Design doc, on-disk
+  [`accountStorageContract.md`](guides/auth_storage_guide/accountStorageContract.md),
+  and an implementation [`TODO.md`](guides/auth_storage_guide/TODO.md).
 
 ## Plans
 
