@@ -1,7 +1,24 @@
-# Implementation TODO — GitHub/Google Auth & Storage
+# Implementation TODO — GitHub/Google Auth & Portable Storage
 
-> Checklist for implementing the design in `githubGoogleAuthStorageImplementation.md`.
-> Each item should be verified against the actual codebase before marking complete.
+> Checklist for the design in
+> [`githubGoogleAuthStorageImplementation.md`](githubGoogleAuthStorageImplementation.md)
+> and the on-disk contract in
+> [`accountStorageContract.md`](accountStorageContract.md).
+> Verify each item against the actual code before ticking it.
+>
+> **Model in one line:** the user's GitHub repo / Drive folder *is* the account.
+> Flow is **browse → select → validate (fit-check) → load or init**. No project DB.
+
+---
+
+## Phase 0: Decisions to lock before coding
+
+- [ ] **GitHub**: classic OAuth App (`repo` = broad) **or** GitHub App
+      (per-repo `Contents:rw` + `Metadata:r`)? Pick one; it changes the picker UX.
+- [ ] **Google**: Google Picker (`drive.file`, recommended) **or** app-rendered
+      browse (`drive.metadata.readonly`)? Pick one; document the privacy cost.
+- [ ] **Identity**: possession-based (default) vs. subject-bound load. Default =
+      possession-based; record `storage.ownerId` regardless.
 
 ---
 
@@ -12,125 +29,143 @@
 - [ ] `npm install --save-dev @types/express-session @types/passport @types/passport-github2 @types/passport-google-oauth20`
 
 ### Environment
-- [ ] Add required vars to `.env.example` and document in `backend/README.md`
+- [ ] Add vars to `.env.example` (`SESSION_SECRET`, GitHub/Google client id+secret,
+      redirect URIs, `GOOGLE_PICKER_API_KEY`, `ENCRYPTION_KEY`) and document in `backend/README.md`
 - [ ] Generate `ENCRYPTION_KEY` with `openssl rand -base64 32`
 
 ### Auth Service (`backend/services/authService.js`)
-- [ ] Create file with Passport strategies (GitHub, Google)
-- [ ] Implement AES-256-GCM encrypt/decrypt using `ENCRYPTION_KEY`
-- [ ] Export `middleware()` returning `[session(), passport.initialize(), passport.session()]`
-- [ ] Export `getGitHubClient(user)` → authenticated Octokit
-- [ ] Export `getGoogleDriveClient(user)` → authenticated Google Drive client (OAuth2 with access_token)
-- [ ] Export `refreshGoogleToken(user)` for token refresh
-- [ ] **Stub** `deserializeUser` with `// TODO: load full user from DB`
+- [ ] Passport strategies (GitHub, Google) + session middleware
+- [ ] AES-256-GCM encrypt/decrypt using `ENCRYPTION_KEY`
+- [ ] `middleware()` → `[session(), passport.initialize(), passport.session()]`
+- [ ] `getGitHubClient(user)` → authenticated Octokit
+- [ ] `getGoogleDriveClient(user)` → OAuth2 + `setCredentials({ access_token })`
+- [ ] `refreshGoogleToken(user)`
+- [ ] `clientsFor(user)` helper → `{ githubClient?, driveClient? }` for routes/controller
+- [ ] `deserializeUser` returns the session payload (identity + encrypted tokens +
+      attached `storage`); **no user DB** in this model
 
-### Storage Service (`backend/services/storageService.js`)
-- [ ] Create file with GitHub operations:
-  - [ ] `createGitHubRepo(githubClient, repoName, private)`
-  - [ ] `createGitHubFile(githubClient, owner, repo, path, content, branch)`
-- [ ] Create file with Google Drive operations:
-  - [ ] `createGoogleDriveFolder(driveClient, folderName, parentId)`
-  - [ ] `uploadToGoogleDrive(driveClient, fileName, mimeType, content, parentId)`
-- [ ] `getOrCreateStorage(user, storageType, storageName, githubClient, driveClient)` — **accepts pre-built clients**
-- [ ] `saveScanResults(user, storageInfo, scanResults, url, githubClient, driveClient)` — **accepts pre-built clients**
-- [ ] **No direct calls to `AuthService` methods** — clients passed in from routes
+### Storage Service (`backend/services/storageService.js`) — speaks the contract
+- [ ] **Browse**: `listGitHubRepos(githubClient)` → `{ id(nodeId), full_name, private, html_url }[]`
+      (Google folders come from the client-side Picker, not the backend)
+- [ ] **Fit-check**: `validateStorage(provider, storageRef, clients)` →
+      `{ status, reason?, capabilities, manifestSummary? }` per
+      [accountStorageContract.md → Validation rules](accountStorageContract.md#validation-rules-the-fit-check)
+- [ ] **Load**: `loadAccount(provider, storageRef, clients)` — read manifest +
+      `scans/index.json`, **reconcile drift** by rebuilding from `scans/*.json`
+- [ ] **Init**: `initStorage(provider, storageRef, owner, clients)` — **revalidate**,
+      then conditionally create `equalview.json` + `scans/` skeleton
+- [ ] **Save**: `saveScanResults(account, scanResult, url, clients)` — write immutable
+      `scans/<scanId>_<host>.json`, then update index + manifest summary
+- [ ] GitHub writes pass blob `sha` (optimistic concurrency); prefer a single commit
+- [ ] Drive writes use generation/ETag preconditions; scan file written first
+- [ ] **Accepts pre-built clients** — no direct `AuthService` calls
+- [ ] Scan files immutable; `index.json` + `scanCount` treated as caches
+- [ ] **No** `repos.getForAuthenticatedUser` for existence (use `repos.getContent`/`repos.get`)
+- [ ] **No** `GoogleAuth({ credentials:{access_token} })` (use `OAuth2` + `setCredentials`)
+- [ ] **Never** write tokens/secrets into the store
 
 ### Auth Routes (`backend/routes/auth.js`)
-- [ ] Factory function `makeAuthRouter()` returning Express Router
-- [ ] Apply `authService.middleware()` at router level
-- [ ] `GET /github` — initiate GitHub OAuth (store provider in session)
-- [ ] `GET /google` — initiate Google OAuth (store provider in session)
-- [ ] `GET /github/callback` — handle callback, redirect to `/connect?provider=github`
-- [ ] `GET /google/callback` — handle callback, redirect to `/connect?provider=google`
-- [ ] `POST /storage` — validate body, call `storageService.getOrCreateStorage()` with clients from `authService`, attach `req.user.storage`
-- [ ] `GET /user` — return safe user data (no tokens)
+- [ ] Factory `makeAuthRouter()`; apply `authService.middleware()` at router level
+- [ ] `GET /github`, `GET /google` — initiate OAuth (store provider in session)
+- [ ] `GET /github/callback`, `GET /google/callback` — redirect `/connect?provider=…`
+- [ ] `GET /storages?provider=github` — list repos (GitHub only)
+- [ ] `POST /storage/validate` — fit-check the selected storage
+- [ ] `POST /storage` — `action: "load" | "init"`; **revalidate** then act; attach `req.user.storage`
+- [ ] `GET /user` — safe profile (+ `storage`), **no tokens**
+- [ ] `GET /status` — `{ authenticated, user }`
 - [ ] `POST /logout` — `req.logout()`, destroy session, clear cookie
-- [ ] `GET /status` — return `{ authenticated, user }`
-- [ ] **No import from frontend** (`PROVIDERS` not used here)
-- [ ] Export `module.exports = makeAuthRouter`
+- [ ] **No frontend import** (`PROVIDERS` not used here)
+- [ ] `module.exports = makeAuthRouter`
 
 ### Routes Index (`backend/routes/index.js`)
-- [ ] Import `makeAuthRouter` from `./auth`
+- [ ] `const makeAuthRouter = require('./auth')`
 - [ ] Mount once: `app.use('/api/auth', makeAuthRouter())`
-- [ ] Keep existing scan/problems mounts under `/api` and `/problems`
-- [ ] **No dual mounting** of auth routes
+- [ ] Keep existing `/api` (scan) and `/problems` mounts
+- [ ] **No dual mounting**
 
 ### App.js (`backend/app.js`)
-- [ ] Import `mountRoutes` only (auth routes mounted inside `mountRoutes`)
-- [ ] Pass `storageService` to `ScanController` deps
-- [ ] Import path: `require('./services/storageService')` (not `../services`)
+- [ ] Construct `authService` + `storageService`; pass both to `ScanController` deps
+- [ ] Import path `require('./services/storageService')` (not `../services`)
 
 ### Scan Controller (`backend/controllers/scanController.js`)
-- [ ] Accept `storageService` in constructor deps
-- [ ] In `postScan`: if authenticated and `req.user.storage`, call `storageService.saveScanResults()` with clients from `authService`
+- [ ] Accept `storageService` + `authService` in deps
+- [ ] In `postScan`: if authenticated and `req.user.storage`, build clients and
+      `saveScanResults(...)` — a storage failure logs a warning, **never** fails the scan
 
 ---
 
-## Phase 2: Frontend — Real Auth Integration
+## Phase 2: Frontend — Real Auth + Picker + Fit-check
 
 ### API Client (`frontend/src/lib/apiClient.js`)
-- [ ] Use `credentials: 'include'` on all fetch calls (session cookies)
-- [ ] **Remove** Bearer token logic (no `localStorage` accessToken)
-- [ ] `githubLogin()` → `window.location.href = '/api/auth/github'`
-- [ ] `googleLogin()` → `window.location.href = '/api/auth/google'`
-- [ ] `getAuthStatus()` → `GET /api/auth/status`
-- [ ] `getUser()` → `GET /api/auth/user`
-- [ ] `setupStorage(provider, mode, name)` → `POST /api/auth/storage`
-- [ ] `logout()` → `POST /api/auth/logout`
-- [ ] Keep `runScan`, `getScanResults`, `getProblem` unchanged (already use `/api/...`)
+- [ ] `credentials: 'include'` on all calls; **remove** any Bearer/localStorage token
+- [ ] `githubLogin()` / `googleLogin()` → full redirect to `/api/auth/{provider}`
+- [ ] `getAuthStatus()`, `getUser()`, `logout()`
+- [ ] `listStorages(provider)` → `GET /api/auth/storages?provider=…`
+- [ ] `validateStorage(provider, storageRef)` → `POST /api/auth/storage/validate`
+- [ ] `setupStorage(provider, storageRef, action)` → `POST /api/auth/storage`
+- [ ] Keep `runScan`, `getScanResults`, `getProblem`
+
+### ConnectView (`frontend/src/views/ConnectView.jsx`) — the picker
+- [ ] GitHub: list repos via `listStorages('github')`; Google: launch **Google Picker**
+- [ ] Persistent **"Create new"** option (the `init` path on a fresh store)
+- [ ] On select → `validateStorage` → render fit-check status + scan count
+- [ ] Action button follows status: `loadable`→"Load my account",
+      `initializable`/new→"Set up & continue", `incompatible`/`invalid`→blocked + guidance
+- [ ] Disable init when `capabilities.canWrite === false`
+- [ ] On confirm → `setupStorage(provider, storageRef, action)` → dashboard
+- [ ] Replace hard-coded `existing` lists in `frontend/src/data/placeholders.js`
 
 ### App Routes (`frontend/src/App.jsx`)
-- [ ] State: `user` (from `/api/auth/user`), `provider`, `storageProvider`, `storageName`
-- [ ] On mount: `apiClient.getAuthStatus()` → if authenticated, `apiClient.getUser()` → set user
-- [ ] Listen for `auth:logout` event → clear state, navigate to signin
-- [ ] `auth(provider)` → call `apiClient.githubLogin()` or `googleLogin()` (full redirect)
-- [ ] `connectDone(mode)` → `apiClient.setupStorage(provider, mode, name)` → set storage info → navigate to dashboard
-- [ ] `signOut()` → `apiClient.logout()` → clear state → navigate to landing
-- [ ] **Remove** `setAuthed` / bare `name` references — use `setUser` and `storageName`
+- [ ] State: `user` (from `/api/auth/user`, includes `storage`), `provider`, selection
+- [ ] On mount: `getAuthStatus()` → if authed, `getUser()`
+- [ ] `auth(provider)` → full OAuth redirect
+- [ ] `connectDone()` → `setupStorage(...)` → dashboard
+- [ ] `signOut()` → `logout()` → clear state → landing
+- [ ] Remove `setAuthed` / placeholder-only wiring
 
 ### Views
-- [ ] `SignInView` — accept `providerInfo` prop (optional)
-- [ ] `AccountView` — use `user` prop (real data), not `PLACEHOLDER_USER`
-- [ ] `ConnectView` — accept `storageError` prop for error display
+- [ ] `AccountView` — real `user` + `storage` (not `PLACEHOLDER_USER`); "saved scans" from index
+- [ ] `DashboardView` — saved scans from the loaded index (not `PLACEHOLDER_SAVED_SCANS`)
+- [ ] `ConnectView` — accept a `storageError` prop for failures
 
 ---
 
 ## Phase 3: Testing & Documentation
 
 ### Tests
-- [ ] `backend/tests/auth.test.js` — test OAuth redirects, callbacks
-- [ ] `backend/tests/storage.test.js` — test storage creation (mock authenticated user)
-- [ ] `frontend/tests/apiClient.test.js` — test auth methods
+- [ ] `backend/tests/auth.test.js` — OAuth redirects, callbacks, status/logout
+- [ ] `backend/tests/storage.test.js` — fit-check matrix (loadable / initializable /
+      unrelated / incompatible / invalid), load-time reconcile, init race guard,
+      atomic save (mock authenticated user + mock clients)
+- [ ] `frontend/tests/apiClient.test.js` — auth + storage methods
+- [ ] `frontend/tests/connectView.test.jsx` — picker + fit-check rendering per status
 
 ### Documentation
-- [ ] Update `backend/README.md` with:
-  - [ ] Auth endpoints table
-  - [ ] Environment setup instructions
-  - [ ] OAuth app configuration steps
-  - [ ] Required scopes
-  - [ ] Testing instructions
-- [ ] Verify acceptance criteria match design doc (no "no frontend changes" claim)
+- [ ] `backend/README.md`: auth/storage endpoints table, env setup, OAuth/Picker
+      config, scopes, testing
+- [ ] Keep this TODO and the design/contract docs in sync if implementation diverges
 
 ---
 
-## Verification Checklist (Run Before Marking Complete)
+## Verification checklist (run before marking complete)
 
-- [ ] `grep -r "makeAuthRouter" backend/routes/` — factory used, not instance
-- [ ] `grep -r "mountAuthRoutes" backend/` — **zero matches** (no dual mount)
-- [ ] `grep -r "/auth/github" frontend/src/lib/apiClient.js` — paths include `/api/auth/`
-- [ ] `grep -r "credentials: 'include'" frontend/src/lib/apiClient.js` — present on fetch
-- [ ] `grep -r "getGitHubClient" backend/services/storageService.js` — **zero matches** (clients passed in)
-- [ ] `grep -r "PROVIDERS" backend/routes/auth.js` — **zero matches** (no frontend import)
-- [ ] `grep -r "repos.getForAuthenticatedUser" backend/` — **zero matches** (use `repos.get({owner, repo})`)
-- [ ] `grep -r "GoogleAuth.*credentials.*access_token" backend/` — **zero matches** (use OAuth2 + setCredentials)
-- [ ] `grep -r "../services/storageService" backend/app.js` — **zero matches** (use `./services/storageService`)
-- [ ] `grep -r "deserializeUser" backend/services/authService.js` — has `// TODO: load full user from DB`
-- [ ] `grep -r "setAuthed" frontend/src/App.jsx` — **zero matches** (use `setUser`)
+- [ ] `grep -r "makeAuthRouter" backend/routes/` — factory used, mounted once
+- [ ] `grep -r "mountAuthRoutes" backend/` — **zero** (no dual mount)
+- [ ] `grep -r "credentials: 'include'" frontend/src/lib/apiClient.js` — present
+- [ ] `grep -rn "validateStorage\|listStorages\|setupStorage" frontend/src/lib/apiClient.js` — all present
+- [ ] `grep -r "getForAuthenticatedUser" backend/` — **zero** (use `repos.get`/`getContent`)
+- [ ] `grep -r "credentials.*access_token" backend/` — **zero** (use `setCredentials`)
+- [ ] `grep -r "PROVIDERS" backend/routes/auth.js` — **zero** (no frontend import)
+- [ ] `grep -rn "drive.file\|drive.metadata.readonly" backend/` — scope matches the locked decision
+- [ ] `grep -rn "sha" backend/services/storageService.js` — GitHub writes pass a blob sha
+- [ ] No tokens written to the store: review `initStorage` / `saveScanResults` payloads
 
 ---
 
 ## Notes
 
-- Each checkbox represents a verifiable claim. If you can't verify it in the actual code, it's not done.
-- Prefer small, testable PRs over one big merge.
-- Design doc (`githubGoogleAuthStorageImplementation.md`) is the source of truth — update it if implementation diverges.
+- Each checkbox is a verifiable claim. If you can't verify it in real code, it's not done.
+- Prefer small, testable PRs.
+- [`githubGoogleAuthStorageImplementation.md`](githubGoogleAuthStorageImplementation.md)
+  (flow/API) and [`accountStorageContract.md`](accountStorageContract.md) (bytes)
+  are the source of truth — update them if the implementation diverges.

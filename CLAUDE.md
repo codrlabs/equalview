@@ -41,3 +41,77 @@ This project is indexed by GitNexus as **equalview** (754 symbols, 971 relations
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
+
+# EqualView — Architecture & Conventions
+
+EqualView is an accessibility scanner: paste a URL, get a categorized,
+human-readable accessibility report. Two halves, one wire contract.
+
+- **Backend** (`backend/`, Node + Express) is dumb about presentation. Layers,
+  outer→inner: `routes/` (URLs + verbs) → `controllers/` (HTTP req/res, classes
+  with constructor-bound methods) → `services/` (the brain). `app.js` is the
+  **composition root** — the one place concrete classes are constructed and wired;
+  everything else takes deps as arguments so layers are unit-testable without a DI
+  framework. Pure modules (`axeTransformer`, `ssrfGuard`) take input → return
+  output, no side effects. Stateful things are classes (`ScanRunner`, future
+  `BrowserPool`).
+- **Frontend** (`frontend/`, React + Vite) is dumb about scanning. Pages =
+  functional components in `views/`; side effects live in `hooks/`;
+  `lib/apiClient.js` is the **only** file that imports `fetch`; `utils/urlValidator.js`
+  validates input. Talks to the backend through `/api/*` (Vite proxies in dev).
+- **Shared contract**: `shared/types.js` holds JSDoc `@typedef`s (`ScanResult`,
+  `Violation`, …) imported by both sides — the wire format is the only contract
+  that matters.
+- Deeper detail: [`docs/plans/architecture-map.md`](docs/plans/architecture-map.md)
+  (§6 code architecture) and [`README.md`](README.md) (current layout).
+
+## Accounts & storage — bring-your-own-storage (portable account)
+
+EqualView keeps **no database of its own**. A signed-in user's entire account
+(profile, settings, saved scans) lives in **storage they already own**: one
+**GitHub repository** or one **Google Drive folder**. GitHub/Google OAuth is used
+only to *identify* the user and get an API token; the user-owned store is the
+source of truth. This is what makes the product cheap to offer to everyone — no
+per-user hosting, no lock-in; the account is portable across devices.
+
+The connection UX is **browse → select → validate → load-or-init**:
+
+1. User connects GitHub or Google (OAuth).
+2. They **see the repos/folders they already have** and **select one**
+   (GitHub: backend lists repos; Google: client-side **Google Picker**, because
+   `drive.file` cannot browse existing folders).
+3. EqualView runs a **fit-check** (`POST /api/auth/storage/validate`) — does this
+   storage hold a valid EqualView account store? → `loadable` / `initializable` /
+   `unrelated` / `incompatible` / `invalid` (+ capabilities).
+4. EqualView **loads** the existing account back, or **initializes** the store.
+
+On-disk contract (the "data needed to load back the account"): a root
+`equalview.json` manifest + a `scans/` folder (`index.json` cache + one immutable
+`<scanId>_<host>.json` per scan). Scan files are truth; `index.json` and
+`scanCount` are rebuildable caches.
+
+When working on auth/storage, treat these as the source of truth and keep them in
+sync with the code:
+
+- [`docs/guides/auth_storage_guide/githubGoogleAuthStorageImplementation.md`](docs/guides/auth_storage_guide/githubGoogleAuthStorageImplementation.md)
+  — auth flow, endpoints, scopes, frontend design.
+- [`docs/guides/auth_storage_guide/accountStorageContract.md`](docs/guides/auth_storage_guide/accountStorageContract.md)
+  — manifest + scans layout + fit-check + concurrency rules.
+- [`docs/guides/auth_storage_guide/TODO.md`](docs/guides/auth_storage_guide/TODO.md)
+  — implementation checklist.
+
+Non-negotiables for this subsystem:
+
+- **No tokens/secrets in the store.** OAuth tokens are encrypted at rest in the
+  session (AES-256-GCM), never written to the repo/folder.
+- **Possession-based identity by default** — whoever can read/write the store can
+  load the account; treat the storage ACL as the account ACL. Record stable
+  provider ids (repo node id / Drive folder id / owner id), not names.
+- **Concurrency & partial writes are expected** — multiple devices and
+  collaborators touch the store. Scan files are immutable; caches reconcile on
+  load; GitHub writes use blob `sha`, Drive writes use generation/ETag.
+- **Scope tradeoffs are real and must be disclosed in the UI**, not just docs
+  (GitHub OAuth `repo` is all-or-nothing; Google browsing needs Picker or
+  `drive.metadata.readonly`).
+- This **supersedes** the Postgres + JWT sketch in the Phase 5 roadmap — there is
+  no project DB.
