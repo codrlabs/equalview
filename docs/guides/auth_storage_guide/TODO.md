@@ -16,14 +16,17 @@
 - [x] **GitHub**: classic OAuth App (`repo` = broad) **or** GitHub App
   ```
   (per-repo `Contents:rw` + `Metadata:r`)? Pick one; it changes the picker UX.
+  Choice: Github App
   ```
 - [x] **Google**: Google Picker (`drive.file`, recommended) **or** app-rendered
   ```
   browse (`drive.metadata.readonly`)? Pick one; document the privacy cost.
+  Choice: Google Picker.
   ```
 - [x] **Identity**: possession-based (default) vs. subject-bound load. Default =
   ```
   possession-based; record `storage.ownerId` regardless.
+  Choice: Possession-Based
   ```
 
 ---
