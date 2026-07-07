@@ -64,11 +64,9 @@ not the EqualView storage app. Storage stays provider-agnostic.
 ### Environment
 
 - [x] Add vars to `.env.example` (`SESSION_SECRET`, GitHub App id+secret, redirect
-  ```
-  URIs, `ENCRYPTION_KEY`) and document in `backend/README.md`
-  ```
+      URIs, `ENCRYPTION_KEY`) and document in `backend/README.md`
 - [x] Generate `ENCRYPTION_KEY` with `openssl rand -base64 32`
-- [X] Defer `GOOGLE_PICKER_API_KEY` and Google OAuth vars to Phase 3
+- [x] Defer `GOOGLE_PICKER_API_KEY` and Google OAuth vars to Phase 3
 
 
 

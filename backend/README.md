@@ -49,13 +49,28 @@ API is on `http://localhost:3000` by default.
 
 ## Environment
 
-| Var               | Default                  | Meaning                        |
-| ----------------- | ------------------------ | ------------------------------ |
-| `PORT`            | `3000`                   | Port the API listens on        |
-| `FRONTEND_ORIGIN` | `http://localhost:5173`  | CORS allow-origin for the SPA  |
+Copy [`.env.example`](.env.example) to `.env` and fill in values before running
+auth (Phase 1).
 
-See [`.env.example`](.env.example) for the full list (Phase 5 adds
-`JWT_SECRET` and `DATABASE_URL`).
+| Var                      | Default                  | Meaning                                      |
+| ------------------------ | ------------------------ | -------------------------------------------- |
+| `PORT`                   | `3000`                   | Port the API listens on                      |
+| `FRONTEND_ORIGIN`        | `http://localhost:5173`  | CORS allow-origin for the SPA                |
+| `SESSION_SECRET`         | —                        | Session cookie signing key (min 32 chars)    |
+| `GITHUB_APP_ID`          | —                        | GitHub App id (OAuth registration)           |
+| `GITHUB_APP_CLIENT_SECRET` | —                      | GitHub App OAuth client secret               |
+| `GITHUB_REDIRECT_URI`    | `http://localhost:3000/api/auth/github/callback` | GitHub OAuth callback URL |
+| `ENCRYPTION_KEY`         | —                        | AES-256-GCM key for tokens at rest (base64)  |
+
+Generate secrets:
+
+```bash
+openssl rand -base64 32   # SESSION_SECRET and/or ENCRYPTION_KEY
+```
+
+Google OAuth and `GOOGLE_PICKER_API_KEY` are deferred to Phase 3 — not read by
+the server yet. Phase 5 placeholders (`JWT_SECRET`, `DATABASE_URL`) remain in
+[`.env.example`](.env.example) comments only.
 
 ## Endpoints
 
