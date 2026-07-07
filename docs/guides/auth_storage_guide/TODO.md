@@ -72,17 +72,15 @@ not the EqualView storage app. Storage stays provider-agnostic.
 
 ### Auth Service (`backend/services/authService.js`)
 
-- [ ] Passport GitHub strategy + session middleware (Google strategy stubbed)
-- [ ] AES-256-GCM encrypt/decrypt using `ENCRYPTION_KEY`
-- [ ] `middleware()` → `[session(), passport.initialize(), passport.session()]`
-- [ ] `getGitHubClient(user)` → authenticated Octokit
-- [ ] `getGoogleDriveClient(user)` → stub (throws or returns `null` until Phase 3)
-- [ ] `refreshGoogleToken(user)` → stub until Phase 3
-- [ ] `clientsFor(user)` helper → `{ githubClient?, driveClient? }` for routes/controller
-- [ ] `deserializeUser` returns the session payload (identity + encrypted tokens +
-  ```
-  attached `storage`); **no user DB** in this model
-  ```
+- [x] Passport GitHub strategy + session middleware (Google strategy stubbed)
+- [x] AES-256-GCM encrypt/decrypt using `ENCRYPTION_KEY`
+- [x] `middleware()` → `[session(), passport.initialize(), passport.session()]`
+- [x] `getGitHubClient(user)` → authenticated Octokit
+- [x] `getGoogleDriveClient(user)` → stub (throws or returns `null` until Phase 3)
+- [x] `refreshGoogleToken(user)` → stub until Phase 3
+- [x] `clientsFor(user)` helper → `{ githubClient?, driveClient? }` for routes/controller
+- [x] `deserializeUser` returns the session payload (identity + encrypted tokens +
+      attached `storage`); **no user DB** in this model
 
 
 
