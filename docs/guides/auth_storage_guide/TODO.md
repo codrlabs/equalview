@@ -118,44 +118,42 @@ Provider-neutral interface; **GitHub adapter implemented**, Google adapter stubb
 
 Provider-neutral routes; Google OAuth endpoints stubbed until Phase 3.
 
-- [ ] Factory `makeAuthRouter()`; apply `authService.middleware()` at router level
-- [ ] `GET /github` — initiate OAuth (store provider in session)
-- [ ] `GET /github/callback` — redirect `/connect?provider=github`
-- [ ] `GET /google`, `GET /google/callback` — stub (501 or redirect with "coming soon")
-- [ ] `GET /storages?provider=github` — list repos (GitHub only)
-- [ ] `POST /storage/validate` — fit-check the selected storage
-- [ ] `POST /storage` — `action: "load" | "init"`; **revalidate** then act; attach `req.user.storage`
-- [ ] `GET /user` — safe profile (+ `storage`), **no tokens**
-- [ ] `GET /status` — `{ authenticated, user }`
-- [ ] `POST /logout` — `req.logout()`, destroy session, clear cookie
-- [ ] **No frontend import** (`PROVIDERS` not used here)
-- [ ] `module.exports = makeAuthRouter`
+- [x] Factory `makeAuthRouter()`; apply `authService.middleware()` at router level
+- [x] `GET /github` — initiate OAuth (store provider in session)
+- [x] `GET /github/callback` — redirect `/connect?provider=github`
+- [x] `GET /google`, `GET /google/callback` — stub (501 or redirect with "coming soon")
+- [x] `GET /storages?provider=github` — list repos (GitHub only)
+- [x] `POST /storage/validate` — fit-check the selected storage
+- [x] `POST /storage` — `action: "load" | "init"`; **revalidate** then act; attach `req.user.storage`
+- [x] `GET /user` — safe profile (+ `storage`), **no tokens**
+- [x] `GET /status` — `{ authenticated, user }`
+- [x] `POST /logout` — `req.logout()`, destroy session, clear cookie
+- [x] **No frontend import** (`PROVIDERS` not used here)
+- [x] `module.exports = makeAuthRouter`
 
 
 
 ### Routes Index (`backend/routes/index.js`)
 
-- [ ] `const makeAuthRouter = require('./auth')`
-- [ ] Mount once: `app.use('/api/auth', makeAuthRouter())`
-- [ ] Keep existing `/api` (scan) and `/problems` mounts
-- [ ] **No dual mounting**
+- [x] `const makeAuthRouter = require('./auth')`
+- [x] Mount once: `app.use('/api/auth', makeAuthRouter())`
+- [x] Keep existing `/api` (scan) and `/problems` mounts
+- [x] **No dual mounting**
 
 
 
 ### App.js (`backend/app.js`)
 
-- [ ] Construct `authService` + `storageService`; pass both to `ScanController` deps
-- [ ] Import path `require('./services/storageService')` (not `../services`)
+- [x] Construct `authService` + `storageService`; pass both to `ScanController` deps
+- [x] Import path `require('./services/storageService')` (not `../services`)
 
 
 
 ### Scan Controller (`backend/controllers/scanController.js`)
 
-- [ ] Accept `storageService` + `authService` in deps
-- [ ] In `postScan`: if authenticated and `req.user.storage`, build clients and
-  ```
-  `saveScanResults(...)` — a storage failure logs a warning, **never** fails the scan
-  ```
+- [x] Accept `storageService` + `authService` in deps
+- [x] In `postScan`: if authenticated and `req.user.storage`, build clients and
+      `saveScanResults(...)` — a storage failure logs a warning, **never** fails the scan
 
 ---
 

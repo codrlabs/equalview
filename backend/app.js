@@ -4,6 +4,8 @@
  * arguments — that's what makes the layers unit-testable without a DI
  * framework. See docs/plans/architecture-map.md §6.5.
  */
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 
@@ -11,9 +13,19 @@ const ScanController = require('./controllers/scanController');
 const mountRoutes = require('./routes');
 const ssrfGuard = require('./services/ssrfGuard');
 const mockScanResults = require('./data/mockScanResults');
-const puppeteer = require('puppeteer');
 const ScanRunner = require('./services/scanRunner');
+const AuthService = require('./services/authService');
+const StorageService = require('./services/storageService');
+
 const scanRunner = new ScanRunner();
+
+if (!process.env.SESSION_SECRET) {
+  process.env.SESSION_SECRET =
+    'equalview-local-session-secret-minimum-32-chars';
+}
+if (!process.env.ENCRYPTION_KEY) {
+  process.env.ENCRYPTION_KEY = '66qBcUPktOoyHvQb/5bH0ACXe2CLlXfueNtLLIl1iFE=';
+}
 
 /**
  * Build a fully-wired Express app. Exported separately from `index.js`
@@ -27,24 +39,27 @@ function buildApp(overrides = {}) {
 
   const frontendOrigin =
     process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
-  app.use(cors({ origin: frontendOrigin }));
+  app.use(cors({ origin: frontendOrigin, credentials: true }));
   app.use(express.json());
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'okay', message: 'Server is running!' });
   });
 
-  // Today the controller still serves the mock fixture; in Phase 2 it
-  // will be constructed with a real ScanRunner instead.
+  const authService = overrides.authService || new AuthService();
+  const storageService = overrides.storageService || new StorageService();
+
   const scanController =
     overrides.scanController ||
-     new ScanController({
-       mockScanResults: overrides.mockScanResults || mockScanResults,
-       ssrfGuard: overrides.ssrfGuard || ssrfGuard,
-       scanRunner: scanRunner,
-     });
+    new ScanController({
+      mockScanResults: overrides.mockScanResults || mockScanResults,
+      ssrfGuard: overrides.ssrfGuard || ssrfGuard,
+      scanRunner: overrides.scanRunner || scanRunner,
+      authService,
+      storageService,
+    });
 
-  mountRoutes(app, { scanController });
+  mountRoutes(app, { scanController, authService, storageService });
 
   return app;
 }

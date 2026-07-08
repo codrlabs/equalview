@@ -14,12 +14,15 @@ backend/
 ├── index.js                    # Bootstrap: builds app, listens on $PORT
 ├── app.js                      # Composition root (DI wiring)
 ├── routes/
-│   ├── index.js                # Mount /api and /problems routers
+│   ├── index.js                # Mount /api/auth, /api, and /problems routers
+│   ├── auth.js                 # OAuth + storage picker API
 │   ├── scan.js                 # POST /api/scan, GET /api/scan-results
 │   └── problems.js             # GET /problems/:id
 ├── controllers/
 │   └── scanController.js       # Request/response only — class with bound methods
 ├── services/
+│   ├── authService.js          # Passport, sessions, token encryption
+│   ├── storageService.js       # Portable-account GitHub adapter
 │   ├── scanRunner.js           # Puppeteer + axe-core scan lifecycle
 │   ├── axeTransformer.js       # Pure: axe results → API ScanResult shape
 │   └── ssrfGuard.js            # Pure: URL allow/deny rules
@@ -114,6 +117,15 @@ See also [`docs/guides/auth_storage_guide/githubGoogleAuthStorageImplementation.
 | Method | Path                      | Notes                                          |
 | ------ | ------------------------- | ---------------------------------------------- |
 | GET    | `/health`                 | liveness probe                                 |
+| GET    | `/api/auth/github`        | start GitHub OAuth                             |
+| GET    | `/api/auth/github/callback` | GitHub OAuth callback                        |
+| GET    | `/api/auth/google`        | stub (501) until Phase 3                       |
+| GET    | `/api/auth/storages`      | list GitHub repos (`?provider=github`)         |
+| POST   | `/api/auth/storage/validate` | fit-check selected storage                  |
+| POST   | `/api/auth/storage`       | load or init account storage                   |
+| GET    | `/api/auth/user`          | current user profile (no tokens)               |
+| GET    | `/api/auth/status`        | `{ authenticated, user }`                      |
+| POST   | `/api/auth/logout`        | end session                                    |
 | POST   | `/api/scan`               | run a live Puppeteer + axe-core scan           |
 | GET    | `/api/scan-results?url=`  | re-run a scan for a URL (used by deep links)   |
 | GET    | `/problems/:id`           | look up a single problem (legacy mock lookup)  |
