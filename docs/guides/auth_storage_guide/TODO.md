@@ -67,6 +67,11 @@ not the EqualView storage app. Storage stays provider-agnostic.
       URIs, `ENCRYPTION_KEY`) and document in `backend/README.md`
 - [x] Generate `ENCRYPTION_KEY` with `openssl rand -base64 32`
 - [x] Defer `GOOGLE_PICKER_API_KEY` and Google OAuth vars to Phase 3
+- [ ] **Dev:** each developer creates a **personal GitHub App** for local testing
+      (callback `http://localhost:3000/api/auth/github/callback`; Client ID +
+      secret in local `backend/.env` only). See `backend/README.md` § GitHub App setup.
+- [ ] **Production (TBD):** finalize a **project-owned** codrlabs/equalview GitHub App
+      with production callback URL(s) on the deployed domain before shipping.
 
 
 

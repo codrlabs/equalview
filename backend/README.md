@@ -57,8 +57,8 @@ auth (Phase 1).
 | `PORT`                   | `3000`                   | Port the API listens on                      |
 | `FRONTEND_ORIGIN`        | `http://localhost:5173`  | CORS allow-origin for the SPA                |
 | `SESSION_SECRET`         | —                        | Session cookie signing key (min 32 chars)    |
-| `GITHUB_APP_ID`          | —                        | GitHub App id (OAuth registration)           |
-| `GITHUB_APP_CLIENT_SECRET` | —                      | GitHub App OAuth client secret               |
+| `GITHUB_APP_CLIENT_ID`   | —                        | GitHub App OAuth **Client ID**               |
+| `GITHUB_APP_CLIENT_SECRET` | —                      | GitHub App OAuth **Client secret**           |
 | `GITHUB_REDIRECT_URI`    | `http://localhost:3000/api/auth/github/callback` | GitHub OAuth callback URL |
 | `ENCRYPTION_KEY`         | —                        | AES-256-GCM key for tokens at rest (base64)  |
 
@@ -71,6 +71,43 @@ openssl rand -base64 32   # SESSION_SECRET and/or ENCRYPTION_KEY
 Google OAuth and `GOOGLE_PICKER_API_KEY` are deferred to Phase 3 — not read by
 the server yet. Phase 5 placeholders (`JWT_SECRET`, `DATABASE_URL`) remain in
 [`.env.example`](.env.example) comments only.
+
+### GitHub App setup (Phase 1)
+
+Phase 0 locked **GitHub App** (not a classic OAuth App) for least-privilege,
+per-repo access. For local development, **each developer creates their own
+personal GitHub App** and puts the credentials in `backend/.env` — nothing is
+shared via the repo.
+
+**Local dev (do this now)**
+
+1. GitHub → **Settings → Developer settings → GitHub Apps → New GitHub App**.
+2. Set **Callback URL** to `http://localhost:3000/api/auth/github/callback`.
+3. Under **Permissions**, grant at least **Contents: Read & write** and
+   **Metadata: Read** (per the auth/storage design).
+4. Create the app, then open **OAuth credentials** and copy the **Client ID**
+   and generate a **Client secret**.
+5. Add to `backend/.env`:
+   - `GITHUB_APP_CLIENT_ID` — the OAuth Client ID (not the numeric App ID)
+   - `GITHUB_APP_CLIENT_SECRET`
+   - `GITHUB_REDIRECT_URI=http://localhost:3000/api/auth/github/callback`
+   - `SESSION_SECRET` and `ENCRYPTION_KEY` (see above)
+
+Install the app on your account and select the repos you want to test with when
+prompted during sign-in.
+
+**Production (TBD — finalize before shipping EqualView)**
+
+The personal apps above are for **testing only**. Before EqualView runs on a
+real domain, the team must register a **project-owned GitHub App** (under the
+codrlabs/equalview org or equivalent) with:
+
+- Production callback URL(s) on the deployed backend (e.g.
+  `https://api.equalview.example/api/auth/github/callback`)
+- The same permission model (`Contents: rw`, `Metadata: r`)
+- Client ID/secret stored in deployment secrets — **never** committed to git
+
+See also [`docs/guides/auth_storage_guide/githubGoogleAuthStorageImplementation.md`](../docs/guides/auth_storage_guide/githubGoogleAuthStorageImplementation.md) § OAuth App Configuration.
 
 ## Endpoints
 
