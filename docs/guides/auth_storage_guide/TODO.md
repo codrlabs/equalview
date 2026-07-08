@@ -93,34 +93,24 @@ not the EqualView storage app. Storage stays provider-agnostic.
 
 Provider-neutral interface; **GitHub adapter implemented**, Google adapter stubbed.
 
-- [ ] **Browse**: `listGitHubRepos(githubClient)` → `{ id(nodeId), full_name, private, html_url }[]`
-  ```
-  (Google folders come from the client-side Picker in Phase 3, not the backend)
-  ```
-- [ ] **Fit-check**: `validateStorage(provider, storageRef, clients)` →
-  ```
-  `{ status, reason?, capabilities, manifestSummary? }` per
-  [accountStorageContract.md → Validation rules](accountStorageContract.md#validation-rules-the-fit-check)
-  ```
-- [ ] **Load**: `loadAccount(provider, storageRef, clients)` — read manifest +
-  ```
-  `scans/index.json`, **reconcile drift** by rebuilding from `scans/*.json`
-  ```
-- [ ] **Init**: `initStorage(provider, storageRef, owner, clients)` — **revalidate**,
-  ```
-  then conditionally create `equalview.json` + `scans/` skeleton
-  ```
-- [ ] **Save**: `saveScanResults(account, scanResult, url, clients)` — write immutable
-  ```
-  `scans/<scanId>_<host>.json`, then update index + manifest summary
-  ```
-- [ ] GitHub writes pass blob `sha` (optimistic concurrency); prefer a single commit
-- [ ] Drive writes stubbed until Phase 3 (generation/ETag preconditions; scan file first)
-- [ ] **Accepts pre-built clients** — no direct `AuthService` calls
-- [ ] Scan files immutable; `index.json` + `scanCount` treated as caches
-- [ ] **No** `repos.getForAuthenticatedUser` for existence (use `repos.getContent`/`repos.get`)
-- [ ] **No** `GoogleAuth({ credentials:{access_token} })` (use `OAuth2` + `setCredentials` when Drive lands)
-- [ ] **Never** write tokens/secrets into the store
+- [x] **Browse**: `listGitHubRepos(githubClient)` → `{ id(nodeId), full_name, private, html_url }[]`
+      (Google folders come from the client-side Picker in Phase 3, not the backend)
+- [x] **Fit-check**: `validateStorage(provider, storageRef, clients)` →
+      `{ status, reason?, capabilities, manifestSummary? }` per
+      [accountStorageContract.md → Validation rules](accountStorageContract.md#validation-rules-the-fit-check)
+- [x] **Load**: `loadAccount(provider, storageRef, clients)` — read manifest +
+      `scans/index.json`, **reconcile drift** by rebuilding from `scans/*.json`
+- [x] **Init**: `initStorage(provider, storageRef, owner, clients)` — **revalidate**,
+      then conditionally create `equalview.json` + `scans/` skeleton
+- [x] **Save**: `saveScanResults(account, scanResult, url, clients)` — write immutable
+      `scans/<scanId>_<host>.json`, then update index + manifest summary
+- [x] GitHub writes pass blob `sha` (optimistic concurrency); prefer a single commit
+- [x] Drive writes stubbed until Phase 3 (generation/ETag preconditions; scan file first)
+- [x] **Accepts pre-built clients** — no direct `AuthService` calls
+- [x] Scan files immutable; `index.json` + `scanCount` treated as caches
+- [x] **No** `repos.getForAuthenticatedUser` for existence (use `repos.getContent`/`repos.get`)
+- [x] **No** `GoogleAuth({ credentials:{access_token} })` (use `OAuth2` + `setCredentials` when Drive lands)
+- [x] **Never** write tokens/secrets into the store
 
 
 
