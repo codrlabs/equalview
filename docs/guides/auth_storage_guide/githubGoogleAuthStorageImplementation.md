@@ -460,9 +460,9 @@ manifest + `scans/`). The server **revalidates** before acting.
 # Sessions
 SESSION_SECRET=your_super_secret_session_key_min_32_chars
 
-# GitHub OAuth (or GitHub App — see Scopes & Browsing Reality)
-GITHUB_CLIENT_ID=your_github_oauth_app_client_id
-GITHUB_CLIENT_SECRET=your_github_oauth_app_client_secret
+# GitHub App (Phase 0 choice — OAuth credentials from the app settings page)
+GITHUB_APP_CLIENT_ID=your_github_app_oauth_client_id
+GITHUB_APP_CLIENT_SECRET=your_github_app_oauth_client_secret
 GITHUB_REDIRECT_URI=http://localhost:3000/api/auth/github/callback
 
 # Google OAuth (+ Picker API key for client-side folder selection)
@@ -480,10 +480,34 @@ ENCRYPTION_KEY=your_32_byte_base64_encoded_encryption_key
 ## OAuth App Configuration
 
 ### GitHub
+
+Phase 0 choice: **GitHub App** (per-repo least privilege), not a classic OAuth App.
+
+#### Local development — personal GitHub App
+
+Each developer creates **their own** GitHub App for Phase 1 testing:
+
+1. GitHub → **Settings → Developer settings → GitHub Apps → New GitHub App**
+2. **Callback URL:** `http://localhost:3000/api/auth/github/callback`
+3. **Permissions:** `Contents: Read & write`, `Metadata: Read`
+4. After creation, copy **OAuth Client ID** + **Client secret** into
+   `backend/.env` as `GITHUB_APP_CLIENT_ID` and `GITHUB_APP_CLIENT_SECRET`
+   (use the OAuth Client ID, not the numeric App ID)
+5. Install the app on your account when testing; pick repos during the install flow
+
+Personal apps stay in each developer's `.env` only — never commit credentials.
+
+#### Production — project GitHub App (TBD)
+
+Before EqualView ships on a real domain, finalize a **codrlabs-owned GitHub App**
+with production callback URL(s) on the deployed backend, the same permissions,
+and secrets in deployment config. Local personal apps are not used in production.
+
+#### Reference (classic OAuth App — not chosen)
+
 - **OAuth App**: callback `http://localhost:3000/api/auth/github/callback`;
   scopes `repo` (private) **or** `public_repo` (public-only), plus `read:user`.
-- **GitHub App (recommended for least privilege)**: permissions
-  `Contents: read/write`, `Metadata: read`; users install on selected repos.
+  Broader scope than GitHub App; documented for comparison only.
 
 ### Google
 1. Cloud Console → APIs & Services → enable **Drive API** and **Picker API**.

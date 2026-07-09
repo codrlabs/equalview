@@ -1,0 +1,108 @@
+/**
+ * Unit tests for AuthService — encryption, client builders, Phase 3 stubs.
+ */
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { TEST_ENCRYPTION_KEY, TEST_SESSION_SECRET } = require('./helpers/testEnv');
+const AuthService = require('../services/authService');
+
+test('encrypt/decrypt round-trip with AES-256-GCM', () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+  });
+
+  const token = 'gho_test_access_token_12345';
+  const encrypted = authService.encrypt(token);
+
+  assert.notEqual(encrypted, token);
+  assert.equal(authService.decrypt(encrypted), token);
+});
+
+test('encrypt produces distinct ciphertext for the same plaintext', () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+  });
+
+  const a = authService.encrypt('same-token');
+  const b = authService.encrypt('same-token');
+
+  assert.notEqual(a, b);
+  assert.equal(authService.decrypt(a), 'same-token');
+  assert.equal(authService.decrypt(b), 'same-token');
+});
+
+test('middleware returns session + passport handlers', () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+  });
+
+  const stack = authService.middleware();
+  assert.equal(stack.length, 3);
+  assert.equal(typeof stack[0], 'function');
+  assert.equal(typeof stack[1], 'function');
+  assert.equal(typeof stack[2], 'function');
+});
+
+test('getGitHubClient returns authenticated Octokit', () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+  });
+
+  const user = {
+    id: '1',
+    provider: 'github',
+    tokens: {
+      github: {
+        accessToken: authService.encrypt('gho_live_token'),
+      },
+    },
+  };
+
+  const client = authService.getGitHubClient(user);
+  assert.ok(client);
+  assert.equal(typeof client.rest.repos.listForAuthenticatedUser, 'function');
+});
+
+test('getGoogleDriveClient returns null until Phase 3', () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+  });
+
+  assert.equal(authService.getGoogleDriveClient({}), null);
+});
+
+test('refreshGoogleToken rejects until Phase 3', async () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+  });
+
+  await assert.rejects(
+    () => authService.refreshGoogleToken({}),
+    /not available until Phase 3/,
+  );
+});
+
+test('clientsFor builds githubClient only when token present', async () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+  });
+
+  const empty = await authService.clientsFor({});
+  assert.deepEqual(Object.keys(empty), []);
+
+  const withGitHub = await authService.clientsFor({
+    tokens: {
+      github: { accessToken: authService.encrypt('gho_token') },
+    },
+  });
+
+  assert.ok(withGitHub.githubClient);
+  assert.equal('driveClient' in withGitHub, false);
+});

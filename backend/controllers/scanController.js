@@ -14,12 +14,16 @@ class ScanController {
    * @param {object} deps
    * @param {object} deps.mockScanResults  Phase-1 fixture; replaced in Phase 2
    * @param {{ validate: (s: string) => { ok: boolean, reason?: string } }} [deps.ssrfGuard]
-   * @param {object} deps.scanRunner  Phase-2 implementation; replaced the mock in Phase 1
+   * @param {object} deps.scanRunner
+   * @param {import('../services/authService')} [deps.authService]
+   * @param {import('../services/storageService')} [deps.storageService]
    */
-  constructor({ mockScanResults, ssrfGuard, scanRunner }) {
+  constructor({ mockScanResults, ssrfGuard, scanRunner, authService, storageService }) {
     this.mockScanResults = mockScanResults;
     this.ssrfGuard = ssrfGuard;
     this.scanRunner = scanRunner;
+    this.authService = authService;
+    this.storageService = storageService;
 
     // Bind handlers once so router wiring stays clean.
     this.postScan = this.postScan.bind(this);
@@ -42,6 +46,30 @@ class ScanController {
      console.log(`Received scan request for URL: ${url}`);
      try {
        const result = await this.scanRunner.run(url);
+
+       if (
+         this.authService &&
+         this.storageService &&
+         typeof req.isAuthenticated === 'function' &&
+         req.isAuthenticated() &&
+         req.user?.storage
+       ) {
+         try {
+           const clients = await this.authService.clientsFor(req.user);
+           await this.storageService.saveScanResults(
+             req.user,
+             result,
+             url,
+             clients,
+           );
+         } catch (storageErr) {
+           console.warn(
+             'Failed to save scan results to storage:',
+             storageErr.message,
+           );
+         }
+       }
+
        return res.json(result);
      } catch (err) {
        console.error(err);

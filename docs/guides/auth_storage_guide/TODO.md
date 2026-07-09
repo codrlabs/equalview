@@ -43,86 +43,98 @@ choices for both providers still stand; Google is deferred, not dropped.
 
 ### Dependencies
 
-- [ ] `npm install express-session passport passport-github2 @octokit/rest crypto-js dotenv` (in `backend/`)
-- [ ] `npm install --save-dev @types/express-session @types/passport @types/passport-github2`
-- [ ] Defer Google deps (`passport-google-oauth20`, `googleapis`) to Phase 3
+- [x] `npm install express-session passport passport-github2 @octokit/rest dotenv` (in `backend/`)
+- [x] `npm install --save-dev @types/express-session @types/passport @types/passport-github2`
+- [x] Defer Google deps (`passport-google-oauth20`, `googleapis`) to Phase 3
 
 ### Environment
 
-- [ ] Add vars to `.env.example` (`SESSION_SECRET`, GitHub App id+secret, redirect
+- [x] Add vars to `.env.example` (`SESSION_SECRET`, GitHub App id+secret, redirect
       URIs, `ENCRYPTION_KEY`) and document in `backend/README.md`
-- [ ] Generate `ENCRYPTION_KEY` with `openssl rand -base64 32`
-- [ ] Defer `GOOGLE_PICKER_API_KEY` and Google OAuth vars to Phase 3
+- [x] Generate `ENCRYPTION_KEY` with `openssl rand -base64 32`
+- [x] Defer `GOOGLE_PICKER_API_KEY` and Google OAuth vars to Phase 3
+- [ ] **Dev:** each developer creates a **personal GitHub App** for local testing
+      (callback `http://localhost:3000/api/auth/github/callback`; Client ID +
+      secret in local `backend/.env` only). See `backend/README.md` § GitHub App setup.
+- [ ] **Production (TBD):** finalize a **project-owned** codrlabs/equalview GitHub App
+      with production callback URL(s) on the deployed domain before shipping.
 
 ### Auth Service (`backend/services/authService.js`)
 
-- [ ] Passport GitHub strategy + session middleware (Google strategy stubbed)
-- [ ] AES-256-GCM encrypt/decrypt using `ENCRYPTION_KEY`
-- [ ] `middleware()` → `[session(), passport.initialize(), passport.session()]`
-- [ ] `getGitHubClient(user)` → authenticated Octokit
-- [ ] `getGoogleDriveClient(user)` → stub (throws or returns `null` until Phase 3)
-- [ ] `refreshGoogleToken(user)` → stub until Phase 3
-- [ ] `clientsFor(user)` helper → `{ githubClient?, driveClient? }` for routes/controller
-- [ ] `deserializeUser` returns the session payload (identity + encrypted tokens +
+- [x] Passport GitHub strategy + session middleware (Google strategy stubbed)
+- [x] AES-256-GCM encrypt/decrypt using `ENCRYPTION_KEY`
+- [x] `middleware()` → `[session(), passport.initialize(), passport.session()]`
+- [x] `getGitHubClient(user)` → authenticated Octokit
+- [x] `getGoogleDriveClient(user)` → stub (throws or returns `null` until Phase 3)
+- [x] `refreshGoogleToken(user)` → stub until Phase 3
+- [x] `clientsFor(user)` helper → `{ githubClient?, driveClient? }` for routes/controller
+- [x] `deserializeUser` returns the session payload (identity + encrypted tokens +
       attached `storage`); **no user DB** in this model
 
 ### Storage Service (`backend/services/storageService.js`) — speaks the contract
 
 Provider-neutral interface; **GitHub adapter implemented**, Google adapter stubbed.
 
-- [ ] **Browse**: `listGitHubRepos(githubClient)` → `{ id(nodeId), full_name, private, html_url }[]`
+- [x] **Browse**: `listGitHubRepos(githubClient)` → `{ id(nodeId), full_name, private, html_url }[]`
       (Google folders come from the client-side Picker in Phase 3, not the backend)
-- [ ] **Fit-check**: `validateStorage(provider, storageRef, clients)` →
+- [x] **Fit-check**: `validateStorage(provider, storageRef, clients)` →
       `{ status, reason?, capabilities, manifestSummary? }` per
       [accountStorageContract.md → Validation rules](accountStorageContract.md#validation-rules-the-fit-check)
-- [ ] **Load**: `loadAccount(provider, storageRef, clients)` — read manifest +
+- [x] **Load**: `loadAccount(provider, storageRef, clients)` — read manifest +
       `scans/index.json`, **reconcile drift** by rebuilding from `scans/*.json`
-- [ ] **Init**: `initStorage(provider, storageRef, owner, clients)` — **revalidate**,
+- [x] **Init**: `initStorage(provider, storageRef, owner, clients)` — **revalidate**,
       then conditionally create `equalview.json` + `scans/` skeleton
-- [ ] **Save**: `saveScanResults(account, scanResult, url, clients)` — write immutable
+- [x] **Save**: `saveScanResults(account, scanResult, url, clients)` — write immutable
       `scans/<scanId>_<host>.json`, then update index + manifest summary
-- [ ] GitHub writes pass blob `sha` (optimistic concurrency); prefer a single commit
-- [ ] Drive writes stubbed until Phase 3 (generation/ETag preconditions; scan file first)
-- [ ] **Accepts pre-built clients** — no direct `AuthService` calls
-- [ ] Scan files immutable; `index.json` + `scanCount` treated as caches
-- [ ] **No** `repos.getForAuthenticatedUser` for existence (use `repos.getContent`/`repos.get`)
-- [ ] **No** `GoogleAuth({ credentials:{access_token} })` (use `OAuth2` + `setCredentials` when Drive lands)
-- [ ] **Never** write tokens/secrets into the store
+- [x] GitHub writes pass blob `sha` (optimistic concurrency); prefer a single commit
+- [x] Drive writes stubbed until Phase 3 (generation/ETag preconditions; scan file first)
+- [x] **Accepts pre-built clients** — no direct `AuthService` calls
+- [x] Scan files immutable; `index.json` + `scanCount` treated as caches
+- [x] **No** `repos.getForAuthenticatedUser` for existence (use `repos.getContent`/`repos.get`)
+- [x] **No** `GoogleAuth({ credentials:{access_token} })` (use `OAuth2` + `setCredentials` when Drive lands)
+- [x] **Never** write tokens/secrets into the store
 
 ### Auth Routes (`backend/routes/auth.js`)
 
 Provider-neutral routes; Google OAuth endpoints stubbed until Phase 3.
 
-- [ ] Factory `makeAuthRouter()`; apply `authService.middleware()` at router level
-- [ ] `GET /github` — initiate OAuth (store provider in session)
-- [ ] `GET /github/callback` — redirect `/connect?provider=github`
-- [ ] `GET /google`, `GET /google/callback` — stub (501 or redirect with "coming soon")
-- [ ] `GET /storages?provider=github` — list repos (GitHub only)
-- [ ] `POST /storage/validate` — fit-check the selected storage
-- [ ] `POST /storage` — `action: "load" | "init"`; **revalidate** then act; attach `req.user.storage`
-- [ ] `GET /user` — safe profile (+ `storage`), **no tokens**
-- [ ] `GET /status` — `{ authenticated, user }`
-- [ ] `POST /logout` — `req.logout()`, destroy session, clear cookie
-- [ ] **No frontend import** (`PROVIDERS` not used here)
-- [ ] `module.exports = makeAuthRouter`
+- [x] Factory `makeAuthRouter()`; apply `authService.middleware()` at router level
+- [x] `GET /github` — initiate OAuth (store provider in session)
+- [x] `GET /github/callback` — redirect `/connect?provider=github`
+- [x] `GET /google`, `GET /google/callback` — stub (501 or redirect with "coming soon")
+- [x] `GET /storages?provider=github` — list repos (GitHub only)
+- [x] `POST /storage/validate` — fit-check the selected storage
+- [x] `POST /storage` — `action: "load" | "init"`; **revalidate** then act; attach `req.user.storage`
+- [x] `GET /user` — safe profile (+ `storage`), **no tokens**
+- [x] `GET /status` — `{ authenticated, user }`
+- [x] `POST /logout` — `req.logout()`, destroy session, clear cookie
+- [x] **No frontend import** (`PROVIDERS` not used here)
+- [x] `module.exports = makeAuthRouter`
 
 ### Routes Index (`backend/routes/index.js`)
 
-- [ ] `const makeAuthRouter = require('./auth')`
-- [ ] Mount once: `app.use('/api/auth', makeAuthRouter())`
-- [ ] Keep existing `/api` (scan) and `/problems` mounts
-- [ ] **No dual mounting**
+- [x] `const makeAuthRouter = require('./auth')`
+- [x] Mount once: `app.use('/api/auth', makeAuthRouter())`
+- [x] Keep existing `/api` (scan) and `/problems` mounts
+- [x] **No dual mounting**
 
 ### App.js (`backend/app.js`)
 
-- [ ] Construct `authService` + `storageService`; pass both to `ScanController` deps
-- [ ] Import path `require('./services/storageService')` (not `../services`)
+- [x] Construct `authService` + `storageService`; pass both to `ScanController` deps
+- [x] Import path `require('./services/storageService')` (not `../services`)
 
 ### Scan Controller (`backend/controllers/scanController.js`)
 
-- [ ] Accept `storageService` + `authService` in deps
-- [ ] In `postScan`: if authenticated and `req.user.storage`, build clients and
+- [x] Accept `storageService` + `authService` in deps
+- [x] In `postScan`: if authenticated and `req.user.storage`, build clients and
       `saveScanResults(...)` — a storage failure logs a warning, **never** fails the scan
+
+### Phase 1 follow-ups (post-merge)
+
+- [ ] **Save path:** trust `index.json` on `saveScanResults`; full reconcile only on
+      load (or when drift is detected). Today every save re-downloads all scan files.
+- [ ] **Session store:** replace in-memory `express-session` MemoryStore with Redis
+      (or equivalent) before production deploy — restarts and multi-instance break today.
 
 ---
 
@@ -195,8 +207,8 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 
 ### Tests
 
-- [ ] `backend/tests/auth.test.js` — OAuth redirects, callbacks, status/logout
-- [ ] `backend/tests/storage.test.js` — fit-check matrix (loadable / initializable /
+- [x] `backend/tests/auth.test.js` — OAuth redirects, callbacks, status/logout
+- [x] `backend/tests/storageService.test.js` — fit-check matrix (loadable / initializable /
       unrelated / incompatible / invalid), load-time reconcile, init race guard,
       atomic save (mock authenticated user + mock clients)
 - [ ] `frontend/tests/apiClient.test.js` — auth + storage methods
@@ -204,7 +216,7 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 
 ### Documentation
 
-- [ ] `backend/README.md`: auth/storage endpoints table, env setup, OAuth/Picker
+- [x] `backend/README.md`: auth/storage endpoints table, env setup, OAuth/Picker
       config, scopes, testing
 - [ ] Keep this TODO and the design/contract docs in sync if implementation diverges
 
