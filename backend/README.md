@@ -65,11 +65,18 @@ auth (Phase 1).
 | `GITHUB_REDIRECT_URI`    | `http://localhost:3000/api/auth/github/callback` | GitHub OAuth callback URL |
 | `ENCRYPTION_KEY`         | —                        | AES-256-GCM key for tokens at rest (base64)  |
 
-Generate secrets:
+Generate secrets (required — the server refuses to start without both):
 
 ```bash
 openssl rand -base64 32   # SESSION_SECRET and/or ENCRYPTION_KEY
 ```
+
+`index.js` throws on startup if either is missing. Tests inject their own values
+via `tests/helpers/testEnv.js`; never commit real secrets to the repo.
+
+**Phase 1 limitation — in-memory sessions:** `express-session` uses the default
+MemoryStore. Restarts log everyone out; multiple server instances do not share
+sessions. Switch to a persistent store (Redis, etc.) before production deploy.
 
 Google OAuth and `GOOGLE_PICKER_API_KEY` are deferred to Phase 3 — not read by
 the server yet. Phase 5 placeholders (`JWT_SECRET`, `DATABASE_URL`) remain in

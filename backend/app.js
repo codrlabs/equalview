@@ -19,14 +19,6 @@ const StorageService = require('./services/storageService');
 
 const scanRunner = new ScanRunner();
 
-if (!process.env.SESSION_SECRET) {
-  process.env.SESSION_SECRET =
-    'equalview-local-session-secret-minimum-32-chars';
-}
-if (!process.env.ENCRYPTION_KEY) {
-  process.env.ENCRYPTION_KEY = '66qBcUPktOoyHvQb/5bH0ACXe2CLlXfueNtLLIl1iFE=';
-}
-
 /**
  * Build a fully-wired Express app. Exported separately from `index.js`
  * so tests can `request(buildApp())` without binding a port.

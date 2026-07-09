@@ -1,9 +1,9 @@
 # Implementation TODO — GitHub/Google Auth & Portable Storage
 
 > Checklist for the design in
-> `[githubGoogleAuthStorageImplementation.md](githubGoogleAuthStorageImplementation.md)`
+> [`githubGoogleAuthStorageImplementation.md`](githubGoogleAuthStorageImplementation.md)
 > and the on-disk contract in
-> `[accountStorageContract.md](accountStorageContract.md)`.
+> [`accountStorageContract.md`](accountStorageContract.md).
 > Verify each item against the actual code before ticking it.
 >
 > **Model in one line:** the user's GitHub repo / Drive folder *is* the account.
@@ -14,24 +14,16 @@
 ## Phase 0: Decisions to lock before coding
 
 - [x] **GitHub**: classic OAuth App (`repo` = broad) **or** GitHub App
-  ```
-  (per-repo `Contents:rw` + `Metadata:r`)? Pick one; it changes the picker UX.
-  ```
+      (per-repo `Contents:rw` + `Metadata:r`)? Pick one; it changes the picker UX.
   - **Choice:** GitHub App
 - [x] **Google**: Google Picker (`drive.file`, recommended) **or** app-rendered
-  ```
-  browse (`drive.metadata.readonly`)? Pick one; document the privacy cost.
-  ```
+      browse (`drive.metadata.readonly`)? Pick one; document the privacy cost.
   - **Choice:** Google Picker
 - [x] **Identity**: possession-based (default) vs. subject-bound load. Default =
-  ```
-  possession-based; record `storage.ownerId` regardless.
-  ```
+      possession-based; record `storage.ownerId` regardless.
   - **Choice:** Possession-based
 
 ---
-
-
 
 ## Implementation sequencing
 
@@ -40,26 +32,20 @@ choices for both providers still stand; Google is deferred, not dropped.
 
 - **Phase 1–2:** auth + storage abstraction with **GitHub adapter only**.
 - **Routes, controller, and frontend** stay provider-neutral; Google surfaces as
-a stub behind the same interface.
+  a stub behind the same interface.
 - **Phase 3:** Google backend adapter + Google Picker (one adapter, not a rewrite).
 - **GitHub App** means GitHub's OAuth registration type (per-repo least privilege),
-not the EqualView storage app. Storage stays provider-agnostic.
+  not the EqualView storage app. Storage stays provider-agnostic.
 
 ---
 
-
-
 ## Phase 1: Backend — Auth & Storage (GitHub)
-
-
 
 ### Dependencies
 
-- [x] `npm install express-session passport passport-github2 @octokit/rest crypto-js dotenv` (in `backend/`)
+- [x] `npm install express-session passport passport-github2 @octokit/rest dotenv` (in `backend/`)
 - [x] `npm install --save-dev @types/express-session @types/passport @types/passport-github2`
 - [x] Defer Google deps (`passport-google-oauth20`, `googleapis`) to Phase 3
-
-
 
 ### Environment
 
@@ -73,8 +59,6 @@ not the EqualView storage app. Storage stays provider-agnostic.
 - [ ] **Production (TBD):** finalize a **project-owned** codrlabs/equalview GitHub App
       with production callback URL(s) on the deployed domain before shipping.
 
-
-
 ### Auth Service (`backend/services/authService.js`)
 
 - [x] Passport GitHub strategy + session middleware (Google strategy stubbed)
@@ -86,8 +70,6 @@ not the EqualView storage app. Storage stays provider-agnostic.
 - [x] `clientsFor(user)` helper → `{ githubClient?, driveClient? }` for routes/controller
 - [x] `deserializeUser` returns the session payload (identity + encrypted tokens +
       attached `storage`); **no user DB** in this model
-
-
 
 ### Storage Service (`backend/services/storageService.js`) — speaks the contract
 
@@ -112,8 +94,6 @@ Provider-neutral interface; **GitHub adapter implemented**, Google adapter stubb
 - [x] **No** `GoogleAuth({ credentials:{access_token} })` (use `OAuth2` + `setCredentials` when Drive lands)
 - [x] **Never** write tokens/secrets into the store
 
-
-
 ### Auth Routes (`backend/routes/auth.js`)
 
 Provider-neutral routes; Google OAuth endpoints stubbed until Phase 3.
@@ -131,8 +111,6 @@ Provider-neutral routes; Google OAuth endpoints stubbed until Phase 3.
 - [x] **No frontend import** (`PROVIDERS` not used here)
 - [x] `module.exports = makeAuthRouter`
 
-
-
 ### Routes Index (`backend/routes/index.js`)
 
 - [x] `const makeAuthRouter = require('./auth')`
@@ -140,14 +118,10 @@ Provider-neutral routes; Google OAuth endpoints stubbed until Phase 3.
 - [x] Keep existing `/api` (scan) and `/problems` mounts
 - [x] **No dual mounting**
 
-
-
 ### App.js (`backend/app.js`)
 
 - [x] Construct `authService` + `storageService`; pass both to `ScanController` deps
 - [x] Import path `require('./services/storageService')` (not `../services`)
-
-
 
 ### Scan Controller (`backend/controllers/scanController.js`)
 
@@ -155,9 +129,14 @@ Provider-neutral routes; Google OAuth endpoints stubbed until Phase 3.
 - [x] In `postScan`: if authenticated and `req.user.storage`, build clients and
       `saveScanResults(...)` — a storage failure logs a warning, **never** fails the scan
 
+### Phase 1 follow-ups (post-merge)
+
+- [ ] **Save path:** trust `index.json` on `saveScanResults`; full reconcile only on
+      load (or when drift is detected). Today every save re-downloads all scan files.
+- [ ] **Session store:** replace in-memory `express-session` MemoryStore with Redis
+      (or equivalent) before production deploy — restarts and multi-instance break today.
+
 ---
-
-
 
 ## Phase 2: Frontend — Auth + GitHub Connect
 
@@ -174,8 +153,6 @@ Provider-neutral API shape; **GitHub picker wired**, Google deferred to Phase 3.
 - [ ] `setupStorage(provider, storageRef, action)` → `POST /api/auth/storage`
 - [ ] Keep `runScan`, `getScanResults`, `getProblem`
 
-
-
 ### ConnectView (`frontend/src/views/ConnectView.jsx`) — the picker
 
 - [ ] GitHub: list repos via `listStorages('github')`
@@ -183,14 +160,10 @@ Provider-neutral API shape; **GitHub picker wired**, Google deferred to Phase 3.
 - [ ] Persistent **"Create new"** option (the `init` path on a fresh store)
 - [ ] On select → `validateStorage` → render fit-check status + scan count
 - [ ] Action button follows status: `loadable`→"Load my account",
-  ```
-  `initializable`/new→"Set up & continue", `incompatible`/`invalid`→blocked + guidance
-  ```
+      `initializable`/new→"Set up & continue", `incompatible`/`invalid`→blocked + guidance
 - [ ] Disable init when `capabilities.canWrite === false`
 - [ ] On confirm → `setupStorage(provider, storageRef, action)` → dashboard
 - [ ] Replace hard-coded `existing` lists in `frontend/src/data/placeholders.js`
-
-
 
 ### App Routes (`frontend/src/App.jsx`)
 
@@ -201,8 +174,6 @@ Provider-neutral API shape; **GitHub picker wired**, Google deferred to Phase 3.
 - [ ] `signOut()` → `logout()` → clear state → landing
 - [ ] Remove `setAuthed` / placeholder-only wiring
 
-
-
 ### Views
 
 - [ ] `AccountView` — real `user` + `storage` (not `PLACEHOLDER_USER`); "saved scans" from index
@@ -210,8 +181,6 @@ Provider-neutral API shape; **GitHub picker wired**, Google deferred to Phase 3.
 - [ ] `ConnectView` — accept a `storageError` prop for failures
 
 ---
-
-
 
 ## Phase 3: Google — Backend adapter + Picker
 
@@ -226,8 +195,6 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 - [ ] Drive adapter in `storageService`: fit-check, load, init, save with generation/ETag
 - [ ] Backend scopes: `drive.file` only (per Phase 0 choice)
 
-
-
 ### Frontend
 
 - [ ] `googleLogin()` → full redirect to `/api/auth/google`
@@ -236,36 +203,24 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 
 ---
 
-
-
 ## Phase 4: Testing & Documentation
-
-
 
 ### Tests
 
-- [ ] `backend/tests/auth.test.js` — OAuth redirects, callbacks, status/logout
-- [ ] `backend/tests/storage.test.js` — fit-check matrix (loadable / initializable /
-  ```
-  unrelated / incompatible / invalid), load-time reconcile, init race guard,
-  atomic save (mock authenticated user + mock clients)
-  ```
+- [x] `backend/tests/auth.test.js` — OAuth redirects, callbacks, status/logout
+- [x] `backend/tests/storageService.test.js` — fit-check matrix (loadable / initializable /
+      unrelated / incompatible / invalid), load-time reconcile, init race guard,
+      atomic save (mock authenticated user + mock clients)
 - [ ] `frontend/tests/apiClient.test.js` — auth + storage methods
 - [ ] `frontend/tests/connectView.test.jsx` — picker + fit-check rendering per status
 
-
-
 ### Documentation
 
-- [ ] `backend/README.md`: auth/storage endpoints table, env setup, OAuth/Picker
-  ```
-  config, scopes, testing
-  ```
+- [x] `backend/README.md`: auth/storage endpoints table, env setup, OAuth/Picker
+      config, scopes, testing
 - [ ] Keep this TODO and the design/contract docs in sync if implementation diverges
 
 ---
-
-
 
 ## Verification checklist (run before marking complete)
 
@@ -282,13 +237,10 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 
 ---
 
-
-
 ## Notes
 
 - Each checkbox is a verifiable claim. If you can't verify it in real code, it's not done.
 - Prefer small, testable PRs.
-- `[githubGoogleAuthStorageImplementation.md](githubGoogleAuthStorageImplementation.md)`
-(flow/API) and `[accountStorageContract.md](accountStorageContract.md)` (bytes)
-are the source of truth — update them if the implementation diverges.
-
+- [`githubGoogleAuthStorageImplementation.md`](githubGoogleAuthStorageImplementation.md)
+  (flow/API) and [`accountStorageContract.md`](accountStorageContract.md) (bytes)
+  are the source of truth — update them if the implementation diverges.

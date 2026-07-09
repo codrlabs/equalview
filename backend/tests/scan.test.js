@@ -6,6 +6,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
+require('./helpers/testEnv');
 const buildApp = require('../app');
 const mockScanResults = require('../data/mockScanResults');
 

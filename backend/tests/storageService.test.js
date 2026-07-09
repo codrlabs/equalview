@@ -51,6 +51,8 @@ function createMockGitHubClient(initial = {}) {
     ...initial.repoMeta,
   };
 
+  let updateRefFailures = initial.updateRefFailures ?? 0;
+
   return {
     files,
     rest: {
@@ -133,6 +135,12 @@ function createMockGitHubClient(initial = {}) {
           return { data: { sha: headSha } };
         },
         updateRef: async ({ sha }) => {
+          if (updateRefFailures > 0) {
+            updateRefFailures -= 1;
+            const err = new Error('Reference update failed');
+            err.status = 422;
+            throw err;
+          }
           headSha = sha;
         },
       },
@@ -361,4 +369,35 @@ test('saveScanResults rejects google storage until Phase 3', async () => {
       ),
     /not available until Phase 3/,
   );
+});
+
+test('_writeGitHubFiles retries when branch head moves during save', async () => {
+  const storageService = new StorageService();
+  const client = createMockGitHubClient({
+    updateRefFailures: 1,
+    files: {
+      'equalview.json': {
+        content: JSON.stringify(manifest()),
+        sha: 'sha-manifest',
+      },
+      'scans/index.json': {
+        content: JSON.stringify({ schemaVersion: 1, scans: [] }),
+        sha: 'sha-index',
+      },
+    },
+  });
+
+  const saved = await storageService.saveScanResults(
+    {
+      storage: { ...STORAGE_REF, provider: 'github', branch: 'main' },
+    },
+    {
+      problems: { visualAccessibility: [], structureAndSemantics: [], multimedia: [] },
+      whatsGood: [],
+    },
+    'https://codrlabs.com',
+    { githubClient: client },
+  );
+
+  assert.ok(saved.scanId);
 });

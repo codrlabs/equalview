@@ -5,18 +5,17 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
+const { TEST_ENCRYPTION_KEY, TEST_SESSION_SECRET } = require('./helpers/testEnv');
 const buildApp = require('../app');
 const AuthService = require('../services/authService');
 const StorageService = require('../services/storageService');
-
-const TEST_KEY = '66qBcUPktOoyHvQb/5bH0ACXe2CLlXfueNtLLIl1iFE=';
 
 function createTestApp(overrides = {}) {
   const authService =
     overrides.authService ||
     new AuthService({
-      sessionSecret: 'test-session-secret-min-32-characters',
-      encryptionKey: TEST_KEY,
+      sessionSecret: TEST_SESSION_SECRET,
+      encryptionKey: TEST_ENCRYPTION_KEY,
       githubClientId: 'test-client-id',
       githubClientSecret: 'test-client-secret',
       githubCallbackUrl: 'http://localhost:3000/api/auth/github/callback',

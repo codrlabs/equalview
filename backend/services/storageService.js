@@ -669,10 +669,66 @@ class StorageService {
   }
 
   /**
-   * Write multiple files in one GitHub commit. Each file may include `sha` for updates.
+   * Write multiple files in one GitHub commit. Retries on ref conflict (409/422).
+   * Files with `sha` are updates; omit `sha` to create.
    * @private
    */
   async _writeGitHubFiles(octokit, owner, repo, branch, files, message) {
+    const maxAttempts = 3;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      try {
+        return await this._attemptGitHubCommit(
+          octokit,
+          owner,
+          repo,
+          branch,
+          files,
+          message,
+        );
+      } catch (err) {
+        const canRetry = this._isRefConflict(err) && attempt < maxAttempts - 1;
+        if (!canRetry) {
+          throw err;
+        }
+        await this._refreshMutableFileShas(octokit, owner, repo, branch, files);
+      }
+    }
+
+    throw new Error('GitHub write failed after retries');
+  }
+
+  /** @private */
+  _isRefConflict(err) {
+    return err?.status === 409 || err?.status === 422;
+  }
+
+  /**
+   * Re-read blob shas for files we are updating before a retry.
+   * @private
+   */
+  async _refreshMutableFileShas(octokit, owner, repo, branch, files) {
+    for (const file of files) {
+      if (!file.sha) {
+        continue;
+      }
+      const existing = await this._readGitHubFile(
+        octokit,
+        owner,
+        repo,
+        file.path,
+        branch,
+      );
+      if (existing) {
+        file.sha = existing.sha;
+      } else {
+        delete file.sha;
+      }
+    }
+  }
+
+  /** @private */
+  async _attemptGitHubCommit(octokit, owner, repo, branch, files, message) {
     const { data: refData } = await octokit.rest.git.getRef({
       owner,
       repo,

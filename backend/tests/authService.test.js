@@ -3,14 +3,13 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { TEST_ENCRYPTION_KEY, TEST_SESSION_SECRET } = require('./helpers/testEnv');
 const AuthService = require('../services/authService');
-
-const TEST_KEY = '66qBcUPktOoyHvQb/5bH0ACXe2CLlXfueNtLLIl1iFE=';
 
 test('encrypt/decrypt round-trip with AES-256-GCM', () => {
   const authService = new AuthService({
-    sessionSecret: 'test-session-secret-min-32-characters',
-    encryptionKey: TEST_KEY,
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
   });
 
   const token = 'gho_test_access_token_12345';
@@ -22,8 +21,8 @@ test('encrypt/decrypt round-trip with AES-256-GCM', () => {
 
 test('encrypt produces distinct ciphertext for the same plaintext', () => {
   const authService = new AuthService({
-    sessionSecret: 'test-session-secret-min-32-characters',
-    encryptionKey: TEST_KEY,
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
   });
 
   const a = authService.encrypt('same-token');
@@ -36,8 +35,8 @@ test('encrypt produces distinct ciphertext for the same plaintext', () => {
 
 test('middleware returns session + passport handlers', () => {
   const authService = new AuthService({
-    sessionSecret: 'test-session-secret-min-32-characters',
-    encryptionKey: TEST_KEY,
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
   });
 
   const stack = authService.middleware();
@@ -49,8 +48,8 @@ test('middleware returns session + passport handlers', () => {
 
 test('getGitHubClient returns authenticated Octokit', () => {
   const authService = new AuthService({
-    sessionSecret: 'test-session-secret-min-32-characters',
-    encryptionKey: TEST_KEY,
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
   });
 
   const user = {
@@ -70,8 +69,8 @@ test('getGitHubClient returns authenticated Octokit', () => {
 
 test('getGoogleDriveClient returns null until Phase 3', () => {
   const authService = new AuthService({
-    sessionSecret: 'test-session-secret-min-32-characters',
-    encryptionKey: TEST_KEY,
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
   });
 
   assert.equal(authService.getGoogleDriveClient({}), null);
@@ -79,8 +78,8 @@ test('getGoogleDriveClient returns null until Phase 3', () => {
 
 test('refreshGoogleToken rejects until Phase 3', async () => {
   const authService = new AuthService({
-    sessionSecret: 'test-session-secret-min-32-characters',
-    encryptionKey: TEST_KEY,
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
   });
 
   await assert.rejects(
@@ -91,8 +90,8 @@ test('refreshGoogleToken rejects until Phase 3', async () => {
 
 test('clientsFor builds githubClient only when token present', async () => {
   const authService = new AuthService({
-    sessionSecret: 'test-session-secret-min-32-characters',
-    encryptionKey: TEST_KEY,
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
   });
 
   const empty = await authService.clientsFor({});
