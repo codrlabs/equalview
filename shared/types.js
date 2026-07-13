@@ -31,8 +31,12 @@
  */
 
 /**
- * Bucketed result returned by `GET /api/scan-results` and
- * `POST /api/scan`.
+ * Bucketed result returned by `GET /api/scan-results`, `POST /api/scan`,
+ * and the `result` field of `GET /api/scans/:id` (saved historical reports).
+ *
+ * When the caller is signed in with attached storage and the save succeeds,
+ * `POST /api/scan` responses may also include `account: { scanCount, scans }`
+ * for dashboard sync.
  *
  * @typedef {object} ScanResult
  * @property {{

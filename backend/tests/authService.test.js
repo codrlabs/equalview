@@ -104,5 +104,77 @@ test('clientsFor builds githubClient only when token present', async () => {
   });
 
   assert.ok(withGitHub.githubClient);
+  assert.ok(withGitHub.githubUserClient);
   assert.equal('driveClient' in withGitHub, false);
+});
+
+test('getInstallationClientForRepo rejects when user cannot access the repo', async () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+    githubAppId: '12345',
+    githubAppPrivateKey:
+      '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0Z3VS5JJcds3xfn/ygWyF6PZGFwodaQ=\n-----END RSA PRIVATE KEY-----',
+  });
+
+  authService.getGitHubClient = () => ({
+    rest: {
+      repos: {
+        get: async () => {
+          const err = new Error('Not Found');
+          err.status = 404;
+          throw err;
+        },
+      },
+    },
+  });
+
+  await assert.rejects(
+    () =>
+      authService.getInstallationClientForRepo(
+        {
+          tokens: {
+            github: { accessToken: authService.encrypt('gho_token') },
+          },
+        },
+        { id: 'R_kgDOA123', full_name: 'other/secret-repo' },
+      ),
+    (err) => err.code === 'STORAGE_ACCESS_DENIED' && err.status === 403,
+  );
+});
+
+test('getInstallationClientForRepo rejects node id mismatch', async () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+    githubAppId: '12345',
+    githubAppPrivateKey:
+      '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0Z3VS5JJcds3xfn/ygWyF6PZGFwodaQ=\n-----END RSA PRIVATE KEY-----',
+  });
+
+  authService.getGitHubClient = () => ({
+    rest: {
+      repos: {
+        get: async () => ({
+          data: {
+            node_id: 'R_kgDODifferent',
+            full_name: 'sam/site-audits',
+          },
+        }),
+      },
+    },
+  });
+
+  await assert.rejects(
+    () =>
+      authService.getInstallationClientForRepo(
+        {
+          tokens: {
+            github: { accessToken: authService.encrypt('gho_token') },
+          },
+        },
+        { id: 'R_kgDOA123', full_name: 'sam/site-audits' },
+      ),
+    (err) => err.code === 'STORAGE_IDENTITY_MISMATCH' && err.status === 403,
+  );
 });

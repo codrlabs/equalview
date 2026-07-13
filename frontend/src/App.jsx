@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   BrowserRouter, Navigate, Route, Routes,
   useLocation, useNavigate, useParams, useSearchParams,
@@ -18,7 +18,12 @@ import NotFoundView from './views/NotFoundView'
 import { apiClient } from './lib/apiClient'
 import { useScan } from './hooks/useScan'
 import { toScanViewModel } from './lib/scanAdapter'
-import { PLACEHOLDER_USER, PLACEHOLDER_SAVED_SCANS } from './data/placeholders'
+import {
+  hasAttachedStorage,
+  mergeAccountUpdate,
+  toSavedScans,
+  toShellUser,
+} from './lib/accountAdapter'
 
 /** Route keys (as the UI kit named them) ↔ URL paths. */
 const PATHS = {
@@ -51,17 +56,79 @@ function ScanningIndicator({ url }) {
   )
 }
 
+function AuthLoadingIndicator() {
+  return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 24px' }}>
+      <div className="ev-spin" style={{ width: 34, height: 34, borderRadius: '50%', border: '3px solid var(--blue-100)', borderTopColor: 'var(--accent)' }} />
+    </div>
+  )
+}
+
 /**
  * /results — renders the in-memory scan; on a deep link / refresh it
- * re-fetches the report for ?url= through the backend.
+ * reloads a saved report (?scanId=) or re-fetches by ?url=.
  */
 function ResultsRoute({ scan, onOpenProblem }) {
   const [params] = useSearchParams()
+  const scanId = params.get('scanId')
   const url = params.get('url')
 
   if (scan) return <ResultsView data={scan} onOpenProblem={onOpenProblem} />
+  if (scanId) return <SavedScanFetcher scanId={scanId} onOpenProblem={onOpenProblem} />
   if (!url) return <Navigate to={PATHS.landing} replace />
   return <ResultsFetcher url={url} onOpenProblem={onOpenProblem} />
+}
+
+function SavedScanFetcher({ scanId, onOpenProblem }) {
+  const navigate = useNavigate()
+  const [viewModel, setViewModel] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+
+    apiClient.getSavedScan(scanId)
+      .then((payload) => {
+        if (cancelled) return
+        setViewModel(toScanViewModel(payload.result, payload.url))
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err?.message || 'Could not load that saved report.')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [scanId])
+
+  if (loading) {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, padding: '64px 24px' }}>
+        <div className="ev-spin" style={{ width: 34, height: 34, borderRadius: '50%', border: '3px solid var(--blue-100)', borderTopColor: 'var(--accent)' }} />
+        <div style={{ font: 'var(--font-label)', color: 'var(--text-body)' }}>Loading saved report…</div>
+      </div>
+    )
+  }
+
+  if (error || !viewModel) {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '64px 24px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: 'var(--text-xl)', margin: 0 }}>We couldn’t open that report</h1>
+        <p style={{ font: 'var(--font-body)', color: 'var(--text-muted)', maxWidth: 420, lineHeight: 1.6, margin: 0 }}>{error || 'The saved scan was not found in your storage.'}</p>
+        <button onClick={() => navigate(PATHS.dashboard)} style={{
+          marginTop: 8, padding: '10px 22px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--accent)',
+          background: 'var(--accent)', color: '#fff', font: 'var(--font-label)', cursor: 'pointer',
+        }}>Back to dashboard</button>
+      </div>
+    )
+  }
+
+  return <ResultsView data={viewModel} onOpenProblem={onOpenProblem} />
 }
 
 function ResultsFetcher({ url, onOpenProblem }) {
@@ -100,11 +167,8 @@ function AppRoutes() {
 
   const [scan, setScan] = useState(null)
   const [problem, setProblem] = useState(null)
-
-  // Auth placeholders — real OAuth + storage land in Phase 5.
-  const [authed, setAuthed] = useState(false)
-  const [provider, setProvider] = useState('github')
-  const [hasScans, setHasScans] = useState(true)
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
 
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('ev-theme') || 'light' } catch { return 'light' }
@@ -117,6 +181,41 @@ function AppRoutes() {
 
   useEffect(() => { window.scrollTo(0, 0) }, [location.pathname])
 
+  const refreshUser = useCallback(async () => {
+    const profile = await apiClient.getUser()
+    setUser(profile)
+    return profile
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function bootstrapAuth() {
+      try {
+        const status = await apiClient.getAuthStatus()
+        if (status.authenticated) {
+          const profile = await apiClient.getUser()
+          if (!cancelled) setUser(profile)
+        } else if (!cancelled) {
+          setUser(null)
+        }
+      } catch {
+        if (!cancelled) setUser(null)
+      } finally {
+        if (!cancelled) setAuthLoading(false)
+      }
+    }
+
+    bootstrapAuth()
+    return () => { cancelled = true }
+  }, [])
+
+  const shellUser = useMemo(() => toShellUser(user), [user])
+  const savedScans = useMemo(() => toSavedScans(user?.account), [user])
+  const provider = user?.provider || 'github'
+  const authed = Boolean(user)
+  const storageReady = hasAttachedStorage(user)
+
   const nav = (routeKey) => {
     if (routeKey !== 'problem') setProblem(null)
     navigate(PATHS[routeKey] || PATHS.landing)
@@ -128,51 +227,160 @@ function AppRoutes() {
     if (!result) throw new Error('The scanner returned no results — the site may have blocked it.')
     setScan(toScanViewModel(result, url))
     setProblem(null)
+
+    if (result.account) {
+      setUser((prev) => mergeAccountUpdate(prev, result.account))
+    } else if (user?.storage) {
+      try {
+        await refreshUser()
+      } catch {
+        // Scan succeeded; dashboard will refresh on next visit.
+      }
+    }
+
     navigate(`${PATHS.results}?url=${encodeURIComponent(url)}`)
   }
 
   const openProblem = (p) => {
     setProblem(p)
-    navigate(`${PATHS.problem}/${encodeURIComponent(p.id)}`)
+    navigate({
+      pathname: `${PATHS.problem}/${encodeURIComponent(p.id)}`,
+      search: location.search,
+    })
   }
 
   const backToResults = () => {
     setProblem(null)
+    if (location.search.includes('scanId=') || location.search.includes('url=')) {
+      navigate({ pathname: PATHS.results, search: location.search })
+      return
+    }
     const url = scan?.url
     navigate(url ? `${PATHS.results}?url=${encodeURIComponent(url)}` : PATHS.results)
   }
 
-  /** Re-run a saved scan from the dashboard (placeholder entries are bare domains). */
-  const openSaved = (s) => {
-    setScan(null)
+  /** Re-open a saved historical report from storage (by scan id). */
+  const openSaved = async (s) => {
+    if (!s?.id) return
     setProblem(null)
-    const url = /^https?:\/\//i.test(s.url) ? s.url : `https://${s.url}`
-    navigate(`${PATHS.results}?url=${encodeURIComponent(url)}`)
+    try {
+      const payload = await apiClient.getSavedScan(s.id)
+      setScan(toScanViewModel(payload.result, payload.url))
+    } catch {
+      setScan(null)
+    }
+    navigate(`${PATHS.results}?scanId=${encodeURIComponent(s.id)}`)
   }
 
-  // OAuth placeholder → storage setup (connect) → dashboard.
-  const auth = (p) => { setProvider(p); navigate(PATHS.connect) }
-  const connectDone = (storeMode) => { setAuthed(true); setHasScans(storeMode === 'existing'); navigate(PATHS.dashboard) }
-  const signOut = () => { setAuthed(false); setHasScans(true); navigate(PATHS.landing) }
+  const auth = (p) => {
+    if (p === 'google') return
+    apiClient.githubLogin()
+  }
+
+  const connectDone = async () => {
+    await refreshUser()
+    navigate(PATHS.dashboard)
+  }
+
+  const signOut = async () => {
+    try {
+      await apiClient.logout()
+    } catch {
+      // Clear local state even if the network call fails.
+    }
+    setUser(null)
+    navigate(PATHS.landing)
+  }
 
   const route = routeKeyFor(location.pathname)
 
+  useEffect(() => {
+    if (route !== 'dashboard' || !storageReady) return
+    refreshUser().catch(() => {})
+  }, [route, storageReady, refreshUser])
+
+  function ConnectRoute() {
+    const [params] = useSearchParams()
+    const connectProvider = params.get('provider') || provider
+    const storageError = params.get('error') === 'auth_failed'
+      ? 'GitHub sign-in failed. Try again.'
+      : null
+
+    if (authLoading) return <AuthLoadingIndicator />
+    if (!authed) return <Navigate to={PATHS.signin} replace />
+
+    return (
+      <ConnectView
+        provider={connectProvider}
+        onDone={connectDone}
+        onCancel={() => navigate(PATHS.signin)}
+        storageError={storageError}
+      />
+    )
+  }
+
+  function RequireStorage({ children }) {
+    if (authLoading) return <AuthLoadingIndicator />
+    if (!authed) return <Navigate to={PATHS.signin} replace />
+    if (!storageReady) return <Navigate to={PATHS.connect} replace />
+    return children
+  }
+
+  if (authLoading && (route === 'dashboard' || route === 'account' || route === 'connect')) {
+    return (
+      <AppShell route={route} onNav={nav} authed={false} user={null} theme={theme} onToggleTheme={toggleTheme}>
+        <AuthLoadingIndicator />
+      </AppShell>
+    )
+  }
+
   return (
-    <AppShell route={route} onNav={nav} authed={authed} user={PLACEHOLDER_USER} theme={theme} onToggleTheme={toggleTheme}>
+    <AppShell route={route} onNav={nav} authed={authed && storageReady} user={shellUser} theme={theme} onToggleTheme={toggleTheme}>
       <Routes>
         <Route path={PATHS.landing} element={<LandingView onScan={handleScan} />} />
         <Route path={PATHS.results} element={<ResultsRoute scan={scan} onOpenProblem={openProblem} />} />
         <Route path={`${PATHS.problem}/:id`} element={<ProblemRoute scan={scan} problem={problem} onBack={backToResults} />} />
         <Route path={PATHS.story} element={<StoryView onNav={nav} />} />
         <Route path={PATHS.donate} element={<DonateView onNav={nav} />} />
-        <Route path={PATHS.signin} element={authed ? <Navigate to={PATHS.dashboard} replace /> : <SignInView onNav={nav} onAuth={auth} />} />
-        <Route path={PATHS.connect} element={<ConnectView provider={provider} onDone={connectDone} onCancel={() => navigate(PATHS.signin)} />} />
-        <Route path={PATHS.dashboard} element={authed
-          ? <DashboardView onNav={nav} onOpen={openSaved} saved={hasScans ? PLACEHOLDER_SAVED_SCANS : []} provider={provider} user={PLACEHOLDER_USER} />
-          : <Navigate to={PATHS.signin} replace />} />
-        <Route path={PATHS.account} element={authed
-          ? <AccountView onNav={nav} onSignOut={signOut} user={PLACEHOLDER_USER} provider={provider} />
-          : <Navigate to={PATHS.signin} replace />} />
+        <Route
+          path={PATHS.signin}
+          element={
+            authed && storageReady
+              ? <Navigate to={PATHS.dashboard} replace />
+              : authed
+                ? <Navigate to={PATHS.connect} replace />
+                : <SignInView onNav={nav} onAuth={auth} />
+          }
+        />
+        <Route path={PATHS.connect} element={<ConnectRoute />} />
+        <Route
+          path={PATHS.dashboard}
+          element={(
+            <RequireStorage>
+              <DashboardView
+                onNav={nav}
+                onOpen={openSaved}
+                saved={savedScans}
+                provider={provider}
+                user={shellUser}
+                storage={user?.storage}
+              />
+            </RequireStorage>
+          )}
+        />
+        <Route
+          path={PATHS.account}
+          element={(
+            <RequireStorage>
+              <AccountView
+                onSignOut={signOut}
+                user={user}
+                shellUser={shellUser}
+                provider={provider}
+              />
+            </RequireStorage>
+          )}
+        />
         <Route path={PATHS.privacy} element={<LegalView doc="privacy" onNav={nav} />} />
         <Route path={PATHS.terms} element={<LegalView doc="terms" onNav={nav} />} />
         <Route path="*" element={<NotFoundView onNav={nav} />} />

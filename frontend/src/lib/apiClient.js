@@ -3,9 +3,15 @@
  * receive the singleton instance and call typed methods on it; tests
  * substitute a fake.
  *
+ * Session cookies — not Bearer tokens. All API calls use
+ * `credentials: 'include'`.
+ *
  * @typedef {import('../../../shared/types.js').ScanResult} ScanResult
  * @typedef {import('../../../shared/types.js').Problem} Problem
  */
+
+const GOOGLE_LOGIN_UNAVAILABLE = 'Google sign-in is not available until Phase 3'
+
 export class ApiClient {
   /**
    * @param {object} [opts]
@@ -24,18 +30,100 @@ export class ApiClient {
    * @param {string} path
    * @param {RequestInit} [init]
    */
-  async _request(path, init) {
-    const res = await this.fetchImpl(`${this.baseUrl}${path}`, init)
+  async _request(path, init = {}) {
+    const res = await this.fetchImpl(`${this.baseUrl}${path}`, {
+      credentials: 'include',
+      ...init,
+      headers: {
+        ...(init.headers || {}),
+      },
+    })
+
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      let message = `HTTP ${res.status}: ${res.statusText}`
+      try {
+        const body = await res.json()
+        if (body?.error) {
+          message = body.error
+        }
+      } catch {
+        // Non-JSON error bodies fall back to status text.
+      }
+      throw new Error(message)
     }
+
     return res.json()
+  }
+
+  /** Full-page redirect to GitHub OAuth. */
+  githubLogin() {
+    if (typeof globalThis.location === 'undefined') {
+      return
+    }
+    globalThis.location.href = `${this.baseUrl}/api/auth/github`
+  }
+
+  /** Phase 3 stub — Google sign-in is not wired in Phase 2. */
+  googleLogin() {
+    throw new Error(GOOGLE_LOGIN_UNAVAILABLE)
+  }
+
+  /** @returns {Promise<{ authenticated: boolean, user: object | null }>} */
+  getAuthStatus() {
+    return this._request('/api/auth/status')
+  }
+
+  /** @returns {Promise<object>} */
+  getUser() {
+    return this._request('/api/auth/user')
+  }
+
+  /** @returns {Promise<{ success: boolean }>} */
+  logout() {
+    return this._request('/api/auth/logout', { method: 'POST' })
+  }
+
+  /**
+   * @param {'github' | 'google'} provider
+   * @returns {Promise<{ provider: string, storages: object[] }>}
+   */
+  listStorages(provider) {
+    return this._request(
+      `/api/auth/storages?provider=${encodeURIComponent(provider)}`,
+    )
+  }
+
+  /**
+   * @param {'github' | 'google'} provider
+   * @param {object} storageRef
+   * @returns {Promise<object>}
+   */
+  validateStorage(provider, storageRef) {
+    return this._request('/api/auth/storage/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider, storageRef }),
+    })
+  }
+
+  /**
+   * @param {'github' | 'google'} provider
+   * @param {object} storageRef
+   * @param {'load' | 'init'} action
+   * @returns {Promise<object>}
+   */
+  setupStorage(provider, storageRef, action) {
+    return this._request('/api/auth/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider, storageRef, action }),
+    })
   }
 
   /**
    * Kick off a scan against `url`.
    * @param {string} url
-   * @returns {Promise<ScanResult>}
+   * @returns {Promise<ScanResult & { account?: { scanCount: number, scans: object[] } }>}
    */
   runScan(url) {
     return this._request('/api/scan', {
@@ -52,6 +140,15 @@ export class ApiClient {
    */
   getScanResults(url) {
     return this._request(`/api/scan-results?url=${encodeURIComponent(url)}`)
+  }
+
+  /**
+   * Load a saved historical report by scan id from attached storage.
+   * @param {string} scanId
+   * @returns {Promise<{ id: string, url: string, scannedAt: string | null, result: ScanResult }>}
+   */
+  getSavedScan(scanId) {
+    return this._request(`/api/scans/${encodeURIComponent(scanId)}`)
   }
 
   /**

@@ -28,6 +28,7 @@ class ScanController {
     // Bind handlers once so router wiring stays clean.
     this.postScan = this.postScan.bind(this);
     this.getScanResults = this.getScanResults.bind(this);
+    this.getSavedScan = this.getSavedScan.bind(this);
     this.getProblem = this.getProblem.bind(this);
   }
 
@@ -54,19 +55,42 @@ class ScanController {
          req.isAuthenticated() &&
          req.user?.storage
        ) {
+         let accountUpdate = null;
          try {
-           const clients = await this.authService.clientsFor(req.user);
-           await this.storageService.saveScanResults(
+           const clients = await this.authService.clientsFor(req.user, {
+             storageRef: req.user.storage,
+           });
+           const saved = await this.storageService.saveScanResults(
              req.user,
              result,
              url,
              clients,
            );
+           if (saved?.scans) {
+             if (!req.user.account) {
+               req.user.account = {
+                 settings: { autoDelete90d: true },
+                 scanCount: 0,
+                 scans: [],
+               };
+             }
+             req.user.account.scans = saved.scans;
+             req.user.account.scanCount = saved.scanCount;
+             await this.authService.persistUser(req);
+             accountUpdate = {
+               scanCount: saved.scanCount,
+               scans: saved.scans,
+             };
+           }
          } catch (storageErr) {
            console.warn(
              'Failed to save scan results to storage:',
              storageErr.message,
            );
+         }
+
+         if (accountUpdate) {
+           return res.json({ ...result, account: accountUpdate });
          }
        }
 
@@ -103,6 +127,48 @@ class ScanController {
        return res.status(500).json({ error: 'Internal server error' });
      }
    }
+
+  /**
+   * GET /api/scans/:id — load a saved historical report from attached storage.
+   */
+  async getSavedScan(req, res) {
+    if (
+      typeof req.isAuthenticated !== 'function' ||
+      !req.isAuthenticated() ||
+      !req.user?.storage
+    ) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    if (!this.authService || !this.storageService) {
+      return res.status(503).json({ error: 'Storage is not configured' });
+    }
+
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'Missing scan id' });
+    }
+
+    try {
+      const clients = await this.authService.clientsFor(req.user, {
+        storageRef: req.user.storage,
+      });
+      const scan = await this.storageService.getScanById(req.user, id, clients);
+      return res.json(scan);
+    } catch (err) {
+      if (err.code === 'SCAN_NOT_FOUND' || err.status === 404) {
+        return res.status(404).json({ error: 'Scan not found' });
+      }
+      if (
+        err.code === 'STORAGE_ACCESS_DENIED' ||
+        err.code === 'STORAGE_IDENTITY_MISMATCH' ||
+        err.status === 403
+      ) {
+        return res.status(403).json({ error: err.message });
+      }
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 
   /**
    * GET /problems/:id

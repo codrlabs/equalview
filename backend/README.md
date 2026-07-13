@@ -94,17 +94,33 @@ shared via the repo.
 1. GitHub → **Settings → Developer settings → GitHub Apps → New GitHub App**.
 2. Set **Callback URL** to `http://localhost:3000/api/auth/github/callback`.
 3. Under **Permissions**, grant at least **Contents: Read & write** and
-   **Metadata: Read** (per the auth/storage design).
+   **Metadata: Read** (per the auth/storage design). Optionally add **Account →
+   Email addresses: Read-only** if you want the dashboard to show your GitHub
+   email; sign-in works without it. EqualView writes files via a **single Git commit** when the
+   installation token can use the Git Database API, and falls back to the
+   **Contents API** when needed (empty repos / restricted tokens).
 4. Create the app, then open **OAuth credentials** and copy the **Client ID**
    and generate a **Client secret**.
 5. Add to `backend/.env`:
    - `GITHUB_APP_CLIENT_ID` — the OAuth Client ID (not the numeric App ID)
    - `GITHUB_APP_CLIENT_SECRET`
    - `GITHUB_REDIRECT_URI=http://localhost:3000/api/auth/github/callback`
+   - `GITHUB_APP_ID` — numeric **App ID** from the app **General** settings page
+   - `GITHUB_APP_PRIVATE_KEY` — PEM from **Private keys** (Generate a private key).
+     Repo writes use **installation tokens** signed with this key; OAuth client
+     credentials alone are not enough for Contents writes.
    - `SESSION_SECRET` and `ENCRYPTION_KEY` (see above)
 
 Install the app on your account and select the repos you want to test with when
-prompted during sign-in.
+prompted during sign-in. If setup fails with **Resource not accessible by
+integration**, your app installation likely still has **Contents: Read** only:
+
+1. GitHub App → **Permissions** → **Repository permissions** → **Contents:
+   Read and write** → **Save changes**
+2. Open [Installed GitHub Apps](https://github.com/settings/installations) →
+   **Configure** your EqualView app → **Accept** the permission upgrade if prompted
+3. Confirm `equalview-scans` (or your target repo) is checked under repository access
+4. Sign out of EqualView and sign in again (fresh OAuth token)
 
 **Production (TBD — finalize before shipping EqualView)**
 
