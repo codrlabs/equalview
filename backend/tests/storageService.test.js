@@ -201,6 +201,36 @@ test('validateStorage returns loadable with manifest summary', async () => {
   assert.equal(result.manifestSummary.accountId, manifest().account.id);
 });
 
+test('validateStorage accepts legacy equalview.json manifests', async () => {
+  const storageService = new StorageService();
+  const legacyManifest = {
+    ...manifest(),
+    equalview: true,
+  };
+  delete legacyManifest.vizably;
+
+  const client = createMockGitHubClient({
+    files: {
+      'equalview.json': {
+        content: JSON.stringify(legacyManifest),
+        sha: 'sha-legacy',
+      },
+      'scans/index.json': {
+        content: JSON.stringify({ schemaVersion: 1, scans: [] }),
+        sha: 'sha-index',
+      },
+    },
+  });
+
+  const result = await storageService.validateStorage('github', STORAGE_REF, {
+    githubClient: client,
+  });
+
+  assert.equal(result.status, 'loadable');
+  assert.equal(result.reason, 'migration_required');
+  assert.equal(result.manifestSummary.accountId, legacyManifest.account.id);
+});
+
 test('validateStorage returns incompatible for newer schema', async () => {
   const storageService = new StorageService();
   const client = createMockGitHubClient({
@@ -274,8 +304,42 @@ test('initStorage rejects when manifest already exists (race guard)', async () =
         { id: '42', username: 'sam' },
         { githubClient: client },
       ),
-    /already contains an Vizably account|initialized by another session/,
+    /already contains a Vizably account|initialized by another session/,
   );
+});
+
+test('loadAccount migrates legacy equalview.json to vizably.json', async () => {
+  const storageService = new StorageService();
+  const legacyManifest = {
+    ...manifest(),
+    equalview: true,
+  };
+  delete legacyManifest.vizably;
+
+  const client = createMockGitHubClient({
+    files: {
+      'equalview.json': {
+        content: JSON.stringify(legacyManifest),
+        sha: 'sha-legacy',
+      },
+      'scans/index.json': {
+        content: JSON.stringify({ schemaVersion: 1, scans: [] }),
+        sha: 'sha-index',
+      },
+    },
+  });
+
+  const result = await storageService.loadAccount('github', STORAGE_REF, {
+    githubClient: client,
+  });
+
+  assert.equal(result.accountId, legacyManifest.account.id);
+  assert.equal(result.reason, 'migration_required');
+  assert.ok(client.files['vizably.json'], 'writes vizably.json');
+  const migrated = JSON.parse(client.files['vizably.json'].content);
+  assert.equal(migrated.vizably, true);
+  assert.equal(migrated.equalview, undefined);
+  assert.equal(migrated.account.id, legacyManifest.account.id);
 });
 
 test('loadAccount reconciles index from scan files', async () => {
