@@ -1,6 +1,6 @@
 # URL Normalization
 
-How EqualView lets users type `example.com` on the landing page without
+How vizably lets users type `example.com` on the landing page without
 requiring the `https://` prefix, while still only ever sending fully
 qualified http(s) URLs to the backend.
 

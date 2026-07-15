@@ -103,7 +103,7 @@ export default function AccountView({ onSignOut, user, provider }) {
       <Card style={{ borderColor: 'var(--sev-critical-bg)' }}>
         <h2 style={{ fontSize: 'var(--text-lg)', margin: '0 0 2px', color: 'var(--sev-critical-fg)' }}>Delete account</h2>
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
-          Disconnect EqualView and delete the scans it saved in {pv.storeShort}. Your {pv.name} account itself stays untouched. This can’t be undone.
+          Disconnect Vizably and delete the scans it saved in {pv.storeShort}. Your {pv.name} account itself stays untouched. This can’t be undone.
         </p>
         {!confirmDelete ? (
           <Button variant="danger" onClick={() => setConfirmDelete(true)} iconLeft={Ico('Trash2', 16, '#fff')}>Delete my account</Button>
@@ -122,7 +122,7 @@ export default function AccountView({ onSignOut, user, provider }) {
 
       <p style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 20, lineHeight: 1.5 }}>
         <span style={{ color: 'var(--green-600)', marginTop: 1 }}>{Ico('Leaf', 15, 'currentColor')}</span>
-        Because your scans live in {pv.store}, EqualView keeps no database of its own — your data stays yours, and there’s no server cost to pass on.
+        Because your scans live in {pv.store}, Vizably keeps no database of its own — your data stays yours, and there’s no server cost to pass on.
       </p>
     </div>
   )

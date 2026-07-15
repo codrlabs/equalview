@@ -1,4 +1,4 @@
-# EqualView — Codebase Reorganization (post-mortem)
+# vizably — Codebase Reorganization (post-mortem)
 
 **Status:** Complete · Phase 1 + Phase 3 router shipped 2026-04-28
 (PRs #38, #39, #40)

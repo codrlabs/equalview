@@ -1,4 +1,4 @@
-# Obsidian Vault — equalview
+# Obsidian Vault — vizably
 
 This folder is an [Obsidian](https://obsidian.md) vault used to keep
 brainstorming, diagrams, and scratch notes about the codebase in sync with
@@ -6,7 +6,7 @@ it as it evolves.
 
 ## Contents
 
-- **`equalview.canvas`** — Obsidian canvas with visual diagrams and notes
+- **`vizably.canvas`** — Obsidian canvas with visual diagrams and notes
 - **`*.png`** — Images pasted into the canvas for reference
 - **`README.md`** — This file
 
@@ -33,7 +33,7 @@ it as it evolves.
 - `src/data/placeholders.js` — auth/storage placeholder data (Phase 5 replaces it)
 - `src/styles/` — theme.css (design tokens, dark mode, base layer), fonts.css
 - Vitest + React Testing Library tests in `src/__tests__/`
-- Root `EqualView_App.html` is the design-kit bundle this UI was ported from
+- Root `vizably_App.html` is the design-kit bundle this UI was ported from
 
 ### Backend (`backend/`)
 - `index.js` — bootstrap, listens on `$PORT`
@@ -60,7 +60,7 @@ it as it evolves.
 - `ssrfGuard.js` is the security boundary that rejects non-http URLs and
   private/internal hosts before a scan is allowed.
 - `axeTransformer.js` is a pure function mapping axe-core result shape into
-  the equalView ScanResult contract (now including per-violation `count`).
+  the vizably ScanResult contract (now including per-violation `count`).
 - `scanRunner.js` is the orchestration layer: validate -> launch browser ->
   bypass CSP -> navigate -> inject axe-core -> run axe -> transform -> close browser.
 - The frontend is a single-page app; Landing runs `POST /api/scan` and the

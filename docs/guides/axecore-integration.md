@@ -9,11 +9,11 @@
 > and [architecture-map.md §4.1](../plans/architecture-map.md).
 
 
-This document describes how axe-core integrates into equalView's layered architecture. The integration transforms equalView from a mock demonstration into a real accessibility scanning engine by injecting axe-core into the backend's scanning pipeline.
+This document describes how axe-core integrates into vizably's layered architecture. The integration transforms vizably from a mock demonstration into a real accessibility scanning engine by injecting axe-core into the backend's scanning pipeline.
 
 ## Architecture Overview
 
-equalView follows a clean, layered architecture where dependencies flow inward:
+vizably follows a clean, layered architecture where dependencies flow inward:
 
 ```
 ┌─────────────────────┐
@@ -37,7 +37,7 @@ equalView follows a clean, layered architecture where dependencies flow inward:
 
 - `ScanController` instantiates a `ScanRunner` service
 - `ScanRunner` orchestrates Puppeteer + axe-core execution
-- `axeTransformer` transforms real axe results into equalView's `ScanResult` type
+- `axeTransformer` transforms real axe results into vizably's `ScanResult` type
 - SSRF guard validates URLs before browser launch
 
 > Notes:
@@ -83,7 +83,7 @@ constructor({ mockScanResults, ssrfGuard, scanRunner })
 4. Inject axe-core library
 5. Execute `axe.run()` with WCAG 2.1 AA tags
 6. Transform raw results via `axeTransformer.transform()`
-7. Return the equalView-compatible `ScanResult`
+7. Return the vizably-compatible `ScanResult`
 
 **Dependencies:**
 - `puppeteer` (direct launch in Phase 2; pool upgrade in Phase 4)
@@ -96,7 +96,7 @@ constructor({ mockScanResults, ssrfGuard, scanRunner })
   **Status:** Already implements the target contract
 
   This file already contains the `transform(axeResults)` function that:
-  - Maps axe violations to equalView problem buckets (`visualAccessibility`, `structureAndSemantics`, `multimedia`)
+  - Maps axe violations to vizably problem buckets (`visualAccessibility`, `structureAndSemantics`, `multimedia`)
   - Extracts "what's good" from passing rules
   - Handles `bucketFor(tags)` categorization logic
 
@@ -291,4 +291,4 @@ app.js
 6. Add queue system for concurrent scan handling
 7. Implement `browserPool.js` (singleton browser)   [Phase 4]
 
-This architecture ensures the axe-core integration slots cleanly into equalView's existing layers without disrupting the frontend's data contract or the shared type definitions.
+This architecture ensures the axe-core integration slots cleanly into vizably's existing layers without disrupting the frontend's data contract or the shared type definitions.

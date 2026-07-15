@@ -4,7 +4,7 @@ import { Ico, GoogleMark } from '../lib/icons'
 import { PROVIDERS } from '../data/placeholders'
 
 /**
- * Connect storage — the step after OAuth. EqualView creates (or reuses) a
+ * Connect storage — the step after OAuth. Vizably creates (or reuses) a
  * single repo/Drive folder it will write reports to, with explicit consent.
  *
  * NOTE: placeholder flow — no storage is actually provisioned yet.
@@ -52,13 +52,13 @@ export default function ConnectView({ provider, onDone, onCancel }) {
           </div>
           <h1 style={{ fontSize: 'var(--text-xl)', margin: '0 0 6px' }}>Where should we save your scans?</h1>
           <p style={{ font: 'var(--font-body)', color: 'var(--text-muted)', fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>
-            EqualView writes each report to {pv.article} {pv.unit} in your {pv.name} — you stay in control of it.
+            Vizably writes each report to {pv.article} {pv.unit} in your {pv.name} — you stay in control of it.
           </p>
         </div>
 
         <Card padding="var(--space-5)">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Option id="new" icon="Plus" title={`Create a new ${pv.unit}`} desc={`Recommended — a fresh private ${pv.unitShort} just for EqualView.`}>
+            <Option id="new" icon="Plus" title={`Create a new ${pv.unit}`} desc={`Recommended — a fresh private ${pv.unitShort} just for Vizably.`}>
               <label style={{ display: 'block', font: 'var(--font-label)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: 5 }}>{pv.unit.charAt(0).toUpperCase() + pv.unit.slice(1)} name</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 42, padding: '0 12px', background: 'var(--surface-card)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-md)' }}>
                 <span style={{ color: 'var(--text-faint)' }}>{Ico(pv.destIcon, 16)}</span>
@@ -68,7 +68,7 @@ export default function ConnectView({ provider, onDone, onCancel }) {
               </div>
             </Option>
 
-            <Option id="existing" icon="FolderOpen" title={`Use an existing ${pv.unit}`} desc={`Point EqualView at ${pv.article} ${pv.unit} you already have.`}>
+            <Option id="existing" icon="FolderOpen" title={`Use an existing ${pv.unit}`} desc={`Point Vizably at ${pv.article} ${pv.unit} you already have.`}>
               <div style={{ position: 'relative' }}>
                 <select value={existing} onClick={(e) => e.stopPropagation()} onChange={(e) => setExisting(e.target.value)}
                   style={{ width: '100%', height: 42, padding: '0 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-strong)', font: 'var(--font-sans)', fontSize: 'var(--text-sm)', color: 'var(--text-strong)', background: 'var(--surface-card)', appearance: 'none', cursor: 'pointer' }}>
@@ -78,7 +78,7 @@ export default function ConnectView({ provider, onDone, onCancel }) {
               </div>
               <p style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 'var(--text-xs)', color: 'var(--sev-moderate-fg)', background: 'var(--sev-moderate-bg)', border: '1px solid var(--sev-moderate)', borderRadius: 'var(--radius-sm)', padding: '8px 10px', margin: '10px 0 0', lineHeight: 1.45 }}>
                 <span style={{ color: 'var(--sev-moderate)', marginTop: 1 }}>{Ico('TriangleAlert', 14, 'currentColor')}</span>
-                <span>Leave EqualView’s files as they are. If reports in this {pv.unit} are renamed or hand-edited, we may not be able to read your history back.</span>
+                <span>Leave Vizably’s files as they are. If reports in this {pv.unit} are renamed or hand-edited, we may not be able to read your history back.</span>
               </p>
             </Option>
           </div>
@@ -88,7 +88,7 @@ export default function ConnectView({ provider, onDone, onCancel }) {
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginTop: 16, padding: '12px 16px', background: 'var(--bg-inset)', borderRadius: 'var(--radius-md)' }}>
           <span style={{ color: 'var(--text-muted)', marginTop: 1 }}>{Ico('ShieldCheck', 16, 'currentColor')}</span>
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-body)', lineHeight: 1.5, margin: 0 }}>
-            Scope requested: <code style={{ font: 'var(--font-code)', color: 'var(--text-strong)' }}>{pv.scope}</code> — {pv.scopeNote.toLowerCase()}. EqualView can’t see or touch anything else in your {pv.name}.
+            Scope requested: <code style={{ font: 'var(--font-code)', color: 'var(--text-strong)' }}>{pv.scope}</code> — {pv.scopeNote.toLowerCase()}. Vizably can’t see or touch anything else in your {pv.name}.
           </p>
         </div>
 

@@ -4,7 +4,7 @@ import { Ico } from '../lib/icons'
 
 /**
  * Support — donations run through Buy Me a Coffee (Samuel's account).
- * EqualView never handles payment data itself.
+ * vizably never handles payment data itself.
  */
 export default function DonateView({ onNav }) {
   const BMC = 'https://ko-fi.com/devolabode'
@@ -15,16 +15,16 @@ export default function DonateView({ onNav }) {
   const reinvest = [
     ['Wrench', 'Tooling and time to keep the scanner accurate and the codebase healthy.'],
     ['Sparkles', 'Room to grow — like optional AI fix suggestions you power with your own token.'],
-    ['Heart', 'Keeping EqualView free, open source, and independent.'],
+    ['Heart', 'Keeping Vizably free, open source, and independent.'],
   ]
 
   return (
     <div style={{ width: '100%', maxWidth: 760, margin: '0 auto', padding: '48px 24px 72px' }}>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <div style={{ font: 'var(--font-label)', color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: 'var(--text-xs)', marginBottom: 12 }}>Support EqualView</div>
+        <div style={{ font: 'var(--font-label)', color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: 'var(--text-xs)', marginBottom: 12 }}>Support Vizably</div>
         <h1 style={{ fontSize: 'var(--text-2xl)', letterSpacing: '-0.02em', margin: '0 0 12px', lineHeight: 1.12 }}>Buy Samuel a coffee</h1>
         <p style={{ font: 'var(--font-body)', fontSize: 'var(--text-md)', color: 'var(--text-muted)', maxWidth: 500, margin: '0 auto', lineHeight: 1.6 }}>
-          EqualView is free and always will be. Your scans live in your own Drive or repo, so coffees don’t pay for servers — they go straight into making the tool better.
+          Vizably is free and always will be. Your scans live in your own Drive or repo, so coffees don’t pay for servers — they go straight into making the tool better.
         </p>
       </div>
 

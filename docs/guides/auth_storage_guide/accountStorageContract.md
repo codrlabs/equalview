@@ -1,14 +1,14 @@
 # Account Storage Contract — "the data needed to load back the account"
 
-This file is the **source of truth** for what a valid EqualView account store
+This file is the **source of truth** for what a valid vizably account store
 looks like inside a user's GitHub repository or Google Drive folder. The
 fit-check (`POST /api/auth/storage/validate`) reads this; load/init write it.
 The auth + flow design lives in
 [`githubGoogleAuthStorageImplementation.md`](githubGoogleAuthStorageImplementation.md).
 
 The whole point: an account is **portable**. Anything required to reconstruct a
-user's EqualView account on a fresh device must live *in the store*, described
-here — nothing essential lives on an EqualView server.
+user's vizably account on a fresh device must live *in the store*, described
+here — nothing essential lives on an vizably server.
 
 ---
 
@@ -18,7 +18,7 @@ The store is rooted at the repo root (GitHub) or the selected folder (Drive):
 
 ```
 <storage root>/
-├── equalview.json          # manifest — identity + storage binding + cached summary
+├── vizably.json          # manifest — identity + storage binding + cached summary
 └── scans/
     ├── index.json          # cache: lightweight list for the dashboard
     ├── 9f3c…a1_codrlabs.com.json     # one immutable scan, named <scanId>_<host>.json
@@ -26,17 +26,17 @@ The store is rooted at the repo root (GitHub) or the selected folder (Drive):
 ```
 
 **Truth vs. cache.** The immutable files in `scans/` are the truth. `index.json`
-and `equalview.json → summary.scanCount` are **caches** — always rebuildable by
+and `vizably.json → summary.scanCount` are **caches** — always rebuildable by
 listing `scans/*.json`. Readers reconcile on load; they never trust a cache over
 the files.
 
 ---
 
-## Manifest — `equalview.json`
+## Manifest — `vizably.json`
 
 ```jsonc
 {
-  "equalview": true,                 // presence + true ⇒ this is an EV store
+  "vizably": true,                 // presence + true ⇒ this is an EV store
   "kind": "account-store",
   "schemaVersion": 1,                // bump on breaking layout changes
   "minReaderSchemaVersion": 1,       // oldest reader that may safely OPEN this
@@ -138,13 +138,13 @@ Given a selected storage, the backend decides a `status` (+ optional `reason` +
 `capabilities`). This is exactly what ConnectView renders.
 
 ```
-read <root>/equalview.json
+read <root>/vizably.json
  ├─ not found
  │   ├─ store empty (no other files)            → initializable
  │   └─ store has unrelated files               → unrelated
  ├─ found but unparseable / missing required    → invalid (reason: malformed_manifest)
  ├─ found, duplicate manifest (Drive)           → invalid (reason: duplicate_manifest)
- ├─ found, equalview !== true                   → unrelated
+ ├─ found, vizably !== true                   → unrelated
  ├─ found, schemaVersion > server supports       → incompatible (reason: too_new)
  ├─ found, schemaVersion < server, migratable   → loadable (reason: migration_required)
  └─ found, supported schemaVersion              → loadable
@@ -173,7 +173,7 @@ On `action: "load"`:
 ### Init-time race guard
 
 On `action: "init"`, **revalidate** immediately before writing. Only create
-`equalview.json` if it still does not exist (conditional create). Never trust a
+`vizably.json` if it still does not exist (conditional create). Never trust a
 stale `validate` result — another device may have initialized in between.
 
 ---
@@ -207,7 +207,7 @@ summary) must be atomic or partial-write tolerant:
 
 ## Quick checklist for implementers
 
-- [ ] `equalview.json` written with random `account.id` + stable provider ids.
+- [ ] `vizably.json` written with random `account.id` + stable provider ids.
 - [ ] Scan files immutable, named `<scanId>_<host>.json`, scanId is a UUID.
 - [ ] `index.json` + `summary` treated as caches; rebuilt on load.
 - [ ] Fit-check returns `status` + `reason` + `capabilities`.

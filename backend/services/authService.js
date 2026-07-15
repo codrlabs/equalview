@@ -181,7 +181,7 @@ class AuthService {
       secret: this.sessionSecret,
       resave: false,
       saveUninitialized: false,
-      name: 'equalview.sid',
+      name: 'vizably.sid',
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

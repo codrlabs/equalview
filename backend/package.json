@@ -1,7 +1,7 @@
 {
-  "name": "equalview-backend",
+  "name": "vizably-backend",
   "version": "1.0.0",
-  "description": "EqualView API — Express backend that will host the axe-core scanner.",
+  "description": "vizably API — Express backend that will host the axe-core scanner.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

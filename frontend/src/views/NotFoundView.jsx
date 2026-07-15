@@ -12,7 +12,7 @@ export default function NotFoundView({ onNav }) {
       </p>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
         <Button variant="primary" onClick={() => onNav('landing')} iconLeft={Ico('House', 16, '#fff')}>Back home</Button>
-        <Button variant="secondary" onClick={() => onNav('story')}>Why EqualView</Button>
+        <Button variant="secondary" onClick={() => onNav('story')}>Why Vizably</Button>
       </div>
     </div>
   )

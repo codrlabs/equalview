@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 /**
- * Surface container. The default white card used across EqualView:
+ * Surface container. The default white card used across vizably:
  * 1px subtle border, 10px radius, soft low shadow. `interactive`
  * adds a hover lift; `inset` gives the recessed grey treatment.
  */

@@ -11,6 +11,10 @@ build/
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*-private-key*
+*.private-key.pem
 
 # Logs and debug
 logs/

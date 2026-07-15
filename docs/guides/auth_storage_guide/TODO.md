@@ -35,7 +35,7 @@ choices for both providers still stand; Google is deferred, not dropped.
   a stub behind the same interface.
 - **Phase 3:** Google backend adapter + Google Picker (one adapter, not a rewrite).
 - **GitHub App** means GitHub's OAuth registration type (per-repo least privilege),
-  not the EqualView storage app. Storage stays provider-agnostic.
+  not the vizably storage app. Storage stays provider-agnostic.
 
 ---
 
@@ -56,7 +56,7 @@ choices for both providers still stand; Google is deferred, not dropped.
 - [ ] **Dev:** each developer creates a **personal GitHub App** for local testing
       (callback `http://localhost:3000/api/auth/github/callback`; Client ID +
       secret in local `backend/.env` only). See `backend/README.md` § GitHub App setup.
-- [ ] **Production (TBD):** finalize a **project-owned** codrlabs/equalview GitHub App
+- [ ] **Production (TBD):** finalize a **project-owned** codrlabs/vizably GitHub App
       with production callback URL(s) on the deployed domain before shipping.
 
 ### Auth Service (`backend/services/authService.js`)
@@ -83,7 +83,7 @@ Provider-neutral interface; **GitHub adapter implemented**, Google adapter stubb
 - [x] **Load**: `loadAccount(provider, storageRef, clients)` — read manifest +
       `scans/index.json`, **reconcile drift** by rebuilding from `scans/*.json`
 - [x] **Init**: `initStorage(provider, storageRef, owner, clients)` — **revalidate**,
-      then conditionally create `equalview.json` + `scans/` skeleton
+      then conditionally create `vizably.json` + `scans/` skeleton
 - [x] **Save**: `saveScanResults(account, scanResult, url, clients)` — write immutable
       `scans/<scanId>_<host>.json`, then update index + manifest summary
 - [x] GitHub writes pass blob `sha` (optimistic concurrency); prefer a single commit

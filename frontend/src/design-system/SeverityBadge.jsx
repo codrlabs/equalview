@@ -1,5 +1,5 @@
 /**
- * SeverityBadge — the signature EqualView signal. Maps an axe-core
+ * SeverityBadge — the signature vizably signal. Maps an axe-core
  * impact level to its color, and ALWAYS pairs that color with a
  * distinct glyph + text label so the meaning never depends on color
  * alone (WCAG 1.4.1 Use of Color).

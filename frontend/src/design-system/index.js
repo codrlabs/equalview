@@ -1,6 +1,6 @@
 /**
- * EqualView design system — single import surface.
- * Ported from the Claude Design UI kit (EqualView_App.html bundle).
+ * vizably design system — single import surface.
+ * Ported from the Claude Design UI kit (vizably_App.html bundle).
  */
 export { default as Logo } from './Logo'
 export { default as Badge } from './Badge'

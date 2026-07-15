@@ -9,7 +9,7 @@ export default function LegalView({ doc = 'privacy', onNav }) {
   const privacy = {
     title: 'Privacy Policy',
     updated: 'Last updated 9 June 2026',
-    intro: 'EqualView is built to make the web more inclusive — we’re not in the business of collecting more about you than we need to do that. Here’s exactly what we keep, and what you control.',
+    intro: 'Vizably is built to make the web more inclusive — we’re not in the business of collecting more about you than we need to do that. Here’s exactly what we keep, and what you control.',
     sections: [
       { h: 'What we collect', list: [
         'When you sign in with GitHub or Google: your name and email, used only to identify you.',
@@ -21,7 +21,7 @@ export default function LegalView({ doc = 'privacy', onNav }) {
         'We don’t run advertising trackers or third-party ad pixels.',
         'We don’t store scans from signed-out visitors beyond the time it takes to show your results.',
       ] },
-      { h: 'How long we keep it', p: 'Because saved reports live in your storage, you control retention: remove individual scans, clear them all, or turn on auto-delete for anything older than 90 days. Disconnecting your account removes the scans EqualView saved there and revokes our access.' },
+      { h: 'How long we keep it', p: 'Because saved reports live in your storage, you control retention: remove individual scans, clear them all, or turn on auto-delete for anything older than 90 days. Disconnecting your account removes the scans Vizably saved there and revokes our access.' },
       { h: 'Your controls', p: 'You can view, export, or delete your data at any time from Account → Settings. Deleting is immediate and permanent.' },
       { h: 'Contact', p: 'Questions about privacy? Open an issue on our GitHub repository and we’ll respond in the open.' },
     ],
@@ -30,18 +30,18 @@ export default function LegalView({ doc = 'privacy', onNav }) {
   const terms = {
     title: 'Terms of Service',
     updated: 'Last updated 9 June 2026',
-    intro: 'EqualView is free and open source. These terms keep it usable and safe for everyone — please read them.',
+    intro: 'Vizably is free and open source. These terms keep it usable and safe for everyone — please read them.',
     sections: [
-      { h: 'The service', p: 'EqualView analyses a URL and reports likely accessibility issues mapped to WCAG. Results are guidance to help you improve a site — they are not a certification or a legal guarantee of compliance.' },
+      { h: 'The service', p: 'Vizably analyses a URL and reports likely accessibility issues mapped to WCAG. Results are guidance to help you improve a site — they are not a certification or a legal guarantee of compliance.' },
       { h: 'Provided “as is”', p: 'The service is provided free of charge, without warranty of any kind. We work hard to be accurate, but we can’t promise every issue is caught or every suggestion fits your context.' },
       { h: 'Acceptable use', list: [
         'Only scan sites you own or have permission to test.',
-        'Don’t use EqualView to overload, attack, or disrupt any website.',
+        'Don’t use Vizably to overload, attack, or disrupt any website.',
         'Don’t abuse the service in ways that degrade it for others.',
       ] },
       { h: 'Accounts', p: 'You’re responsible for keeping your login secure and for activity under your account. Tell us promptly if you suspect unauthorised access.' },
       { h: 'Donations', p: 'Donations are voluntary and non-refundable, and are reinvested in full into developing and improving the project — tooling and maintenance, not storage, since your saved scans live in your own Google Drive or GitHub.' },
-      { h: 'Licence & changes', p: 'EqualView is released under the MPL-2.0 licence. We may update these terms as the project evolves; material changes will be noted here with a new date.' },
+      { h: 'Licence & changes', p: 'Vizably is released under the MPL-2.0 licence. We may update these terms as the project evolves; material changes will be noted here with a new date.' },
     ],
   }
 

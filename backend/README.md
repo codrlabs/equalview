@@ -1,4 +1,4 @@
-# EqualView — Backend
+# Vizably — Backend
 
 Express API that runs real accessibility scans: `services/scanRunner.js`
 drives a headless Chromium via Puppeteer, injects axe-core into the
@@ -106,14 +106,14 @@ shared via the repo.
 Install the app on your account and select the repos you want to test with when
 prompted during sign-in.
 
-**Production (TBD — finalize before shipping EqualView)**
+**Production (TBD — finalize before shipping Vizably)**
 
-The personal apps above are for **testing only**. Before EqualView runs on a
+The personal apps above are for **testing only**. Before Vizably runs on a
 real domain, the team must register a **project-owned GitHub App** (under the
-codrlabs/equalview org or equivalent) with:
+codrlabs/vizably org or equivalent) with:
 
 - Production callback URL(s) on the deployed backend (e.g.
-  `https://api.equalview.example/api/auth/github/callback`)
+  `https://api.vizably.example/api/auth/github/callback`)
 - The same permission model (`Contents: rw`, `Metadata: r`)
 - Client ID/secret stored in deployment secrets — **never** committed to git
 

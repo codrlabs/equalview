@@ -6,7 +6,7 @@
  */
 
 /** Signed-in user placeholder — replaced by the OAuth profile later. */
-export const PLACEHOLDER_USER = { name: 'Samuel', email: 'Samuel@equalview.org' }
+export const PLACEHOLDER_USER = { name: 'Samuel', email: 'Samuel@vizably.org' }
 
 /**
  * Storage provider metadata used by the SignIn → Connect → Dashboard
@@ -15,14 +15,14 @@ export const PLACEHOLDER_USER = { name: 'Samuel', email: 'Samuel@equalview.org' 
 export const PROVIDERS = {
   github: {
     name: 'GitHub', store: 'a private GitHub repo', storeShort: 'GitHub repo',
-    dest: 'equalview-scans', destIcon: 'GitBranch',
+    dest: 'vizably-scans', destIcon: 'GitBranch',
     unit: 'repository', unitShort: 'repo', article: 'a',
     scope: 'repo', scopeNote: 'Create & write to one private repository',
     existing: ['site-audits', 'a11y-reports', 'client-work'],
   },
   google: {
     name: 'Google', store: 'your Google Drive', storeShort: 'Google Drive',
-    dest: 'EqualView', destIcon: 'HardDrive',
+    dest: 'Vizably', destIcon: 'HardDrive',
     unit: 'folder', unitShort: 'folder', article: 'a',
     scope: 'drive.file', scopeNote: 'Create & write to one Drive folder',
     existing: ['Accessibility', 'Work', 'Clients'],

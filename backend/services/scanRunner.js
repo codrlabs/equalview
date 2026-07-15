@@ -8,7 +8,7 @@
  *   - Inject axe-core library into the page context
  *   - Execute axe.run() with WCAG 2.1 AA tags
  *   - Transform raw results via axeTransformer.transform()
- *   - Return the equalView-compatible ScanResult
+ *   - Return the vizably-compatible ScanResult
  */
 
 const {validate} = require('./ssrfGuard');

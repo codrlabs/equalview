@@ -8,7 +8,7 @@
 const crypto = require('crypto');
 const { randomUUID } = require('crypto');
 
-const MANIFEST_PATH = 'equalview.json';
+const MANIFEST_PATH = 'vizably.json';
 const SCANS_DIR = 'scans';
 const INDEX_PATH = `${SCANS_DIR}/index.json`;
 const SUPPORTED_SCHEMA_VERSION = 1;
@@ -151,7 +151,7 @@ class StorageService {
 
     const validation = await this.validateStorage(provider, storageRef, clients);
     if (validation.status === 'loadable') {
-      throw new Error('Storage already contains an EqualView account');
+      throw new Error('Storage already contains an Vizably account');
     }
     if (validation.status === 'incompatible' || validation.status === 'invalid') {
       throw new Error(validation.reason || `Cannot initialize storage (${validation.status})`);
@@ -177,7 +177,7 @@ class StorageService {
 
     const now = new Date().toISOString();
     const manifest = {
-      equalview: true,
+      vizably: true,
       kind: 'account-store',
       schemaVersion: SUPPORTED_SCHEMA_VERSION,
       minReaderSchemaVersion: SUPPORTED_SCHEMA_VERSION,
@@ -224,7 +224,7 @@ class StorageService {
           content: JSON.stringify(index, null, 2) + '\n',
         },
       ],
-      'Initialize EqualView account store',
+      'Initialize Vizably account store',
     );
 
     return {
@@ -417,7 +417,7 @@ class StorageService {
     if (!manifest || typeof manifest !== 'object') {
       return { status: 'invalid', reason: 'malformed_manifest' };
     }
-    if (manifest.equalview !== true || manifest.kind !== 'account-store') {
+    if (manifest.vizably !== true || manifest.kind !== 'account-store') {
       return { status: 'unrelated', reason: null };
     }
     if (

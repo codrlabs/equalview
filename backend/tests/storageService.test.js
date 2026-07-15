@@ -13,7 +13,7 @@ const STORAGE_REF = {
 
 function manifest(overrides = {}) {
   return {
-    equalview: true,
+    vizably: true,
     kind: 'account-store',
     schemaVersion: 1,
     minReaderSchemaVersion: 1,
@@ -184,7 +184,7 @@ test('validateStorage returns loadable with manifest summary', async () => {
   const storageService = new StorageService();
   const client = createMockGitHubClient({
     files: {
-      'equalview.json': {
+      'vizably.json': {
         content: JSON.stringify(manifest()),
         sha: 'sha-manifest',
       },
@@ -205,7 +205,7 @@ test('validateStorage returns incompatible for newer schema', async () => {
   const storageService = new StorageService();
   const client = createMockGitHubClient({
     files: {
-      'equalview.json': {
+      'vizably.json': {
         content: JSON.stringify(manifest({ schemaVersion: 99 })),
         sha: 'sha-manifest',
       },
@@ -222,7 +222,7 @@ test('validateStorage returns invalid for malformed manifest', async () => {
   const storageService = new StorageService();
   const client = createMockGitHubClient({
     files: {
-      'equalview.json': { content: '{not json', sha: 'sha-manifest' },
+      'vizably.json': { content: '{not json', sha: 'sha-manifest' },
     },
   });
   const result = await storageService.validateStorage('github', STORAGE_REF, {
@@ -249,7 +249,7 @@ test('initStorage writes manifest and index skeleton', async () => {
     { githubClient: client },
   );
 
-  assert.ok(client.files['equalview.json']);
+  assert.ok(client.files['vizably.json']);
   assert.ok(client.files['scans/index.json']);
   assert.equal(result.scanCount, 0);
   assert.equal(result.settings.autoDelete90d, true);
@@ -259,7 +259,7 @@ test('initStorage rejects when manifest already exists (race guard)', async () =
   const storageService = new StorageService();
   const client = createMockGitHubClient({
     files: {
-      'equalview.json': {
+      'vizably.json': {
         content: JSON.stringify(manifest()),
         sha: 'sha-manifest',
       },
@@ -274,7 +274,7 @@ test('initStorage rejects when manifest already exists (race guard)', async () =
         { id: '42', username: 'sam' },
         { githubClient: client },
       ),
-    /already contains an EqualView account|initialized by another session/,
+    /already contains an Vizably account|initialized by another session/,
   );
 });
 
@@ -292,7 +292,7 @@ test('loadAccount reconciles index from scan files', async () => {
   };
   const client = createMockGitHubClient({
     files: {
-      'equalview.json': {
+      'vizably.json': {
         content: JSON.stringify(manifest()),
         sha: 'sha-manifest',
       },
@@ -319,7 +319,7 @@ test('saveScanResults writes scan file, index, and manifest in one commit', asyn
   const storageService = new StorageService();
   const client = createMockGitHubClient({
     files: {
-      'equalview.json': {
+      'vizably.json': {
         content: JSON.stringify(manifest()),
         sha: 'sha-manifest',
       },
@@ -353,7 +353,7 @@ test('saveScanResults writes scan file, index, and manifest in one commit', asyn
   assert.ok(scanFileKey);
   assert.equal(saved.scanCount, 1);
 
-  const updatedManifest = JSON.parse(client.files['equalview.json'].content);
+  const updatedManifest = JSON.parse(client.files['vizably.json'].content);
   assert.equal(updatedManifest.summary.scanCount, 1);
 });
 
@@ -376,7 +376,7 @@ test('_writeGitHubFiles retries when branch head moves during save', async () =>
   const client = createMockGitHubClient({
     updateRefFailures: 1,
     files: {
-      'equalview.json': {
+      'vizably.json': {
         content: JSON.stringify(manifest()),
         sha: 'sha-manifest',
       },

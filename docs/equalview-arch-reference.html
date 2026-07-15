@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EqualView — Architecture Reference</title>
+<title>vizably — Architecture Reference</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -206,7 +206,7 @@ footer { max-width: 900px; margin: 0 auto; padding: 24px 32px 48px; display: fle
 <body>
 
 <nav>
-  <span class="nav-logo">equalview / arch</span>
+  <span class="nav-logo">vizably / arch</span>
   <div class="nav-links">
     <a href="#s1" class="nav-link">Feature map</a>
     <a href="#s2" class="nav-link">Real-world scenarios</a>
@@ -216,7 +216,7 @@ footer { max-width: 900px; margin: 0 auto; padding: 24px 32px 48px; display: fle
 
 <div class="hero">
   <div class="hero-eyebrow">Architecture Reference</div>
-  <h1 class="hero-title">How features slot into<br><em>EqualView's layers</em></h1>
+  <h1 class="hero-title">How features slot into<br><em>vizably's layers</em></h1>
   <p class="hero-desc">Two interactive references for interns and contributors. The first maps abstract features to their exact architecture layers. The second walks through concrete product moments — real buttons, real flows, real gotchas.</p>
   <div class="hero-meta">
     <span class="meta-item"><span class="meta-dot"></span> 8 feature patterns</span>
@@ -256,7 +256,7 @@ footer { max-width: 900px; margin: 0 auto; padding: 24px 32px 48px; display: fle
 </section>
 
 <footer>
-  <span class="footer-text">EqualView · <a href="https://github.com/codrlabs/equalview" class="footer-link" target="_blank">github.com/codrlabs/equalview</a></span>
+  <span class="footer-text">vizably · <a href="https://github.com/codrlabs/vizably" class="footer-link" target="_blank">github.com/codrlabs/vizably</a></span>
   <span class="footer-text">intern-onboarding-post-reorg · main branch</span>
 </footer>
 
@@ -323,8 +323,8 @@ function buildDetail(f){
     ${rows}
     ${f.shared?`<div class="shared-bar"><span class="shared-lbl">shared/types.js</span><span class="shared-val">${f.shared}</span></div>`:''}
     <div class="detail-actions">
-      <button class="action-btn" onclick="go('Write the full implementation of the ${f.title} feature for EqualView, including all files and tests')">Write the code →</button>
-      <button class="action-btn" onclick="go('What tests should I write for the ${f.title} feature in EqualView?')">Plan the tests →</button>
+      <button class="action-btn" onclick="go('Write the full implementation of the ${f.title} feature for vizably, including all files and tests')">Write the code →</button>
+      <button class="action-btn" onclick="go('What tests should I write for the ${f.title} feature in vizably?')">Plan the tests →</button>
     </div>`;
   p.classList.add('visible');
 }
@@ -377,7 +377,7 @@ function buildScenarios(){
       </div>
       <div class="s-section-label">Watch out for</div>
       <div class="s-gotcha"><strong>⚑ </strong>${sc.gotcha}</div>
-      <button class="s-btn" onclick="event.stopPropagation();go('Write the full implementation for: ${sc.title.replace(/'/g,"\\'")} in the EqualView codebase, including all files and wiring in app.js')">Write the full implementation →</button>
+      <button class="s-btn" onclick="event.stopPropagation();go('Write the full implementation for: ${sc.title.replace(/'/g,"\\'")} in the vizably codebase, including all files and wiring in app.js')">Write the full implementation →</button>
     </div>
   </div>`).join('');
 }

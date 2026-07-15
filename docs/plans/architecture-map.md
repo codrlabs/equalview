@@ -1,4 +1,4 @@
-# EqualView — Architecture & UX Map
+# vizably — Architecture & UX Map
 
 **Status:** Living document
 **Companion to:** [`project-roadmap.md`](project-roadmap.md),
@@ -174,7 +174,7 @@ data source listed, that's a backend gap, not a frontend one.
 
 | Region            | Contents                                                | Data source                                  |
 | ----------------- | ------------------------------------------------------- | -------------------------------------------- |
-| Header            | "equalview" wordmark, one-line subtitle                 | static                                       |
+| Header            | "vizably" wordmark, one-line subtitle                 | static                                       |
 | Auth slot [planned, P5] | "Sign in" link, **or** "My scans · Log out" if authed | `GET /api/auth/me`                          |
 | URL form          | `<input type="url">`, "Scan" button (disabled empty / `aria-busy` while scanning) | local state |
 | Validation slot   | inline error ("That doesn't look like a URL") **[planned, replaces `alert`]** | client-side `new URL(...)` |
@@ -426,7 +426,7 @@ backend does**.
 to a results page for it.
 
 **UI elements.**
-- App title (`equalview`) + one-line subtitle.
+- App title (`vizably`) + one-line subtitle.
 - Single text input (`type="url"`, labeled for screen readers).
 - "Scan" button (disabled while empty or while a scan is in flight,
   `aria-busy` while scanning).
