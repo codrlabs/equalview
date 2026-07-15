@@ -592,6 +592,70 @@ test('concurrent saveScanResults keeps both writers\' scans', async () => {
   assert.equal(scanFiles.length, 2);
 });
 
+test('saveScanResults reuses scan id when index conflicts after scan file write', async () => {
+  const storageService = new StorageService();
+  const client = createMockGitHubClient({
+    files: {
+      'equalview.json': {
+        content: JSON.stringify(manifest()),
+        sha: 'sha-manifest',
+      },
+      'scans/index.json': {
+        content: JSON.stringify({ schemaVersion: 1, scans: [] }),
+        sha: 'sha-index',
+      },
+    },
+  });
+
+  // Force Contents API (sequential writes) so scan can succeed before index fails.
+  client.rest.git.getRef = async () => {
+    const err = new Error('Resource not accessible by integration');
+    err.status = 403;
+    throw err;
+  };
+
+  let indexAttempts = 0;
+  const originalCreate = client.rest.repos.createOrUpdateFileContents.bind(
+    client.rest.repos,
+  );
+  client.rest.repos.createOrUpdateFileContents = async (args) => {
+    if (args.path === 'scans/index.json') {
+      indexAttempts += 1;
+      if (indexAttempts === 1) {
+        const err = new Error('Reference update failed');
+        err.status = 422;
+        throw err;
+      }
+    }
+    return originalCreate(args);
+  };
+
+  const saved = await storageService.saveScanResults(
+    {
+      storage: { ...STORAGE_REF, provider: 'github', branch: 'main' },
+    },
+    {
+      problems: { visualAccessibility: [], structureAndSemantics: [], multimedia: [] },
+      whatsGood: [],
+    },
+    'https://codrlabs.com',
+    { githubClient: client },
+  );
+
+  assert.equal(indexAttempts, 2);
+  assert.ok(saved.scanId);
+
+  const scanFiles = Object.keys(client.files).filter(
+    (p) => p.startsWith('scans/') && !p.endsWith('index.json'),
+  );
+  assert.equal(scanFiles.length, 1);
+  assert.equal(scanFiles[0], `scans/${saved.scanId}_codrlabs.com.json`);
+
+  const index = JSON.parse(client.files['scans/index.json'].content);
+  assert.equal(index.scans.length, 1);
+  assert.equal(index.scans[0].id, saved.scanId);
+});
+
 test('saveScanResults conflict retry merges against current scan truth', async () => {
   const storageService = new StorageService();
   const peerId = '11111111-2222-3333-4444-555555555555';

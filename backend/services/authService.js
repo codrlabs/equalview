@@ -177,6 +177,9 @@ class AuthService {
     if (!owner || !repo) {
       throw new Error('GitHub storageRef requires full_name (owner/repo)');
     }
+    if (!storageRef?.id) {
+      throw new Error('GitHub storageRef requires id (repository node id)');
+    }
 
     let data;
     try {
@@ -193,7 +196,7 @@ class AuthService {
       throw err;
     }
 
-    if (storageRef.id && data.node_id !== storageRef.id) {
+    if (data.node_id !== storageRef.id) {
       const mismatch = new Error(
         `Repository identity mismatch for ${fullName}: storageRef.id does not match the GitHub node id.`,
       );

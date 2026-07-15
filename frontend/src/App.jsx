@@ -74,7 +74,9 @@ function ResultsRoute({ scan, onOpenProblem }) {
   const url = params.get('url')
 
   if (scan) return <ResultsView data={scan} onOpenProblem={onOpenProblem} />
-  if (scanId) return <SavedScanFetcher scanId={scanId} onOpenProblem={onOpenProblem} />
+  if (scanId) {
+    return <SavedScanFetcher key={scanId} scanId={scanId} onOpenProblem={onOpenProblem} />
+  }
   if (!url) return <Navigate to={PATHS.landing} replace />
   return <ResultsFetcher url={url} onOpenProblem={onOpenProblem} />
 }
@@ -87,8 +89,6 @@ function SavedScanFetcher({ scanId, onOpenProblem }) {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
 
     apiClient.getSavedScan(scanId)
       .then((payload) => {

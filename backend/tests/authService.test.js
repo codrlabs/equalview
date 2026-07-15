@@ -178,3 +178,44 @@ test('getInstallationClientForRepo rejects node id mismatch', async () => {
     (err) => err.code === 'STORAGE_IDENTITY_MISMATCH' && err.status === 403,
   );
 });
+
+test('getInstallationClientForRepo requires storageRef.id', async () => {
+  const authService = new AuthService({
+    sessionSecret: TEST_SESSION_SECRET,
+    encryptionKey: TEST_ENCRYPTION_KEY,
+    githubAppId: '12345',
+    githubAppPrivateKey:
+      '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0Z3VS5JJcds3xfn/ygWyF6PZGFwodaQ=\n-----END RSA PRIVATE KEY-----',
+  });
+
+  let reposGetCalled = false;
+  authService.getGitHubClient = () => ({
+    rest: {
+      repos: {
+        get: async () => {
+          reposGetCalled = true;
+          return {
+            data: {
+              node_id: 'R_kgDOA123',
+              full_name: 'sam/site-audits',
+            },
+          };
+        },
+      },
+    },
+  });
+
+  await assert.rejects(
+    () =>
+      authService.getInstallationClientForRepo(
+        {
+          tokens: {
+            github: { accessToken: authService.encrypt('gho_token') },
+          },
+        },
+        { full_name: 'sam/site-audits' },
+      ),
+    /storageRef requires id/,
+  );
+  assert.equal(reposGetCalled, false);
+});

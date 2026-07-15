@@ -257,10 +257,14 @@ class StorageService {
       throw new Error('GitHub client is required to save scan results');
     }
 
+    // Mint id + immutable payload once. Retries must reuse them — otherwise a
+    // partial write (scan file ok, index conflict) duplicates the same scan.
+    const prepared = this._prepareScanWrite(scanResult, url);
+
     const maxAttempts = 3;
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       try {
-        return await this._saveScanResultsOnce(account, scanResult, url, clients);
+        return await this._saveScanResultsOnce(account, prepared, clients);
       } catch (err) {
         const canRetry = this._isRefConflict(err) && attempt < maxAttempts - 1;
         if (!canRetry) {
@@ -272,6 +276,39 @@ class StorageService {
     }
 
     throw new Error('GitHub write failed after retries');
+  }
+
+  /**
+   * Build the immutable scan file contents once per saveScanResults call.
+   * @private
+   */
+  _prepareScanWrite(scanResult, url) {
+    const scanId = randomUUID();
+    const host = this._hostFromUrl(url);
+    const scannedAt = new Date().toISOString();
+    const scanPath = `${SCANS_DIR}/${scanId}_${host}.json`;
+    const scanPayload = {
+      id: scanId,
+      schemaVersion: SUPPORTED_SCHEMA_VERSION,
+      url,
+      scannedAt,
+      result: scanResult,
+    };
+    const scanContent = JSON.stringify(scanPayload, null, 2) + '\n';
+    const { issues, topSeverity } = this._summarizeScanResult(scanResult);
+
+    return {
+      scanId,
+      host,
+      url,
+      scannedAt,
+      scanPath,
+      scanContent,
+      scanSize: Buffer.byteLength(scanContent, 'utf8'),
+      scanSha256: crypto.createHash('sha256').update(scanContent).digest('hex'),
+      issues,
+      topSeverity,
+    };
   }
 
   /**
@@ -354,10 +391,26 @@ class StorageService {
   }
 
   /**
-   * One save attempt: reconcile from scan-file truth, append this scan, write.
+   * One save attempt: reconcile from scan-file truth, append prepared scan, write.
+   * @param {object} account
+   * @param {object} prepared from `_prepareScanWrite`
+   * @param {StorageClients} clients
    * @private
    */
-  async _saveScanResultsOnce(account, scanResult, url, clients) {
+  async _saveScanResultsOnce(account, prepared, clients) {
+    const {
+      scanId,
+      host,
+      url,
+      scannedAt,
+      scanPath,
+      scanContent,
+      scanSize,
+      scanSha256,
+      issues,
+      topSeverity,
+    } = prepared;
+
     const storageRef = account.storageRef ?? account.storage;
     const { owner, repo } = this._parseGitHubRef(storageRef);
     const octokit = clients.githubClient;
@@ -370,22 +423,6 @@ class StorageService {
 
     const manifest = this._parseJson(manifestFile.content, 'manifest');
     const { index } = await this._reconcileGitHubIndex(octokit, owner, repo, branch);
-
-    const scanId = randomUUID();
-    const host = this._hostFromUrl(url);
-    const scannedAt = new Date().toISOString();
-    const scanPath = `${SCANS_DIR}/${scanId}_${host}.json`;
-    const scanPayload = {
-      id: scanId,
-      schemaVersion: SUPPORTED_SCHEMA_VERSION,
-      url,
-      scannedAt,
-      result: scanResult,
-    };
-    const scanContent = JSON.stringify(scanPayload, null, 2) + '\n';
-    const scanSize = Buffer.byteLength(scanContent, 'utf8');
-    const scanSha256 = crypto.createHash('sha256').update(scanContent).digest('hex');
-    const { issues, topSeverity } = this._summarizeScanResult(scanResult);
 
     // Drop a stale index row if a previous partial write left this id's file
     // without a successful index update (immutable file may already exist).
