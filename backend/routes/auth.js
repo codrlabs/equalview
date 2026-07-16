@@ -168,7 +168,7 @@ function makeAuthRouter({ authService, storageService }) {
         if (destroyErr) {
           return next(destroyErr);
         }
-        res.clearCookie('equalview.sid');
+        res.clearCookie('vizably.sid');
         return res.json({ success: true });
       });
     });

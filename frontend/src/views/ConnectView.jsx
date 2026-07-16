@@ -6,7 +6,7 @@ import { PROVIDERS } from '../data/placeholders'
 
 const STATUS_UI = {
   loadable: {
-    title: 'EqualView account found',
+    title: 'Vizably account found',
     detail: (v) => `${v?.manifestSummary?.scanCount ?? 0} saved scan${v?.manifestSummary?.scanCount === 1 ? '' : 's'}`,
     action: 'load',
     button: 'Load my account',
@@ -14,21 +14,21 @@ const STATUS_UI = {
   },
   initializable: {
     title: 'Ready to set up',
-    detail: () => 'This storage is empty — we can initialize it for EqualView.',
+    detail: () => 'This storage is empty — we can initialize it for Vizably.',
     action: 'init',
     button: 'Set up & continue',
     tone: 'neutral',
   },
   unrelated: {
     title: 'Other files present',
-    detail: () => 'No EqualView manifest yet. You can set this up; other files will stay as they are.',
+    detail: () => 'No Vizably manifest yet. You can set this up; other files will stay as they are.',
     action: 'init',
     button: 'Set up & continue',
     tone: 'warn',
   },
   incompatible: {
-    title: 'Update EqualView required',
-    detail: () => 'This store was created by a newer EqualView version.',
+    title: 'Update Vizably required',
+    detail: () => 'This store was created by a newer Vizably version.',
     action: null,
     button: null,
     tone: 'error',
@@ -47,9 +47,9 @@ function reasonMessage(reason) {
     case 'malformed_manifest':
       return 'The manifest in this storage is malformed.'
     case 'too_new':
-      return 'This store needs a newer EqualView version.'
+      return 'This store needs a newer Vizably version.'
     case 'access_denied':
-      return 'EqualView does not have access to this storage.'
+      return 'Vizably does not have access to this storage.'
     case 'not_writable':
       return 'This storage is read-only.'
     case 'not_found':
@@ -202,7 +202,7 @@ export default function ConnectView({
 
     if (mode === 'new' && !activeStorageRef) {
       setError(
-        `Create "${newRepoName.trim()}" on GitHub, install the EqualView app on it, then refresh the list.`,
+        `Create "${newRepoName.trim()}" on GitHub, install the Vizably app on it, then refresh the list.`,
       )
       return
     }
@@ -354,7 +354,7 @@ export default function ConnectView({
               lineHeight: 1.5,
             }}
           >
-            EqualView writes each report to {pv.article} {pv.unit} in your {pv.name} — you stay in
+            Vizably writes each report to {pv.article} {pv.unit} in your {pv.name} — you stay in
             control of it.
           </p>
         </div>
@@ -383,7 +383,7 @@ export default function ConnectView({
               id="new"
               icon="Plus"
               title={`Create a new ${pv.unit}`}
-              desc={`Initialize a fresh private ${pv.unitShort} for EqualView (must exist on GitHub first).`}
+              desc={`Initialize a fresh private ${pv.unitShort} for Vizably (must exist on GitHub first).`}
             >
               <label
                 style={{
@@ -426,7 +426,7 @@ export default function ConnectView({
               </div>
               {mode === 'new' && !activeStorageRef && newRepoName.trim() && (
                 <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', margin: '8px 0 0' }}>
-                  Create this repository on GitHub, install the EqualView app on it, then{' '}
+                  Create this repository on GitHub, install the Vizably app on it, then{' '}
                   <button
                     type="button"
                     onClick={(e) => {

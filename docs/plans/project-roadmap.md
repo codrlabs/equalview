@@ -1,11 +1,11 @@
-# EqualView Project Roadmap
+# vizably Project Roadmap
 
 **Status:** Active
 **Sub-roadmaps:** [`axecore-integration-roadmap.md`](axecore-integration-roadmap.md)
 
 ## What we are building
 
-EqualView is a web app that does one thing end-to-end:
+vizably is a web app that does one thing end-to-end:
 
 1. The user pastes a URL on the landing page.
 2. The backend loads that page in a headless browser and runs
@@ -138,7 +138,7 @@ Goal: a clean repo that an outsider can read in 10 minutes.
         tree, and is now fully superseded by
         [`docs/plans/architecture-map.md`](architecture-map.md).
   - [x] Rename `docs/research/Healcode.canvas` →
-        `docs/research/equalview.canvas` so it matches the project
+        `docs/research/vizably.canvas` so it matches the project
         name and the reference in `docs/research/README.md`.
   - [x] Tidy `backend/package.json`: set `author` to `"Codr Labs"`,
         drop the placeholder `"keywords": []`, fix the `license` to
@@ -277,7 +277,7 @@ hardening, not blockers.
 Goal: the app feels like a product, not a demo.
 
 The full design-system frontend landed (ported from the design kit in
-`EqualView_App.html`): token-driven theme with light/dark, the
+`vizably_App.html`): token-driven theme with light/dark, the
 `design-system/` component kit, one view per screen, and product
 routes (`/results`, `/problem/:id`, `/story`, `/donate`, `/signin`,
 `/connect`, `/dashboard`, `/account`, `/privacy`, `/terms`, 404).
@@ -467,7 +467,7 @@ These don't belong to a single phase — pick them up opportunistically.
   listed all three plans).
 - _2026-04-26_ — Phase 0 housekeeping cleanup pass landed: tests
   folder renamed to `__tests__/`, stale `docs/guides/architecture.md`
-  retired, research canvas renamed to `equalview.canvas`,
+  retired, research canvas renamed to `vizably.canvas`,
   `backend/package.json` tidied, README links to all three plans.
 - _2026-04-26_ — Initial version. Phase 0 in flight; Phases 1–5
   drafted; product definition and axe-core output shape pinned down;

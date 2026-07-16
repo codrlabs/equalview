@@ -1,7 +1,7 @@
 import { Button, Logo } from '../design-system'
 import { Ico } from '../lib/icons'
 
-const REPO = 'https://github.com/codrlabs/equalview'
+const REPO = 'https://github.com/codrlabs/vizably'
 const BMC = 'https://ko-fi.com/devolabode'
 
 /** Top app bar with logo + nav, global footer. Donate lives in the footer. */
@@ -16,7 +16,7 @@ export default function AppShell({ children, route, onNav, authed, user, theme, 
     }}>{children}</button>
   )
 
-  const initials = (user && user.name ? user.name : 'EV').slice(0, 1).toUpperCase()
+  const initials = (user && user.name ? user.name : 'V').slice(0, 1).toUpperCase()
 
   const FootCol = ({ title, children }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 11, minWidth: 132 }}>
@@ -42,7 +42,7 @@ export default function AppShell({ children, route, onNav, authed, user, theme, 
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 28px', position: 'sticky', top: 0, zIndex: 10,
       }}>
-        <button onClick={() => onNav('landing')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} aria-label="EqualView home">
+        <button onClick={() => onNav('landing')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} aria-label="Vizably home">
           <Logo size={28} />
         </button>
         <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -89,7 +89,7 @@ export default function AppShell({ children, route, onNav, authed, user, theme, 
           <div style={{ display: 'flex', gap: 52, flexWrap: 'wrap' }}>
             <FootCol title="Product">
               <FootLink to="landing">Scan a site</FootLink>
-              <FootLink to="story">Why EqualView</FootLink>
+              <FootLink to="story">Why Vizably</FootLink>
               <FootLink to={authed ? 'dashboard' : 'signin'}>My scans</FootLink>
             </FootCol>
             <FootCol title="Support">
@@ -103,7 +103,7 @@ export default function AppShell({ children, route, onNav, authed, user, theme, 
           </div>
         </div>
         <div style={{ maxWidth: 1040, margin: '32px auto 0', paddingTop: 22, borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, fontSize: 'var(--text-xs)', color: 'var(--text-faint)' }}>
-          <span>© 2026 EqualView · Open source under MPL-2.0</span>
+          <span>© 2026 Vizably · Open source under MPL-2.0</span>
           <span>Accessibility, made visible.</span>
         </div>
       </footer>

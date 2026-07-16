@@ -15,7 +15,7 @@
  */
 
 /**
- * A single accessibility finding as the EqualView UI sees it.
+ * A single accessibility finding as the vizably UI sees it.
  *
  * @typedef {object} Problem
  * @property {string} id

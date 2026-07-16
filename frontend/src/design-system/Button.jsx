@@ -1,5 +1,5 @@
 /**
- * EqualView primary action button.
+ * vizably primary action button.
  * Variants: primary (filled blue), secondary (outline), ghost (text), danger.
  * Sizes: sm, md, lg. Pill or default radius.
  */

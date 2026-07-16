@@ -1,4 +1,4 @@
-# EqualView Architecture — Line-by-Line Reference
+# vizably Architecture — Line-by-Line Reference
 
 > **Note (2026-06):** parts of this guide describe the frontend as it
 > was before the design-system UI landed (`pages/` + `components/`,
@@ -434,7 +434,7 @@ module.exports = { transform, bucketFor }
 | `cat.structure`, `cat.aria`, `cat.tables`, `cat.parsing`, `cat.name-role-value` | `structureAndSemantics` |
 | everything else (cat.color, cat.control, etc.) | `visualAccessibility` |
 
-**Why the `bucketFor` helper exists:** It's the bridge between axe-core's taxonomy (which uses WCAG tag categories like `cat.color`) and EqualView's UX taxonomy (which groups issues by the three accessibility dimensions users think about).
+**Why the `bucketFor` helper exists:** It's the bridge between axe-core's taxonomy (which uses WCAG tag categories like `cat.color`) and vizably's UX taxonomy (which groups issues by the three accessibility dimensions users think about).
 
 **Why pure and testable:** Feed it a captured axe fixture and it returns a predictable result. Zero browser needed in tests:
 ```js

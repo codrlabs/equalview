@@ -74,10 +74,10 @@ Ask these questions **in order**. Stop at the first "yes."
 **Frontend**
 
 1. Is it a new screen or a new URL? → `pages/` + a route in
-   [`App.jsx`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/App.jsx)
+   [`App.jsx`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/App.jsx)
 2. Is it `{ data, loading, error }` for an API call? → `hooks/`
 3. Does it import `fetch`? → **must** be
-   [`lib/apiClient.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/lib/apiClient.js).
+   [`lib/apiClient.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/lib/apiClient.js).
    Nowhere else.
 4. Is it dumb UI (props in, JSX + events out)? → `components/`
 5. Is it a pure helper (no React, no I/O)? → `utils/`
@@ -87,7 +87,7 @@ Ask these questions **in order**. Stop at the first "yes."
 **Shared**
 
 - Did the wire shape between frontend and backend change? →
-  [`shared/types.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/shared/types.js)
+  [`shared/types.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/shared/types.js)
   *first*. Then ripple outward.
 
 ---
@@ -102,7 +102,7 @@ what stays untouched?** That last question is the architectural one.
 **Layer:** frontend, `utils/` only.
 
 - Edit
-  [`utils/urlValidator.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/utils/urlValidator.js)
+  [`utils/urlValidator.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/utils/urlValidator.js)
   to prepend `https://` when the user input has no scheme, then
   validate.
 - Add a test in `__tests__/`.
@@ -131,11 +131,11 @@ and
    `puppeteer`.
 3. Fill in the `services/axeTransformer.js` stub.
 4. In
-   [`scanController.postScan`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/controllers/scanController.js#L41),
+   [`scanController.postScan`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/controllers/scanController.js#L41),
    replace the `// TODO(Phase 2)` block with
    `await this.runner.run(url)`.
 5. Wire `runner` into `new ScanController({...})` inside
-   [`app.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/app.js).
+   [`app.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/app.js).
 6. Tests: pure `scanRunner.test.js` + HTTP `scan.axe.test.js` using
    `buildApp({ runner: fakeRunner })`.
 
@@ -149,11 +149,11 @@ and
 **Layer:** frontend, `pages/` + `components/` + `styles/`.
 
 - The hook
-  [`useScan`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/hooks/useScan.js)
+  [`useScan`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/hooks/useScan.js)
   already returns `loading: true`. **Don't add new state.**
 - New dumb component `components/SkeletonCard.jsx`.
 - In
-  [`ScanResultsPage.jsx`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/pages/ScanResultsPage.jsx),
+  [`ScanResultsPage.jsx`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/pages/ScanResultsPage.jsx),
   render `<SkeletonCard />` while `loading`.
 - Add `styles/skeleton.css`.
 - **Do not touch:** backend, `apiClient`, `useScan`.
@@ -215,7 +215,7 @@ and
 
 ### Issue #23 — "Update Obsidian canvas with current codebase state"
 
-**Layer:** docs only — `docs/obsidian/equalview.canvas`.
+**Layer:** docs only — `docs/obsidian/vizably.canvas`.
 
 > Pattern: docs are a layer too. They have their own home
 > (`docs/guides`, `docs/plans`, `docs/obsidian`). Don't sneak

@@ -158,7 +158,7 @@ class AuthService {
     }
 
     return (
-      `EqualView is not installed on ${fullName}. Install the app at ${installUrl}, ` +
+      `Vizably is not installed on ${fullName}. Install the app at ${installUrl}, ` +
       'grant access to this repository, then sign out and sign in again.'
     );
   }
@@ -380,7 +380,7 @@ class AuthService {
       secret: this.sessionSecret,
       resave: false,
       saveUninitialized: false,
-      name: 'equalview.sid',
+      name: 'vizably.sid',
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

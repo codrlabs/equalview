@@ -9,7 +9,7 @@
 > and [architecture-map.md §4.1](../plans/architecture-map.md).
 
 
-> **Purpose:** For every folder in the EqualView codebase, understand: (1) what it does through a real-world analogy, (2) where this pattern came from historically, and (3) why teams structure code this way.
+> **Purpose:** For every folder in the vizably codebase, understand: (1) what it does through a real-world analogy, (2) where this pattern came from historically, and (3) why teams structure code this way.
 
 ---
 
@@ -21,13 +21,13 @@
 
 A bedroom blueprint says "bed goes here, window there, closet on that wall." It doesn't know how bricks are laid, how plumbing works, or where the water comes from — it just says what the finished room should look like and how you move between rooms.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```jsx
 // LandingPage.jsx — the blueprint for the landing screen
 export default function LandingPage() {
   return (
     <main>
-      <h1>EqualView</h1>        {/* static title */}
+      <h1>vizably</h1>        {/* static title */}
       <UrlInput />               {/* here's the form */}
       <ScanButton />             {/* here's the action */}
     </main>
@@ -35,14 +35,14 @@ export default function LandingPage() {
 }
 ```
 
-**Origin of this pattern:** The "pages" folder name comes from the **Next.js pages directory** (introduced 2016 by Vercel). Next.js popularized mapping files in a `pages/` folder directly to URL routes (`pages/about.jsx` → `/about`). EqualView uses React Router separately, but kept the naming convention. Before that, teams had `containers/` or `scenes/` — but "page" is more intuitive because everyone knows what a web page is.
+**Origin of this pattern:** The "pages" folder name comes from the **Next.js pages directory** (introduced 2016 by Vercel). Next.js popularized mapping files in a `pages/` folder directly to URL routes (`pages/about.jsx` → `/about`). vizably uses React Router separately, but kept the naming convention. Before that, teams had `containers/` or `scenes/` — but "page" is more intuitive because everyone knows what a web page is.
 
 **Why it's used:**
 - Separates "what the user sees and navigates to" from "how it's drawn" and "where the data comes from"
 - Makes it obvious which URL leads where — just look at the filename
 - Prevents the common bug where UI logic leaks into routing logic
 - Without it: you open a file and find fetch calls, CSS, routing, and state all mixed together ("spaghetti code")
-- The actual EqualView page: `frontend/src/pages/ScanResultsPage.jsx`
+- The actual vizably page: `frontend/src/pages/ScanResultsPage.jsx`
 
 ---
 
@@ -52,7 +52,7 @@ export default function LandingPage() {
 
 A `Malm` dresser doesn't care if it's in your bedroom, guest room, or a hotel. It has a clear interface: drawers go in/out, that's it. You don't ask it to also make coffee. It has no opinion about the rest of the house.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```jsx
 // ProblemCategoryBox.jsx — a list of accessibility problems for one category
 export default function ProblemCategoryBox({ problems, title }) {
@@ -72,7 +72,7 @@ export default function ProblemCategoryBox({ problems, title }) {
 - Testable in isolation — render just `ProblemCard` with fake data, no network
 - Composable — pages assemble them like LEGO blocks
 - Without it: every screen copies and pastes the same markup, and when you fix a bug in one, the other six still have it
-- The actual EqualView components: `ProblemCategoryBox`, `WhatsGood`, `ProblemSolutionPage`
+- The actual vizably components: `ProblemCategoryBox`, `WhatsGood`, `ProblemSolutionPage`
 
 ---
 
@@ -82,7 +82,7 @@ export default function ProblemCategoryBox({ problems, title }) {
 
 You're sitting at the table (the page). You tell the waiter, "I'd like the pasta." The waiter walks to the kitchen (API), waits while the chef cooks (loading state), brings you the food (data), or tells you "sorry, we're out" (error). You, at the table, don't go to the kitchen. You don't cook. You just eat when it arrives. The waiter handles all the back-and-forth.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // useScan.js — the waiter that fetches scan results
 export function useScan(url) {
@@ -109,7 +109,7 @@ export function useScan(url) {
 - Multiple pages can use the same hook — no copy-paste
 - Hook tests are just function tests — no React DOM needed (mostly)
 - Without it: every page rewrites the same `useEffect + fetch + try/catch + setState` — hundreds of lines of duplication
-- The actual EqualView hooks: `useScan`, `useProblem`
+- The actual vizably hooks: `useScan`, `useProblem`
 
 ---
 
@@ -119,7 +119,7 @@ export function useScan(url) {
 
 No department (housekeeping, front desk, restaurant) is allowed to have their own direct line to the outside world. They all use the same hotel phone. The phone handles the connection logic: dialing, busy signals, dropped calls, voicemail. If the hotel switches phone providers (from AT&T to Verizon), only the phone system changes — not every department.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 class ApiClient {
   async getScanResults(url) {
@@ -147,7 +147,7 @@ class ApiClient {
 
 2 + 2 always equals 4. It doesn't matter who's pressing the buttons, why they're adding, or whether it's morning. It doesn't remember what you calculated yesterday. It has no side effects — it doesn't send your numbers to the internet.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // urlValidator.js — pure URL sanity check
 export function isValidUrl(string) {
@@ -177,7 +177,7 @@ export function isValidUrl(string) {
 
 They're organized by room, by brand, by finish. You don't guess what color the bedroom is — you pick from the swatch labeled "Bedroom: Warm Taupe." The painter (the component) doesn't decide the color; the swatch does.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```css
 /* scanResults.css — everything about how the results page looks */
 .scan-results { background: var(--bg); }
@@ -200,7 +200,7 @@ They're organized by room, by brand, by finish. You don't guess what color the b
 
 The car looks fine in the showroom. But does it survive a 40mph crash? Does the airbag deploy? Do the doors open after impact? The dummy doesn't care how pretty the car is — it only cares about the specific thing being tested. And you test *before* you sell the car to humans.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // scanResultsPage.test.jsx — crash-test the results page
 test('shows loading then renders results', async () => {
@@ -232,7 +232,7 @@ test('shows loading then renders results', async () => {
 
 You put the key in, turn it, and the engine starts. You don't see the ignition system, the fuel injection, or the spark plugs — you just turn the key and expect the car to go. This file is the key turn.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```jsx
 // main.jsx — turn the key, start the app
 import ReactDOM from 'react-dom/client';
@@ -256,7 +256,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
 "Restaurant on the 3rd floor, gym on the 5th, check-in at the front desk." It doesn't build the rooms. It just says "if a guest wants room service, they go to the restaurant. If they want to check in, they go to the desk."
 
-**Example in EqualView:**
+**Example in vizably:**
 ```jsx
 // App.jsx — the directory of screens
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -292,7 +292,7 @@ export default function App() {
 
 You walk up and say, "I'd like a taxi." The concierge doesn't drive the taxi, doesn't own the taxi, doesn't even know where taxis come from. They just recognize the request ("taxi") and send it to the right person. "Sir, your taxi is outside."
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // routes/scan.js — the concierge for /api/scan
 function makeScanRouter(controller) {
@@ -319,7 +319,7 @@ function makeScanRouter(controller) {
 
 A delegate from France says (in French), "We need more funding for climate." The translator converts it to English for the US delegate. They don't decide what the policy is — they just translate between languages. They also decide if something is too rude to translate (validation), and format the response diplomatically (JSON response).
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // scanController.js — the UN translator
 class ScanController {
@@ -332,7 +332,7 @@ class ScanController {
 }
 ```
 
-**Origin of this pattern:** The **Controller** concept comes from **MVC (Model-View-Controller)** from **Smalltalk-80** (1980 — Alan Kay at Xerox PARC). The modern "Controller as request/response handler with no business logic" separation traces to **Rails controllers** (2004) and **ASP.NET MVC** (2008). Express.js's `req, res` pattern (2010) merged with this. The `this`-binding fix (binding in constructor) is a specific pattern from **JavaScript closures and class methods** — documented heavily in EqualView's `axecore-integration.md` as a known footgun.
+**Origin of this pattern:** The **Controller** concept comes from **MVC (Model-View-Controller)** from **Smalltalk-80** (1980 — Alan Kay at Xerox PARC). The modern "Controller as request/response handler with no business logic" separation traces to **Rails controllers** (2004) and **ASP.NET MVC** (2008). Express.js's `req, res` pattern (2010) merged with this. The `this`-binding fix (binding in constructor) is a specific pattern from **JavaScript closures and class methods** — documented heavily in vizably's `axecore-integration.md` as a known footgun.
 
 **Why it's used:**
 - HTTP concerns (status codes, headers, body parsing) live in one place
@@ -348,7 +348,7 @@ class ScanController {
 
 You describe a chair ("oak, armless, padded"). The carpenter builds it. They don't care if you're a hotel, an office, or a home — they just build the chair. They don't know about your interior design, they don't order the wood. They transform your specification into the thing you need.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // axeTransformer.js — transform raw axe output to our API shape
 function transform(rawAxeResults) {
@@ -375,7 +375,7 @@ function transform(rawAxeResults) {
 
 Boxes go in, boxes come out. The warehouse doesn't know what's in the boxes, doesn't price them, doesn't sell them. Inventory management is somebody else's job. If you swap one warehouse for another (different location, different locks), the store keeps running.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // mockScanResults.js — the warehouse containing sample data
 module.exports = {
@@ -400,7 +400,7 @@ module.exports = {
 
 Before a car ships, engineers put it through simulated crashes, extreme temperatures, salt spray, and vibration tests. They don't care how pretty the car looks — they care if it survives the test. Every car goes through the same tests. If a car fails, they fix it before it reaches customers.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // scan.test.js — test the /api/scan endpoint
 app.test('POST /api/scan returns scan result', async () => {
@@ -426,7 +426,7 @@ app.test('POST /api/scan returns scan result', async () => {
 
 "Maria, you're kitchen. John, you're front desk. Sarah, you're housekeeping." The manager knows everyone by name, but doesn't DO their jobs. They hire and fire (dependency injection). If the hotel expands (new features), they add new people. If someone calls in sick (missing dependency), they handle it.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // app.js — the manager who wires everything together
 function buildApp(overrides = {}) {
@@ -453,7 +453,7 @@ function buildApp(overrides = {}) {
 
 That's their entire job. Turn the key, open the door, say "good morning." They don't greet guests, they don't cook breakfast, they just start the day. Minimal, critical, and over quickly.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // index.js — unlock the door and start listening
 require('dotenv').config();
@@ -482,7 +482,7 @@ app.listen(process.env.PORT, () => {
 
 Both the French and English speakers look at the same dictionary. If they disagree on what a word means, they don't guess — they check the dictionary. If the dictionary is wrong, they update the dictionary, not how they use the word.
 
-**Example in EqualView:**
+**Example in vizably:**
 ```js
 // shared/types.js — the dictionary both sides agree on
 /**

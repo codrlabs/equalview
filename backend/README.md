@@ -1,4 +1,4 @@
-# EqualView — Backend
+# Vizably — Backend
 
 Express API that runs real accessibility scans: `services/scanRunner.js`
 drives a headless Chromium via Puppeteer, injects axe-core into the
@@ -96,7 +96,7 @@ shared via the repo.
 3. Under **Permissions**, grant at least **Contents: Read & write** and
    **Metadata: Read** (per the auth/storage design). Optionally add **Account →
    Email addresses: Read-only** if you want the dashboard to show your GitHub
-   email; sign-in works without it. EqualView writes files via a **single Git commit** when the
+   email; sign-in works without it. Vizably writes files via a **single Git commit** when the
    installation token can use the Git Database API, and falls back to the
    **Contents API** when needed (empty repos / restricted tokens).
 4. Create the app, then open **OAuth credentials** and copy the **Client ID**
@@ -118,18 +118,18 @@ integration**, your app installation likely still has **Contents: Read** only:
 1. GitHub App → **Permissions** → **Repository permissions** → **Contents:
    Read and write** → **Save changes**
 2. Open [Installed GitHub Apps](https://github.com/settings/installations) →
-   **Configure** your EqualView app → **Accept** the permission upgrade if prompted
-3. Confirm `equalview-scans` (or your target repo) is checked under repository access
-4. Sign out of EqualView and sign in again (fresh OAuth token)
+   **Configure** your Vizably app → **Accept** the permission upgrade if prompted
+3. Confirm `vizably-scans` (or your target repo) is checked under repository access
+4. Sign out of Vizably and sign in again (fresh OAuth token)
 
-**Production (TBD — finalize before shipping EqualView)**
+**Production (TBD — finalize before shipping Vizably)**
 
-The personal apps above are for **testing only**. Before EqualView runs on a
+The personal apps above are for **testing only**. Before Vizably runs on a
 real domain, the team must register a **project-owned GitHub App** (under the
-codrlabs/equalview org or equivalent) with:
+codrlabs/vizably org or equivalent) with:
 
 - Production callback URL(s) on the deployed backend (e.g.
-  `https://api.equalview.example/api/auth/github/callback`)
+  `https://api.vizably.example/api/auth/github/callback`)
 - The same permission model (`Contents: rw`, `Metadata: r`)
 - Client ID/secret stored in deployment secrets — **never** committed to git
 

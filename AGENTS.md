@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **equalview** (989 symbols, 1703 relationships, 52 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **vizably** (754 symbols, 971 relationships, 4 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -25,10 +25,10 @@ This project is indexed by GitNexus as **equalview** (989 symbols, 1703 relation
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/equalview/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/equalview/clusters` | All functional areas |
-| `gitnexus://repo/equalview/processes` | All execution flows |
-| `gitnexus://repo/equalview/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/vizably/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/vizably/clusters` | All functional areas |
+| `gitnexus://repo/vizably/processes` | All execution flows |
+| `gitnexus://repo/vizably/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 
@@ -43,9 +43,9 @@ This project is indexed by GitNexus as **equalview** (989 symbols, 1703 relation
 
 <!-- gitnexus:end -->
 
-# EqualView — Architecture & Conventions
+# vizably — Architecture & Conventions
 
-EqualView is an accessibility scanner: paste a URL, get a categorized,
+vizably is an accessibility scanner: paste a URL, get a categorized,
 human-readable accessibility report. Two halves, one wire contract.
 
 - **Backend** (`backend/`, Node + Express) is dumb about presentation. Layers,
@@ -68,7 +68,7 @@ human-readable accessibility report. Two halves, one wire contract.
 
 ## Accounts & storage — bring-your-own-storage (portable account)
 
-EqualView keeps **no database of its own**. A signed-in user's entire account
+vizably keeps **no database of its own**. A signed-in user's entire account
 (profile, settings, saved scans) lives in **storage they already own**: one
 **GitHub repository** or one **Google Drive folder**. GitHub/Google OAuth is used
 only to *identify* the user and get an API token; the user-owned store is the
@@ -81,13 +81,13 @@ The connection UX is **browse → select → validate → load-or-init**:
 2. They **see the repos/folders they already have** and **select one**
    (GitHub: backend lists repos; Google: client-side **Google Picker**, because
    `drive.file` cannot browse existing folders).
-3. EqualView runs a **fit-check** (`POST /api/auth/storage/validate`) — does this
-   storage hold a valid EqualView account store? → `loadable` / `initializable` /
+3. vizably runs a **fit-check** (`POST /api/auth/storage/validate`) — does this
+   storage hold a valid vizably account store? → `loadable` / `initializable` /
    `unrelated` / `incompatible` / `invalid` (+ capabilities).
-4. EqualView **loads** the existing account back, or **initializes** the store.
+4. vizably **loads** the existing account back, or **initializes** the store.
 
 On-disk contract (the "data needed to load back the account"): a root
-`equalview.json` manifest + a `scans/` folder (`index.json` cache + one immutable
+`vizably.json` manifest + a `scans/` folder (`index.json` cache + one immutable
 `<scanId>_<host>.json` per scan). Scan files are truth; `index.json` and
 `scanCount` are rebuildable caches.
 

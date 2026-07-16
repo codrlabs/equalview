@@ -1,4 +1,4 @@
-# EqualView — Post-Reorg Architecture Walkthrough
+# vizably — Post-Reorg Architecture Walkthrough
 
 > **Note (2026-06):** parts of this guide describe the frontend as it
 > was before the design-system UI landed (`pages/` + `components/`,
@@ -34,7 +34,7 @@ Companion docs:
 
 ## 1. The 30-second pitch
 
-EqualView does one thing end-to-end:
+vizably does one thing end-to-end:
 
 1. The user pastes a URL on the **landing page**.
 2. The backend (eventually) loads that page in a headless browser and
@@ -59,7 +59,7 @@ Nine PRs landed between `8f72a1f` and `f750962`, in three buckets.
 - Deleted dead UI: `frontend/src/_tests_/doc/test.md`, the unused
   `landingPage.test.jsx`, and pieces of `ScanResults.jsx` that were no
   longer reachable.
-- Renamed the Obsidian canvas `Healcode.canvas` → `equalview.canvas`.
+- Renamed the Obsidian canvas `Healcode.canvas` → `vizably.canvas`.
 - Removed the stale `docs/guides/architecture.md` (replaced by
   `docs/plans/architecture-map.md`).
 - Fixed README references that still mentioned **Jest** — the frontend
@@ -94,7 +94,7 @@ The frontend used to switch screens by reading
 
 ### 2.4 Shared types (PR #38)
 
-New top-level [`shared/types.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/shared/types.js)
+New top-level [`shared/types.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/shared/types.js)
 holds JSDoc typedefs (`Problem`, `ScanResult`, `Impact`; planned
 `User`, `StoredScan`). Backend (CJS) and frontend (ESM) reference it
 the same way. **The wire shape is documented once.**
@@ -111,7 +111,7 @@ PR #41 refreshed all four plan docs to the post-reorg state.
 ## 3. Folder-by-folder tour
 
 ```
-equalview/
+vizably/
 ├── backend/        Express API (Node 22)
 ├── frontend/       React 19 + Vite 7 SPA
 ├── shared/         JSDoc types referenced by both sides
@@ -206,7 +206,7 @@ The split mirrors the backend's intent: each file does one thing.
 - **`lib/apiClient.js`** is the single boundary to the network.
   Everywhere else imports the singleton; tests substitute a fake.
 - **`utils/`** are pure helpers (e.g.
-  [`isValidUrl`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/utils/urlValidator.js)).
+  [`isValidUrl`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/utils/urlValidator.js)).
 - **`styles/`** is CSS, scoped per screen.
 
 ### 3.3 `shared/` — the wire-shape contract
@@ -242,7 +242,7 @@ folder in Obsidian to edit it.
 
 ### 3.5 Top level
 
-- [`docker-compose.yml`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/docker-compose.yml)
+- [`docker-compose.yml`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/docker-compose.yml)
   — frontend on `:5173`, backend on `:3000`, both with hot-reload
   bind mounts. `FRONTEND_ORIGIN` is plumbed into the backend so CORS
   is configurable.
@@ -354,7 +354,7 @@ refresh.
 
 ### 4.4 Backend wiring (the composition root)
 
-[`backend/app.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/app.js)
+[`backend/app.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/app.js)
 is the single point that knows about concrete classes:
 
 ```js
@@ -369,7 +369,7 @@ shape stay the same. That property is the whole point of the reorg.
 
 ### 4.5 Type contract
 
-Wire-shape changes start in [`shared/types.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/shared/types.js).
+Wire-shape changes start in [`shared/types.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/shared/types.js).
 The transformer and consumers follow. Never the other way around.
 
 ---
@@ -496,7 +496,7 @@ module.exports = { createScanHistory };
 Two things to notice:
 
 1. **Dependencies are passed in.** That's the same pattern
-   [`scanController.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/controllers/scanController.js)
+   [`scanController.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/controllers/scanController.js)
    uses. Tests inject a fake store, a deterministic `uuid`, and a
    frozen `now`. No mocking framework needed.
 2. **The factory returns plain methods.** It is the *composition
@@ -509,7 +509,7 @@ The controller is the only layer that knows about `req` / `res`. It
 runs cheap validations, calls into services, and serializes JSON. It
 does **not** contain business logic.
 
-Edit [`scanController.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/controllers/scanController.js):
+Edit [`scanController.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/controllers/scanController.js):
 
 ```js
 class ScanController {
@@ -558,7 +558,7 @@ Three things this snippet demonstrates that you should always do:
 
 Routers contain only `router.METHOD(path, controller.method)`. No
 parsing, no validation, no logic. Edit
-[`routes/scan.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/routes/scan.js):
+[`routes/scan.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/routes/scan.js):
 
 ```js
 function makeScanRouter(controller) {
@@ -575,7 +575,7 @@ bigger than one line per endpoint, it doesn't belong here.
 
 ### Step 6 — wire it up in the composition root (`backend/app.js`)
 
-[`app.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/app.js)
+[`app.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/app.js)
 is the **only** file that constructs concrete classes. New
 dependencies show up here and nowhere else.
 
@@ -618,7 +618,7 @@ no monkey-patching.
 There are two kinds of tests, matching the two kinds of code.
 
 **Pure-service test** (no Express) — mirrors
-[`ssrfGuard.test.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/tests/ssrfGuard.test.js):
+[`ssrfGuard.test.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/tests/ssrfGuard.test.js):
 
 ```js
 // backend/tests/scanHistory.test.js
@@ -646,7 +646,7 @@ test('records and lists entries newest-first', () => {
 ```
 
 **HTTP test** (full app) — mirrors
-[`scan.test.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/tests/scan.test.js):
+[`scan.test.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/tests/scan.test.js):
 
 ```js
 test('POST /api/scan records to history and GET /api/scan-history returns it', async () => {
@@ -689,7 +689,7 @@ Every async data source on the frontend has a hook with the
 small because they don't manage that state machine themselves.
 
 This file is a copy of
-[`useScan.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/hooks/useScan.js)
+[`useScan.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/hooks/useScan.js)
 with one method swapped:
 
 ```js
@@ -789,7 +789,7 @@ is. The result URL pattern was already shareable, so reusing it for
 
 Vitest + RTL tests stub the API client at the module level — exactly
 the trick
-[`scanResultsPage.test.jsx`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/__tests__/scanResultsPage.test.jsx)
+[`scanResultsPage.test.jsx`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/__tests__/scanResultsPage.test.jsx)
 already uses:
 
 ```jsx
@@ -873,7 +873,7 @@ untouched. **Same architecture, different layers in play.**
 
 This is the second walkthrough, mirroring §5 but for the single
 most-asked-about change in the codebase: **swapping
-[`mockScanResults`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/data/mockScanResults.js)
+[`mockScanResults`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/data/mockScanResults.js)
 for a real Puppeteer + axe-core scan**, so `POST /api/scan` and
 `GET /api/scan-results` return what the user's site actually looks
 like to axe instead of a fixture (or the future-error state when the
@@ -898,9 +898,9 @@ first time we cash it in.
 
 Wire-shape changes always start here (§4.5). For the axe swap,
 nothing actually has to change:
-[`axeTransformer.transform(...)`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/services/axeTransformer.js)
+[`axeTransformer.transform(...)`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/services/axeTransformer.js)
 already returns the
-[`ScanResult`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/shared/types.js)
+[`ScanResult`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/shared/types.js)
 shape the frontend consumes today, because the mock fixture and the
 transformer were designed against the same typedefs (`Problem`,
 `ScanResult`, `Impact`).
@@ -1069,7 +1069,7 @@ Things this snippet pins down:
 
 - **The `// TODO(Phase 2)` comment in the current file goes away.**
   The
-  [existing `postScan`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/controllers/scanController.js#L41)
+  [existing `postScan`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/controllers/scanController.js#L41)
   literally says "call this.runner.run(url)" — that's what this is.
   The dependency name `runner` matches.
 - **`mockScanResults` is gone from the constructor.** Tests that
@@ -1140,7 +1140,7 @@ Two layers, two test styles, exactly mirroring the existing files.
 
 **Pure-service test for `scanRunner`** — no Express, no browser.
 Mirrors
-[`ssrfGuard.test.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/tests/ssrfGuard.test.js)
+[`ssrfGuard.test.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/tests/ssrfGuard.test.js)
 in style:
 
 ```js
@@ -1181,7 +1181,7 @@ test('throws if the post-redirect URL is private', async () => {
 ```
 
 **HTTP test that overrides the runner via `buildApp`** — mirrors
-[`scan.test.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/tests/scan.test.js):
+[`scan.test.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/tests/scan.test.js):
 
 ```js
 // backend/tests/scan.axe.test.js
@@ -1219,9 +1219,9 @@ root constructs.
 This is the payoff. The wire shape coming back from `POST /api/scan`
 and `GET /api/scan-results` is the same `ScanResult` typedef the
 mock already produced (Step 1 confirmed this). So
-[`apiClient`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/lib/apiClient.js),
-[`useScan`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/hooks/useScan.js),
-[`ScanResultsPage`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/frontend/src/pages/ScanResultsPage.jsx),
+[`apiClient`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/lib/apiClient.js),
+[`useScan`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/hooks/useScan.js),
+[`ScanResultsPage`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/frontend/src/pages/ScanResultsPage.jsx),
 and every component below them keep working unchanged. The user
 stops seeing mock fixture data (or the future-error state once the
 fixture is removed) because the same endpoint now returns real axe

@@ -42,7 +42,7 @@ account back** or init a new one. The user's repo/folder *is* the account.
   recommendation for **GitHub App** (per-repo `Contents: read/write`) as the
   least-privilege path.
 - **`accountStorageContract.md`** (new) — the authoritative on-disk spec:
-  `equalview.json` manifest with `accountId`, `storage.ownerId`, `settings`,
+  `vizably.json` manifest with `accountId`, `storage.ownerId`, `settings`,
   `summary`; `scans/index.json` cache; immutable scan files named
   `<scanId>_<host>.json`. Every field has a reason.
 - **Concurrency & partial-write model:** optimistic concurrency via blob `sha`

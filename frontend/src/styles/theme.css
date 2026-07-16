@@ -1,5 +1,5 @@
 /* ───────────────────────────────────────────────────────────
-   EqualView — Color tokens
+   vizably — Color tokens
    Monochrome ink/slate base + a single accessible blue accent.
    Color is reserved almost entirely for SEVERITY signalling and
    must always be paired with a label/icon (never color alone).
@@ -138,7 +138,7 @@
 }
 
 /* ───────────────────────────────────────────────────────────
-   EqualView — Typography tokens
+   vizably — Typography tokens
    Public Sans for everything; JetBrains Mono for code.
    Two functional weights (400 / 600), 700 reserved for the
    wordmark and the largest display sizes.
@@ -188,7 +188,7 @@
 }
 
 /* ───────────────────────────────────────────────────────────
-   EqualView — Spacing, radius, shadow & motion tokens
+   vizably — Spacing, radius, shadow & motion tokens
    4px base grid. Restrained elevation; calm, quick motion.
    ─────────────────────────────────────────────────────────── */
 
@@ -245,7 +245,7 @@
 }
 
 /* ───────────────────────────────────────────────────────────
-   EqualView — base layer
+   vizably — base layer
    Light element defaults so components and cards inherit the
    brand without extra wiring. Accessibility-first: always-on
    visible focus rings, comfortable line length, no color-only

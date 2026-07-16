@@ -1,6 +1,6 @@
 /**
  * axeTransformer — pure module that maps a raw axe-core results object
- * into the API response shape the EqualView frontend consumes.
+ * into the API response shape the vizably frontend consumes.
  *
  * This is currently a stub: until Phase 2 of the project roadmap wires
  * Puppeteer + axe-core, the controller still serves the mock fixture
@@ -22,7 +22,7 @@
  */
 
 /**
- * Map an axe `tags` array to one of EqualView's UI buckets.
+ * Map an axe `tags` array to one of vizably's UI buckets.
  * Pure helper — covered by unit tests in Phase 1.
  *
  * @param {string[]} tags

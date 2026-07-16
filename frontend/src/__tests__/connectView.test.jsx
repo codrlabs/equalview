@@ -56,7 +56,7 @@ describe('ConnectView', () => {
       full_name: REPO.full_name,
       html_url: REPO.html_url,
     })
-    expect(screen.getByText('EqualView account found')).toBeInTheDocument()
+    expect(screen.getByText('Vizably account found')).toBeInTheDocument()
     expect(screen.getByText('3 saved scans')).toBeInTheDocument()
   })
 
@@ -68,7 +68,7 @@ describe('ConnectView', () => {
     )
 
     await waitForRepoPicker(client)
-    expect(await screen.findByText('EqualView account found')).toBeInTheDocument()
+    expect(await screen.findByText('Vizably account found')).toBeInTheDocument()
 
     const button = screen.getByRole('button', { name: /load my account/i })
     fireEvent.click(button)
@@ -136,7 +136,7 @@ describe('ConnectView', () => {
     )
 
     await waitForRepoPicker(client)
-    expect(await screen.findByText('Update EqualView required')).toBeInTheDocument()
+    expect(await screen.findByText('Update Vizably required')).toBeInTheDocument()
 
     const button = screen.getByRole('button', { name: /continue/i })
     expect(button).toBeDisabled()

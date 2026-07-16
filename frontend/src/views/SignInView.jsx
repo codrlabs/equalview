@@ -4,7 +4,7 @@ import { Ico, GoogleMark } from '../lib/icons'
 /**
  * Sign in — connect with GitHub or Google. We use the provider only to
  * identify you; saved scans live in YOUR own storage (a private repo or
- * your Drive), never on EqualView's servers.
+ * your Drive), never on vizably's servers.
  *
  * NOTE: real OAuth is not wired yet — `onAuth(provider)` continues the
  * placeholder flow into ConnectView.

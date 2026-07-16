@@ -8,7 +8,9 @@
 const crypto = require('crypto');
 const { randomUUID } = require('crypto');
 
-const MANIFEST_PATH = 'equalview.json';
+const MANIFEST_PATH = 'vizably.json';
+/** Pre-rename store root — still loadable; rewritten to `MANIFEST_PATH` on load. */
+const LEGACY_MANIFEST_PATH = 'equalview.json';
 const SCANS_DIR = 'scans';
 const INDEX_PATH = `${SCANS_DIR}/index.json`;
 const SUPPORTED_SCHEMA_VERSION = 1;
@@ -93,17 +95,18 @@ class StorageService {
     const octokit = clients.githubClient;
     const branch = await this._resolveGitHubBranch(octokit, owner, repo, storageRef.branch);
 
-    const manifestFile = await this._readGitHubFile(octokit, owner, repo, MANIFEST_PATH, branch);
+    const manifestFile = await this._readAccountManifest(octokit, owner, repo, branch);
     if (!manifestFile) {
       throw new Error('Account manifest not found');
     }
 
-    const manifest = this._parseJson(manifestFile.content, 'manifest');
-    const manifestCheck = this._assessManifest(manifest);
+    const parsed = this._parseJson(manifestFile.content, 'manifest');
+    const manifestCheck = this._assessManifest(parsed);
     if (manifestCheck.status === 'incompatible' || manifestCheck.status === 'invalid') {
       throw new Error(manifestCheck.reason || 'Invalid account manifest');
     }
 
+    const { manifest, migrated: brandMigrated } = this._normalizeManifestBrand(parsed);
     const { index, repaired, scanFiles } = await this._reconcileGitHubIndex(
       octokit,
       owner,
@@ -112,19 +115,35 @@ class StorageService {
     );
 
     let reason = manifestCheck.reason ?? null;
+    const needsManifestWrite = repaired || brandMigrated || manifestFile.legacy;
     if (repaired) {
       reason = 'repairable';
-      await this._writeGitHubFiles(octokit, owner, repo, branch, [
-        {
+    } else if (brandMigrated || manifestFile.legacy) {
+      reason = 'migration_required';
+    }
+
+    if (needsManifestWrite) {
+      const files = [];
+      if (repaired) {
+        files.push({
           path: INDEX_PATH,
           content: JSON.stringify(index, null, 2) + '\n',
-        },
-        {
-          path: MANIFEST_PATH,
-          content: JSON.stringify(this._updateManifestSummary(manifest, index), null, 2) + '\n',
-          sha: manifestFile.sha,
-        },
-      ], 'Reconcile scan index cache');
+        });
+      }
+      files.push({
+        path: MANIFEST_PATH,
+        content: JSON.stringify(this._updateManifestSummary(manifest, index), null, 2) + '\n',
+        // Only reuse sha when overwriting the current path; legacy → new file.
+        ...(manifestFile.path === MANIFEST_PATH ? { sha: manifestFile.sha } : {}),
+      });
+      await this._writeGitHubFiles(
+        octokit,
+        owner,
+        repo,
+        branch,
+        files,
+        repaired ? 'Reconcile scan index cache' : 'Migrate account manifest to vizably.json',
+      );
     }
 
     return {
@@ -156,7 +175,7 @@ class StorageService {
 
     const validation = await this.validateStorage(provider, storageRef, clients);
     if (validation.status === 'loadable') {
-      throw new Error('Storage already contains an EqualView account');
+      throw new Error('Storage already contains a Vizably account');
     }
     if (validation.status === 'incompatible' || validation.status === 'invalid') {
       throw new Error(validation.reason || `Cannot initialize storage (${validation.status})`);
@@ -169,11 +188,10 @@ class StorageService {
     const octokit = clients.githubClient;
     const branch = await this._resolveGitHubBranch(octokit, repoOwner, repo, storageRef.branch);
 
-    const existingManifest = await this._readGitHubFile(
+    const existingManifest = await this._readAccountManifest(
       octokit,
       repoOwner,
       repo,
-      MANIFEST_PATH,
       branch,
     );
     if (existingManifest) {
@@ -182,7 +200,7 @@ class StorageService {
 
     const now = new Date().toISOString();
     const manifest = {
-      equalview: true,
+      vizably: true,
       kind: 'account-store',
       schemaVersion: SUPPORTED_SCHEMA_VERSION,
       minReaderSchemaVersion: SUPPORTED_SCHEMA_VERSION,
@@ -229,7 +247,7 @@ class StorageService {
           content: JSON.stringify(index, null, 2) + '\n',
         },
       ],
-      'Initialize EqualView account store',
+      'Initialize Vizably account store',
     );
 
     return {
@@ -416,12 +434,14 @@ class StorageService {
     const octokit = clients.githubClient;
     const branch = await this._resolveGitHubBranch(octokit, owner, repo, storageRef.branch);
 
-    const manifestFile = await this._readGitHubFile(octokit, owner, repo, MANIFEST_PATH, branch);
+    const manifestFile = await this._readAccountManifest(octokit, owner, repo, branch);
     if (!manifestFile) {
       throw new Error('Account manifest not found');
     }
 
-    const manifest = this._parseJson(manifestFile.content, 'manifest');
+    const { manifest } = this._normalizeManifestBrand(
+      this._parseJson(manifestFile.content, 'manifest'),
+    );
     const { index } = await this._reconcileGitHubIndex(octokit, owner, repo, branch);
 
     // Drop a stale index row if a previous partial write left this id's file
@@ -460,7 +480,7 @@ class StorageService {
         {
           path: MANIFEST_PATH,
           content: JSON.stringify(updatedManifest, null, 2) + '\n',
-          sha: manifestFile.sha,
+          ...(manifestFile.path === MANIFEST_PATH ? { sha: manifestFile.sha } : {}),
         },
       ],
       `Save accessibility scan for ${host}`,
@@ -514,7 +534,7 @@ class StorageService {
       throw err;
     }
 
-    const manifestFile = await this._readGitHubFile(octokit, owner, repo, MANIFEST_PATH, branch);
+    const manifestFile = await this._readAccountManifest(octokit, owner, repo, branch);
     if (!manifestFile) {
       const rootEntries = await this._listGitHubDirectory(octokit, owner, repo, '', branch);
       const status = rootEntries.length === 0 ? 'initializable' : 'unrelated';
@@ -545,6 +565,7 @@ class StorageService {
       };
     }
 
+    const { manifest: normalized } = this._normalizeManifestBrand(manifest);
     const { index, repaired } = await this._reconcileGitHubIndex(
       octokit,
       owner,
@@ -552,17 +573,60 @@ class StorageService {
       branch,
     );
 
+    let reason = repaired ? 'repairable' : manifestCheck.reason;
+    if (!repaired && (manifestFile.legacy || manifest.equalview === true)) {
+      reason = 'migration_required';
+    }
+
     return {
       status: 'loadable',
-      reason: repaired ? 'repairable' : manifestCheck.reason,
+      reason,
       capabilities,
       manifestSummary: {
-        accountId: manifest.account.id,
-        schemaVersion: manifest.schemaVersion,
+        accountId: normalized.account.id,
+        schemaVersion: normalized.schemaVersion,
         scanCount: index.scans.length,
-        updatedAt: manifest.account.updatedAt,
+        updatedAt: normalized.account.updatedAt,
       },
     };
+  }
+
+  /**
+   * Prefer `vizably.json`; fall back to pre-rename `equalview.json`.
+   * @private
+   */
+  async _readAccountManifest(octokit, owner, repo, branch) {
+    const current = await this._readGitHubFile(octokit, owner, repo, MANIFEST_PATH, branch);
+    if (current) {
+      return { ...current, path: MANIFEST_PATH, legacy: false };
+    }
+    const legacy = await this._readGitHubFile(
+      octokit,
+      owner,
+      repo,
+      LEGACY_MANIFEST_PATH,
+      branch,
+    );
+    if (legacy) {
+      return { ...legacy, path: LEGACY_MANIFEST_PATH, legacy: true };
+    }
+    return null;
+  }
+
+  /**
+   * Accept `equalview: true` stores; normalize to `vizably: true` for writers.
+   * @private
+   */
+  _normalizeManifestBrand(manifest) {
+    if (manifest?.vizably === true && manifest.equalview == null) {
+      return { manifest, migrated: false };
+    }
+    if (manifest?.vizably === true || manifest?.equalview === true) {
+      const next = { ...manifest, vizably: true };
+      delete next.equalview;
+      return { manifest: next, migrated: manifest.equalview === true || manifest.vizably !== true };
+    }
+    return { manifest, migrated: false };
   }
 
   /** @private */
@@ -570,7 +634,10 @@ class StorageService {
     if (!manifest || typeof manifest !== 'object') {
       return { status: 'invalid', reason: 'malformed_manifest' };
     }
-    if (manifest.equalview !== true || manifest.kind !== 'account-store') {
+    const isAccountStore =
+      (manifest.vizably === true || manifest.equalview === true) &&
+      manifest.kind === 'account-store';
+    if (!isAccountStore) {
       return { status: 'unrelated', reason: null };
     }
     if (
@@ -656,7 +723,7 @@ class StorageService {
         'GitHub App cannot write to this repository. Add GITHUB_APP_ID and ' +
         'GITHUB_APP_PRIVATE_KEY to backend/.env, set Repository permissions → Contents ' +
         'to "Read and write", then open https://github.com/settings/installations, ' +
-        'configure your EqualView app, accept any permission upgrade, and ensure this ' +
+        'configure your Vizably app, accept any permission upgrade, and ensure this ' +
         'repo is selected. Sign out and sign in again.'
       );
     }

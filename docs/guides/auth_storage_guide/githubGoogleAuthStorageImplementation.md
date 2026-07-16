@@ -2,16 +2,16 @@
 
 ## Overview
 
-EqualView lets a person sign in with **GitHub** or **Google** and keep their
+vizably lets a person sign in with **GitHub** or **Google** and keep their
 whole account — profile, settings, and saved accessibility scans — inside
 **storage they already own**: one **GitHub repository** or one **Google Drive
-folder**. EqualView runs **no database of its own**. The user-owned storage is
+folder**. vizably runs **no database of its own**. The user-owned storage is
 the source of truth; OAuth is used only to *identify* the user and obtain an API
 token to read/write that storage.
 
 This is a **bring-your-own-storage, portable account** model. Because the
 account travels with the user's repo/folder, they can sign in from any device,
-**pick the same storage**, and EqualView **loads the account back** — no
+**pick the same storage**, and vizably **loads the account back** — no
 server-side data, no lock-in, no per-user hosting cost. That is what makes it
 cheap to offer to as many people as possible.
 
@@ -19,10 +19,10 @@ The defining UX is **browse → select → validate → load-or-init**:
 
 1. The user connects GitHub or Google (OAuth).
 2. They **see the repos/folders they already have** and **select one**.
-3. EqualView **validates** whether that storage *fits the data needed to load
+3. vizably **validates** whether that storage *fits the data needed to load
    the account back* (a "fit-check").
-4. Depending on the result, EqualView **loads** the existing account or
-   **initializes** the storage as a new EqualView account store.
+4. Depending on the result, vizably **loads** the existing account or
+   **initializes** the storage as a new vizably account store.
 
 > The exact on-disk contract that the fit-check reads/writes — the manifest,
 > the scans layout, and the validation rules — lives in its own document:
@@ -58,7 +58,7 @@ User lands on ConnectView — the storage picker
          │
          ▼
 Backend VALIDATES the selected storage (fit-check)
-  reads <root>/equalview.json → returns a status + capabilities
+  reads <root>/vizably.json → returns a status + capabilities
          │
    ┌─────┴───────────────────────────────────────────────┐
    ▼                 ▼                 ▼                   ▼
@@ -66,7 +66,7 @@ loadable        initializable      incompatible        unrelated / invalid
    │                 │                 │                   │
    ▼                 ▼                 ▼                   ▼
 "Load my       "Set this up      "Made by a newer    "This isn't an EV
- account"       for EqualView"     EqualView —          store / it has other
+ account"       for vizably"     vizably —          store / it has other
    │                 │              update to use it"    files — init anyway
    ▼                 ▼                 │                   or pick another"
 LOAD: read       INIT: write          ▼                   │
@@ -88,7 +88,7 @@ store.
 ### Identity model — read this first
 
 This model is **possession-based by default**: whoever can read/write the
-selected repo/folder can load and modify that EqualView account. This is a
+selected repo/folder can load and modify that vizably account. This is a
 deliberate tradeoff for portability and zero-server-state, but it has sharp
 edges the implementation must respect:
 
@@ -136,8 +136,8 @@ already has. Two valid strategies:
 
 1. **Google Picker (recommended, privacy-preserving).**
    - Scopes: `openid email profile` + `https://www.googleapis.com/auth/drive.file`.
-   - The user browses in Google's own Picker UI and hands EqualView exactly the
-     one folder they chose (or a new one). EqualView gets access to *only* that
+   - The user browses in Google's own Picker UI and hands vizably exactly the
+     one folder they chose (or a new one). vizably gets access to *only* that
      folder.
    - Consequence: for Google, the picker is **client-side (Google Picker)**, not
      a backend `GET /api/auth/storages` listing. The selected folder id is then
@@ -146,7 +146,7 @@ already has. Two valid strategies:
 2. **App-rendered browse (heavier).**
    - Scopes: `https://www.googleapis.com/auth/drive.metadata.readonly` (to list
      folder metadata) + `drive.file` (to write the chosen store).
-   - Tradeoff: EqualView can read metadata for *all* of the user's Drive, which
+   - Tradeoff: vizably can read metadata for *all* of the user's Drive, which
      is a real privacy cost to disclose.
 
    **Avoid** the full `https://www.googleapis.com/auth/drive` scope — broad
@@ -166,7 +166,7 @@ Classic GitHub **OAuth Apps** have coarse scopes:
 There is **no per-repo or read-only-source scope** for classic OAuth Apps.
 
 **Recommended for least privilege:** ship a **GitHub App** instead, where the
-user installs EqualView on selected repositories with `Contents: read/write` +
+user installs vizably on selected repositories with `Contents: read/write` +
 `Metadata: read`. The UX becomes GitHub's install/repo-select flow rather than
 "list all repos from a token." Document both; pick one before implementation.
 
@@ -211,7 +211,7 @@ no circular dependency).
 **Fit-check (the core of the UX)**
 - `validateStorage(provider, storageRef, githubClient, driveClient)` →
   `{ status, reason?, capabilities, manifestSummary? }`. Reads
-  `<root>/equalview.json`, checks `schemaVersion`, cross-checks `scans/index.json`
+  `<root>/vizably.json`, checks `schemaVersion`, cross-checks `scans/index.json`
   vs. actual files, and probes write capability. See
   [Fit-check status](#fit-check-status) for the enum.
 
@@ -219,7 +219,7 @@ no circular dependency).
 - `loadAccount(provider, storageRef, clients)` → reads manifest + `scans/index.json`,
   reconciles drift, returns the rehydrated account (settings + scan index).
 - `initStorage(provider, storageRef, owner, clients)` → **revalidates**, then
-  atomically writes `equalview.json` + `scans/` skeleton. Returns the new account.
+  atomically writes `vizably.json` + `scans/` skeleton. Returns the new account.
 
 **Saving scans**
 - `saveScanResults(account, scanResult, url, clients)` → writes one immutable
@@ -292,10 +292,10 @@ is offered.
 
 | status | meaning | UI offers |
 | --- | --- | --- |
-| `loadable` | Valid `equalview.json`, supported `schemaVersion` | **Load my account** (shows scan count) |
-| `initializable` | Storage is empty / has no EqualView files | **Set up for EqualView** |
+| `loadable` | Valid `vizably.json`, supported `schemaVersion` | **Load my account** (shows scan count) |
+| `initializable` | Storage is empty / has no vizably files | **Set up for vizably** |
 | `unrelated` | Non-empty, no manifest, has other files | Init anyway / pick another (warn) |
-| `incompatible` | `schemaVersion` newer than this server supports | Blocked — update EqualView |
+| `incompatible` | `schemaVersion` newer than this server supports | Blocked — update vizably |
 | `invalid` | Manifest present but malformed / missing fields / duplicate manifest | Blocked — pick another or repair |
 
 Optional refinements (model as `reason`, not new top-level states, to keep the
@@ -303,7 +303,7 @@ client simple):
 
 - `reason: "migration_required"` (older supported schema → migrate before write)
 - `reason: "repairable"` (manifest OK but `index.json` drifted → rebuild on load)
-- `reason: "duplicate_manifest"` (Drive can hold two `equalview.json` → ambiguous)
+- `reason: "duplicate_manifest"` (Drive can hold two `vizably.json` → ambiguous)
 - `reason: "access_denied" | "not_writable" | "not_found" | "temporarily_unavailable"`
 
 Every result also carries:
@@ -335,7 +335,7 @@ writes:
   surface `reason: "repairable"`.
 - **Validate→init race.** A `validate` result can go stale before `init`.
   `POST /api/auth/storage { action: "init" }` must **revalidate and
-  conditionally create** `equalview.json`; never trust a stale validate result.
+  conditionally create** `vizably.json`; never trust a stale validate result.
 - **Object identity.** Persist the **repo node id / Drive folder id**, not the
   name — repos get renamed/transferred and Drive folder names are not unique.
 
@@ -499,7 +499,7 @@ Personal apps stay in each developer's `.env` only — never commit credentials.
 
 #### Production — project GitHub App (TBD)
 
-Before EqualView ships on a real domain, finalize a **codrlabs-owned GitHub App**
+Before vizably ships on a real domain, finalize a **codrlabs-owned GitHub App**
 with production callback URL(s) on the deployed backend, the same permissions,
 and secrets in deployment config. Local personal apps are not used in production.
 
@@ -528,7 +528,7 @@ and secrets in deployment config. Local personal apps are not used in production
 await octokit.repos.listForAuthenticatedUser({ visibility: 'all', per_page: 100 });
 
 // Existence / fit-check read — get the manifest blob
-await octokit.repos.getContent({ owner, repo, path: 'equalview.json' }); // 404 ⇒ no manifest
+await octokit.repos.getContent({ owner, repo, path: 'vizably.json' }); // 404 ⇒ no manifest
 
 // Create a repo for the "new" path
 await octokit.repos.createForAuthenticatedUser({ name, private: true });
@@ -545,7 +545,7 @@ oauth2.setCredentials({ access_token: decryptedToken });
 const drive = google.drive({ version: 'v3', auth: oauth2 });
 
 // Read the manifest inside the picked folder (fit-check)
-await drive.files.list({ q: `'${folderId}' in parents and name = 'equalview.json' and trashed = false`,
+await drive.files.list({ q: `'${folderId}' in parents and name = 'vizably.json' and trashed = false`,
                          fields: 'files(id,name,modifiedTime)' });
 
 // Create a folder (the "new" path)
@@ -587,7 +587,7 @@ await drive.files.create({ resource: { name, parents: [folderId] },
 | Can't list Drive folders | Using `drive.file` (app-only) | Use Google Picker, or add `drive.metadata.readonly` |
 | GitHub picker missing private repos | `public_repo` scope | Use `repo` scope or a GitHub App with selected repos |
 | `InvalidKey` / `BadPadding` | Bad `ENCRYPTION_KEY` | 32-byte base64 (`openssl rand -base64 32`) |
-| Fit-check says `invalid` on a real store | Malformed/duplicate `equalview.json` | Inspect manifest; on Drive remove duplicate manifest files |
+| Fit-check says `invalid` on a real store | Malformed/duplicate `vizably.json` | Inspect manifest; on Drive remove duplicate manifest files |
 | Scans appear/disappear across devices | Index drift / concurrent writes | Load-time reconcile rebuilds index from `scans/*.json` |
 | Lost scan after a failed write | Partial multi-file write | Expected — scan files are truth; re-run reconcile |
 | `403 Rate Limit` | API limits | Backoff; cache the manifest within a session |

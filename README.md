@@ -1,4 +1,4 @@
-# equalview
+# Vizably
 
 An accessibility-focused web application that helps make the web more inclusive for everyone.
 
@@ -12,8 +12,8 @@ An accessibility-focused web application that helps make the web more inclusive 
 
 **Option 1: Using Docker (Recommended)**
 ```bash
-git clone https://github.com/codrlabs/equalview.git
-cd equalview
+git clone https://github.com/codrlabs/vizably.git
+cd vizably
 docker compose up --build
 ```
 
@@ -39,7 +39,7 @@ The frontend will be available at `http://localhost:5173` and proxies
 ## 📁 Project Structure
 
 ```
-equalview/
+vizably/
 ├── backend/                          # Node + Express API
 │   ├── index.js                      # Bootstrap (load .env, listen)
 │   ├── app.js                        # Composition root (DI wiring)
@@ -120,7 +120,7 @@ are often expensive or limited.
 
 ### Current Status
 - **Frontend**: full design-system UI (ported from the design kit in
-  `EqualView_App.html`). Routes mirror the product flow — `/` (scan
+  `vizably_App.html`). Routes mirror the product flow — `/` (scan
   entry), `/results`, `/problem/:id`, `/story`, `/donate`, `/signin`,
   `/connect`, `/dashboard`, `/account`, `/privacy`, `/terms`, and a
   404 fallback — with light/dark theming persisted in `localStorage`.
@@ -205,7 +205,7 @@ See [`docs/README.md`](docs/README.md) for an index. Highlights:
 - [`docs/plans/axecore-integration-roadmap.md`](docs/plans/axecore-integration-roadmap.md) — Sub-roadmap for replacing the mock scanner
 - [`docs/plans/codebase-reorganization.md`](docs/plans/codebase-reorganization.md) — Final repo layout after the Phase 1 / Phase 3 reorg
 - [`docs/obsidian/`](docs/obsidian/) — Obsidian vault (canvas + supporting notes)
-- [deepwiki.com/codrlabs/equalview/](https://deepwiki.com/codrlabs/equalview/) — Interactive knowledge platform that helps navigate the codebase and makes it accessble for others to contribute.
+- [deepwiki.com/codrlabs/vizably/](https://deepwiki.com/codrlabs/vizably/) — Interactive knowledge platform that helps navigate the codebase and makes it accessble for others to contribute.
 
 ## 🤝 Contributing
 

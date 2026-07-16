@@ -1,5 +1,5 @@
 /**
- * EqualView logo — mark + wordmark lockup. The mark reads as a
+ * vizably logo — mark + wordmark lockup. The mark reads as a
  * scan/document with a highlighted finding (the dot). Renders inline
  * SVG so color follows `tone`.
  *
@@ -26,14 +26,14 @@ export default function Logo({ tone = 'brand', showWordmark = true, size = 32, s
   )
 
   return (
-    <span role="img" aria-label="EqualView" style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.34, ...style }}>
+    <span role="img" aria-label="Vizably" style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.34, ...style }}>
       {mark}
       {showWordmark && (
         <span style={{
           font: 'var(--font-sans)', fontWeight: 'var(--weight-bold)', fontSize: size * 0.72,
           letterSpacing: '-0.02em', lineHeight: 1, color: wordColor,
         }}>
-          equal<span style={{ color: tone === 'invert' ? '#fff' : 'var(--accent)' }}>view</span>
+          viz<span style={{ color: tone === 'invert' ? '#fff' : 'var(--accent)' }}>ably</span>
         </span>
       )}
     </span>

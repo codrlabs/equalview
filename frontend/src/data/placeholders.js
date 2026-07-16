@@ -2,14 +2,14 @@
  * Provider display metadata for Connect / Account / Dashboard copy.
  * Repo lists come from `GET /api/auth/storages` — not hard-coded here.
  */
-export const PLACEHOLDER_USER = { name: 'Samuel', email: 'Samuel@equalview.org' }
+export const PLACEHOLDER_USER = { name: 'Samuel', email: 'Samuel@vizably.org' }
 
 export const PROVIDERS = {
   github: {
     name: 'GitHub',
     store: 'a private GitHub repo',
     storeShort: 'GitHub repo',
-    dest: 'equalview-scans',
+    dest: 'vizably-scans',
     destIcon: 'GitBranch',
     unit: 'repository',
     unitShort: 'repo',
@@ -21,7 +21,7 @@ export const PROVIDERS = {
     name: 'Google',
     store: 'your Google Drive',
     storeShort: 'Google Drive',
-    dest: 'EqualView',
+    dest: 'Vizably',
     destIcon: 'HardDrive',
     unit: 'folder',
     unitShort: 'folder',

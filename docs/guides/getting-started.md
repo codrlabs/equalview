@@ -32,8 +32,8 @@ Alpine Chromium instead).
 ## 2. Clone the repo
 
 ```bash
-git clone https://github.com/codrlabs/equalview.git
-cd equalview
+git clone https://github.com/codrlabs/vizably.git
+cd vizably
 ```
 
 The folder layout is documented in the
@@ -131,7 +131,7 @@ curl "http://localhost:3000/api/scan-results?url=http://127.0.0.1"
 ```
 
 That last call exercises the SSRF guard
-([`backend/services/ssrfGuard.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/services/ssrfGuard.js))
+([`backend/services/ssrfGuard.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/services/ssrfGuard.js))
 — it should refuse to scan loopback or private IPs.
 
 ---
@@ -166,7 +166,7 @@ Don't open a real PR yet — this is just to confirm your edit loop
 works:
 
 1. Open
-   [`backend/services/ssrfGuard.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/equalview/backend/services/ssrfGuard.js)
+   [`backend/services/ssrfGuard.js`](file:///c%3A/Users/nidal/Documents/GitHub/codrlabs/open-solutions/vizably/backend/services/ssrfGuard.js)
    and add a `console.log('ssrfGuard hit', input);` at the top of
    `validate`.
 2. Save. `nodemon` (or Docker's bind mount) picks it up.
@@ -222,8 +222,8 @@ Now that the app runs, in this order:
 ## TL;DR
 
 ```bash
-git clone https://github.com/codrlabs/equalview.git
-cd equalview
+git clone https://github.com/codrlabs/vizably.git
+cd vizably
 docker compose up --build           # → http://localhost:5173
 # in another terminal:
 cd backend  && npm test
