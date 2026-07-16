@@ -82,12 +82,16 @@ function makeAuthRouter({ authService, storageService }) {
         return res.status(400).json({ error: 'provider and storageRef are required' });
       }
 
-      const clients = await authService.clientsFor(req.user);
+      const clients = await authService.clientsFor(req.user, {
+        storageRef: req.body?.storageRef,
+      });
       const result = await storageService.validateStorage(provider, storageRef, clients);
       return res.json(result);
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ error: 'Failed to validate storage' });
+      return res.status(400).json({
+        error: err.message || 'Failed to validate storage',
+      });
     }
   });
 
@@ -103,7 +107,9 @@ function makeAuthRouter({ authService, storageService }) {
         return res.status(400).json({ error: 'action must be "load" or "init"' });
       }
 
-      const clients = await authService.clientsFor(req.user);
+      const clients = await authService.clientsFor(req.user, {
+        storageRef: req.body?.storageRef,
+      });
       let account;
 
       if (action === 'load') {
@@ -122,9 +128,10 @@ function makeAuthRouter({ authService, storageService }) {
         accountId: account.accountId,
         settings: account.settings,
         scanCount: account.scanCount,
+        scans: account.index?.scans ?? [],
       };
 
-      await persistUserSession(req);
+      await authService.persistUser(req);
 
       return res.json({
         success: true,
@@ -176,19 +183,6 @@ function requireAuth(req, res, next) {
     return next();
   }
   return res.status(401).json({ error: 'Not authenticated' });
-}
-
-/** @param {import('express').Request} req */
-function persistUserSession(req) {
-  return new Promise((resolve, reject) => {
-    req.login(req.user, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve();
-    });
-  });
 }
 
 /** Strip tokens from the session user before responding. */

@@ -144,41 +144,41 @@ Provider-neutral API shape; **GitHub picker wired**, Google deferred to Phase 3.
 
 ### API Client (`frontend/src/lib/apiClient.js`)
 
-- [ ] `credentials: 'include'` on all calls; **remove** any Bearer/localStorage token
-- [ ] `githubLogin()` → full redirect to `/api/auth/github`
-- [ ] `googleLogin()` → stub or disabled until Phase 3
-- [ ] `getAuthStatus()`, `getUser()`, `logout()`
-- [ ] `listStorages(provider)` → `GET /api/auth/storages?provider=…`
-- [ ] `validateStorage(provider, storageRef)` → `POST /api/auth/storage/validate`
-- [ ] `setupStorage(provider, storageRef, action)` → `POST /api/auth/storage`
-- [ ] Keep `runScan`, `getScanResults`, `getProblem`
+- [x] `credentials: 'include'` on all calls; **remove** any Bearer/localStorage token
+- [x] `githubLogin()` → full redirect to `/api/auth/github`
+- [x] `googleLogin()` → stub or disabled until Phase 3
+- [x] `getAuthStatus()`, `getUser()`, `logout()`
+- [x] `listStorages(provider)` → `GET /api/auth/storages?provider=…`
+- [x] `validateStorage(provider, storageRef)` → `POST /api/auth/storage/validate`
+- [x] `setupStorage(provider, storageRef, action)` → `POST /api/auth/storage`
+- [x] Keep `runScan`, `getScanResults`, `getProblem`
 
 ### ConnectView (`frontend/src/views/ConnectView.jsx`) — the picker
 
-- [ ] GitHub: list repos via `listStorages('github')`
-- [ ] Google Picker deferred to Phase 3 (hide or disable Google connect path)
-- [ ] Persistent **"Create new"** option (the `init` path on a fresh store)
-- [ ] On select → `validateStorage` → render fit-check status + scan count
-- [ ] Action button follows status: `loadable`→"Load my account",
+- [x] GitHub: list repos via `listStorages('github')`
+- [x] Google Picker deferred to Phase 3 (hide or disable Google connect path)
+- [x] Persistent **"Create new"** option (the `init` path on a fresh store)
+- [x] On select → `validateStorage` → render fit-check status + scan count
+- [x] Action button follows status: `loadable`→"Load my account",
       `initializable`/new→"Set up & continue", `incompatible`/`invalid`→blocked + guidance
-- [ ] Disable init when `capabilities.canWrite === false`
-- [ ] On confirm → `setupStorage(provider, storageRef, action)` → dashboard
-- [ ] Replace hard-coded `existing` lists in `frontend/src/data/placeholders.js`
+- [x] Disable init when `capabilities.canWrite === false`
+- [x] On confirm → `setupStorage(provider, storageRef, action)` → dashboard
+- [x] Replace hard-coded `existing` lists in `frontend/src/data/placeholders.js`
+- [x] `ConnectView` — accept a `storageError` prop for failures
 
 ### App Routes (`frontend/src/App.jsx`)
 
-- [ ] State: `user` (from `/api/auth/user`, includes `storage`), `provider`, selection
-- [ ] On mount: `getAuthStatus()` → if authed, `getUser()`
-- [ ] `auth(provider)` → full OAuth redirect (GitHub only for now)
-- [ ] `connectDone()` → `setupStorage(...)` → dashboard
-- [ ] `signOut()` → `logout()` → clear state → landing
-- [ ] Remove `setAuthed` / placeholder-only wiring
+- [x] State: `user` (from `/api/auth/user`, includes `storage`), `provider`, selection
+- [x] On mount: `getAuthStatus()` → if authed, `getUser()`
+- [x] `auth(provider)` → full OAuth redirect (GitHub only for now)
+- [x] `connectDone()` → `setupStorage(...)` → dashboard (handled in ConnectView; App navigates on `onDone`)
+- [x] `signOut()` → `logout()` → clear state → landing
+- [x] Remove `setAuthed` / placeholder-only wiring
 
 ### Views
 
-- [ ] `AccountView` — real `user` + `storage` (not `PLACEHOLDER_USER`); "saved scans" from index
-- [ ] `DashboardView` — saved scans from the loaded index (not `PLACEHOLDER_SAVED_SCANS`)
-- [ ] `ConnectView` — accept a `storageError` prop for failures
+- [x] `AccountView` — real `user` + `storage` (not `PLACEHOLDER_USER`); "saved scans" from index
+- [x] `DashboardView` — saved scans from the loaded index (not `PLACEHOLDER_SAVED_SCANS`)
 
 ---
 
@@ -211,8 +211,8 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 - [x] `backend/tests/storageService.test.js` — fit-check matrix (loadable / initializable /
       unrelated / incompatible / invalid), load-time reconcile, init race guard,
       atomic save (mock authenticated user + mock clients)
-- [ ] `frontend/tests/apiClient.test.js` — auth + storage methods
-- [ ] `frontend/tests/connectView.test.jsx` — picker + fit-check rendering per status
+- [x] `frontend/tests/apiClient.test.js` — auth + storage methods
+- [x] `frontend/tests/connectView.test.jsx` — picker + fit-check rendering per status
 
 ### Documentation
 

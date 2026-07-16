@@ -1,22 +1,23 @@
 import { useState } from 'react'
 import { Button, Card, Input } from '../design-system'
 import { Ico, GoogleMark } from '../lib/icons'
-import { PROVIDERS, PLACEHOLDER_SAVED_SCANS } from '../data/placeholders'
+import { PROVIDERS } from '../data/placeholders'
 
 /**
  * Account settings — profile + data/storage controls + delete account.
  * Deliberately framed around using LESS storage, not more.
- *
- * NOTE: placeholder — actions mutate local state only until the
- * storage/auth backend exists.
  */
-export default function AccountView({ onSignOut, user, provider }) {
+export default function AccountView({ onSignOut, user, shellUser, provider }) {
   const pv = PROVIDERS[provider] || PROVIDERS.github
-  const [autoDelete, setAutoDelete] = useState(true)
-  const [scansCleared, setScansCleared] = useState(false)
+  const [autoDelete, setAutoDelete] = useState(user?.account?.settings?.autoDelete90d ?? true)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const savedCount = scansCleared ? 0 : PLACEHOLDER_SAVED_SCANS.length
+  const savedCount = user?.account?.scanCount ?? user?.account?.scans?.length ?? 0
+  const storageLabel = user?.storage?.full_name || pv.dest
+  const displayUser = shellUser || {
+    name: user?.displayName || user?.username || 'User',
+    email: user?.email || '',
+  }
 
   const Section = ({ title, desc, children }) => (
     <section style={{ marginBottom: 22 }}>
@@ -64,17 +65,17 @@ export default function AccountView({ onSignOut, user, provider }) {
             <span style={{ flexShrink: 0, display: 'inline-flex' }}>{provider === 'google' ? GoogleMark(20) : Ico('Github', 20)}</span>
             <div style={{ flex: 1 }}>
               <div style={{ font: 'var(--font-label)', color: 'var(--text-strong)' }}>Connected with {pv.name}</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{user ? user.email : ''}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{displayUser.email}</div>
             </div>
             <Button variant="ghost" size="sm" onClick={onSignOut}>Disconnect</Button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <Input label="Name" defaultValue={user ? user.name : ''} iconLeft={Ico('User', 17)} />
-            <Input label="Email" type="email" defaultValue={user ? user.email : ''} iconLeft={Ico('Mail', 17)} />
+            <Input label="Name" defaultValue={displayUser.name} iconLeft={Ico('User', 17)} readOnly />
+            <Input label="Email" type="email" defaultValue={displayUser.email} iconLeft={Ico('Mail', 17)} readOnly />
           </div>
-          <div style={{ marginTop: 16 }}>
-            <Button variant="secondary">Save changes</Button>
-          </div>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', margin: '12px 0 0', lineHeight: 1.45 }}>
+            Profile fields come from {pv.name} and update when you reconnect.
+          </p>
         </Section>
       </Card>
 
@@ -82,8 +83,8 @@ export default function AccountView({ onSignOut, user, provider }) {
       <Card style={{ marginBottom: 22 }}>
         <Section title="Data & storage" desc={`Your scans are saved in ${pv.store} — your space, not ours. Manage what’s kept here.`}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <RowItem icon={pv.destIcon} title={`Saved scans · ${savedCount}`} sub={savedCount ? `Stored in ${pv.storeShort} (${pv.dest}).` : 'No saved scans — nothing is taking up space.'}>
-              <Button variant="secondary" size="sm" disabled={!savedCount} onClick={() => setScansCleared(true)}>
+            <RowItem icon={pv.destIcon} title={`Saved scans · ${savedCount}`} sub={savedCount ? `Stored in ${pv.storeShort} (${storageLabel}).` : 'No saved scans — nothing is taking up space.'}>
+              <Button variant="secondary" size="sm" disabled title="Bulk delete lands in a later phase">
                 {savedCount ? 'Delete all' : 'Cleared'}
               </Button>
             </RowItem>
@@ -93,7 +94,7 @@ export default function AccountView({ onSignOut, user, provider }) {
             </RowItem>
             <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
             <RowItem icon="Download" title="Download my data" sub="Export your account and saved reports as JSON.">
-              <Button variant="secondary" size="sm">Export</Button>
+              <Button variant="secondary" size="sm" disabled title="Export lands in a later phase">Export</Button>
             </RowItem>
           </div>
         </Section>
@@ -113,16 +114,19 @@ export default function AccountView({ onSignOut, user, provider }) {
               Are you sure? This deletes everything, permanently.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
-              <Button variant="danger" onClick={onSignOut} iconLeft={Ico('Trash2', 16, '#fff')}>Yes, delete everything</Button>
+              <Button variant="danger" onClick={onSignOut} iconLeft={Ico('Trash2', 16, '#fff')}>Yes, sign out</Button>
               <Button variant="secondary" onClick={() => setConfirmDelete(false)}>Keep my account</Button>
             </div>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.45 }}>
+              Storage deletion from {storageLabel} is not wired yet — this signs you out for now.
+            </p>
           </div>
         )}
       </Card>
 
       <p style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: 20, lineHeight: 1.5 }}>
         <span style={{ color: 'var(--green-600)', marginTop: 1 }}>{Ico('Leaf', 15, 'currentColor')}</span>
-        Because your scans live in {pv.store}, Vizably keeps no database of its own — your data stays yours, and there’s no server cost to pass on.
+        Because your scans live in {pv.store} ({storageLabel}), Vizably keeps no database of its own — your data stays yours, and there’s no server cost to pass on.
       </p>
     </div>
   )
