@@ -27,7 +27,8 @@ const GOOGLE_NOT_AVAILABLE = 'Google storage is not available until Phase 3';
 
 /**
  * @typedef {object} StorageClients
- * @property {import('@octokit/rest').Octokit} [githubClient]
+ * @property {import('@octokit/rest').Octokit} [githubClient] repo IO (installation token when available)
+ * @property {import('@octokit/rest').Octokit} [githubUserClient] user OAuth token for capability probes
  * @property {object} [driveClient]
  */
 
@@ -68,7 +69,11 @@ class StorageService {
       return this._invalidResult('missing_github_client');
     }
 
-    return this._validateGitHubStorage(storageRef, clients.githubClient);
+    return this._validateGitHubStorage(
+      storageRef,
+      clients.githubClient,
+      clients.githubUserClient ?? clients.githubClient,
+    );
   }
 
   /**
@@ -252,6 +257,160 @@ class StorageService {
       throw new Error('GitHub client is required to save scan results');
     }
 
+    // Mint id + immutable payload once. Retries must reuse them — otherwise a
+    // partial write (scan file ok, index conflict) duplicates the same scan.
+    const prepared = this._prepareScanWrite(scanResult, url);
+
+    const maxAttempts = 3;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      try {
+        return await this._saveScanResultsOnce(account, prepared, clients);
+      } catch (err) {
+        const canRetry = this._isRefConflict(err) && attempt < maxAttempts - 1;
+        if (!canRetry) {
+          throw err;
+        }
+        // Retry from scratch: re-reconcile against current scan-file truth so a
+        // peer writer's index entries are not overwritten by a stale snapshot.
+      }
+    }
+
+    throw new Error('GitHub write failed after retries');
+  }
+
+  /**
+   * Build the immutable scan file contents once per saveScanResults call.
+   * @private
+   */
+  _prepareScanWrite(scanResult, url) {
+    const scanId = randomUUID();
+    const host = this._hostFromUrl(url);
+    const scannedAt = new Date().toISOString();
+    const scanPath = `${SCANS_DIR}/${scanId}_${host}.json`;
+    const scanPayload = {
+      id: scanId,
+      schemaVersion: SUPPORTED_SCHEMA_VERSION,
+      url,
+      scannedAt,
+      result: scanResult,
+    };
+    const scanContent = JSON.stringify(scanPayload, null, 2) + '\n';
+    const { issues, topSeverity } = this._summarizeScanResult(scanResult);
+
+    return {
+      scanId,
+      host,
+      url,
+      scannedAt,
+      scanPath,
+      scanContent,
+      scanSize: Buffer.byteLength(scanContent, 'utf8'),
+      scanSha256: crypto.createHash('sha256').update(scanContent).digest('hex'),
+      issues,
+      topSeverity,
+    };
+  }
+
+  /**
+   * Load one immutable saved scan by id from the attached storage.
+   * @param {object} account session user (with storage binding)
+   * @param {string} scanId
+   * @param {StorageClients} clients
+   */
+  async getScanById(account, scanId, clients) {
+    if (account?.storage?.provider === 'google') {
+      throw new Error(GOOGLE_NOT_AVAILABLE);
+    }
+    if (!clients.githubClient) {
+      throw new Error('GitHub client is required to load a saved scan');
+    }
+    if (!scanId || typeof scanId !== 'string') {
+      const err = new Error('Scan id is required');
+      err.status = 400;
+      err.code = 'SCAN_ID_REQUIRED';
+      throw err;
+    }
+
+    const storageRef = account.storageRef ?? account.storage;
+    const { owner, repo } = this._parseGitHubRef(storageRef);
+    const octokit = clients.githubClient;
+    const branch = await this._resolveGitHubBranch(octokit, owner, repo, storageRef.branch);
+
+    const scanEntries = await this._listGitHubDirectory(octokit, owner, repo, SCANS_DIR, branch);
+    const match = scanEntries.find(
+      (entry) =>
+        entry.type === 'file' &&
+        entry.name.startsWith(`${scanId}_`) &&
+        entry.name.endsWith('.json'),
+    );
+
+    if (!match) {
+      const err = new Error('Scan not found');
+      err.status = 404;
+      err.code = 'SCAN_NOT_FOUND';
+      throw err;
+    }
+
+    const fileData = await this._readGitHubFile(
+      octokit,
+      owner,
+      repo,
+      `${SCANS_DIR}/${match.name}`,
+      branch,
+    );
+    if (!fileData) {
+      const err = new Error('Scan not found');
+      err.status = 404;
+      err.code = 'SCAN_NOT_FOUND';
+      throw err;
+    }
+
+    let payload;
+    try {
+      payload = this._parseJson(fileData.content, 'scan');
+    } catch {
+      const err = new Error('Scan file is malformed');
+      err.status = 500;
+      err.code = 'SCAN_MALFORMED';
+      throw err;
+    }
+
+    if (payload.id !== scanId || !payload.result || !payload.url) {
+      const err = new Error('Scan not found');
+      err.status = 404;
+      err.code = 'SCAN_NOT_FOUND';
+      throw err;
+    }
+
+    return {
+      id: payload.id,
+      url: payload.url,
+      scannedAt: payload.scannedAt ?? null,
+      result: payload.result,
+    };
+  }
+
+  /**
+   * One save attempt: reconcile from scan-file truth, append prepared scan, write.
+   * @param {object} account
+   * @param {object} prepared from `_prepareScanWrite`
+   * @param {StorageClients} clients
+   * @private
+   */
+  async _saveScanResultsOnce(account, prepared, clients) {
+    const {
+      scanId,
+      host,
+      url,
+      scannedAt,
+      scanPath,
+      scanContent,
+      scanSize,
+      scanSha256,
+      issues,
+      topSeverity,
+    } = prepared;
+
     const storageRef = account.storageRef ?? account.storage;
     const { owner, repo } = this._parseGitHubRef(storageRef);
     const octokit = clients.githubClient;
@@ -265,22 +424,9 @@ class StorageService {
     const manifest = this._parseJson(manifestFile.content, 'manifest');
     const { index } = await this._reconcileGitHubIndex(octokit, owner, repo, branch);
 
-    const scanId = randomUUID();
-    const host = this._hostFromUrl(url);
-    const scannedAt = new Date().toISOString();
-    const scanPath = `${SCANS_DIR}/${scanId}_${host}.json`;
-    const scanPayload = {
-      id: scanId,
-      schemaVersion: SUPPORTED_SCHEMA_VERSION,
-      url,
-      scannedAt,
-      result: scanResult,
-    };
-    const scanContent = JSON.stringify(scanPayload, null, 2) + '\n';
-    const scanSize = Buffer.byteLength(scanContent, 'utf8');
-    const scanSha256 = crypto.createHash('sha256').update(scanContent).digest('hex');
-    const { issues, topSeverity } = this._summarizeScanResult(scanResult);
-
+    // Drop a stale index row if a previous partial write left this id's file
+    // without a successful index update (immutable file may already exist).
+    index.scans = index.scans.filter((entry) => entry.id !== scanId);
     index.scans.unshift({
       id: scanId,
       url,
@@ -297,6 +443,8 @@ class StorageService {
     const updatedManifest = this._updateManifestSummary(manifest, index, scannedAt);
     updatedManifest.account.updatedAt = scannedAt;
 
+    const indexFile = await this._readGitHubFile(octokit, owner, repo, INDEX_PATH, branch);
+
     await this._writeGitHubFiles(
       octokit,
       owner,
@@ -304,7 +452,11 @@ class StorageService {
       branch,
       [
         { path: scanPath, content: scanContent },
-        { path: INDEX_PATH, content: JSON.stringify(index, null, 2) + '\n' },
+        {
+          path: INDEX_PATH,
+          content: JSON.stringify(index, null, 2) + '\n',
+          sha: indexFile?.sha,
+        },
         {
           path: MANIFEST_PATH,
           content: JSON.stringify(updatedManifest, null, 2) + '\n',
@@ -318,6 +470,7 @@ class StorageService {
       scanId,
       path: scanPath,
       scanCount: index.scans.length,
+      scans: index.scans,
     };
   }
 
@@ -340,13 +493,13 @@ class StorageService {
   }
 
   /** @private */
-  async _validateGitHubStorage(storageRef, octokit) {
+  async _validateGitHubStorage(storageRef, octokit, probeOctokit = octokit) {
     const { owner, repo } = this._parseGitHubRef(storageRef);
     const branch = await this._resolveGitHubBranch(octokit, owner, repo, storageRef.branch);
 
     let capabilities;
     try {
-      capabilities = await this._probeGitHubCapabilities(octokit, owner, repo);
+      capabilities = await this._probeGitHubCapabilities(probeOctokit, owner, repo);
     } catch (err) {
       if (err.status === 404) {
         return this._invalidResult('not_found');
@@ -438,14 +591,76 @@ class StorageService {
 
   /** @private */
   async _probeGitHubCapabilities(octokit, owner, repo) {
-    const { data } = await octokit.rest.repos.get({ owner, repo });
-    const permissions = data.permissions ?? {};
-    const canWrite = Boolean(permissions.push || permissions.admin);
+    const fullName = `${owner}/${repo}`;
+    let resolvedViaInstallations = false;
+    let canRead = false;
+    let canWrite = false;
+
+    try {
+      const { data } = await octokit.rest.apps.listInstallationsForAuthenticatedUser({
+        per_page: 100,
+      });
+
+      for (const installation of data.installations ?? []) {
+        const contents = installation.permissions?.contents;
+        if (!contents || contents === 'none') {
+          continue;
+        }
+
+        const { data: reposData } =
+          await octokit.rest.apps.listInstallationReposForAuthenticatedUser({
+            installation_id: installation.id,
+            per_page: 100,
+          });
+
+        const included = reposData.repositories?.some((r) => r.full_name === fullName);
+        if (!included) {
+          continue;
+        }
+
+        resolvedViaInstallations = true;
+        if (contents === 'read' || contents === 'write') {
+          canRead = true;
+        }
+        if (contents === 'write') {
+          canWrite = true;
+        }
+      }
+    } catch {
+      // Classic OAuth tokens or older mocks — fall back to repos.get below.
+    }
+
+    if (!resolvedViaInstallations) {
+      const { data } = await octokit.rest.repos.get({ owner, repo });
+      const permissions = data.permissions ?? {};
+      canRead = Boolean(permissions.pull || permissions.push || permissions.admin);
+      canWrite = Boolean(permissions.push || permissions.admin);
+    }
+
     return {
-      canRead: Boolean(permissions.pull || permissions.push || permissions.admin),
+      canRead,
       canWrite,
       canCreate: canWrite,
     };
+  }
+
+  /**
+   * Turn GitHub App permission failures into actionable setup guidance.
+   * @param {unknown} err
+   * @private
+   */
+  _formatGitHubStorageError(err) {
+    const message = err?.response?.data?.message ?? err?.message ?? '';
+    if (err?.status === 403 && /not accessible by integration/i.test(message)) {
+      return (
+        'GitHub App cannot write to this repository. Add GITHUB_APP_ID and ' +
+        'GITHUB_APP_PRIVATE_KEY to backend/.env, set Repository permissions → Contents ' +
+        'to "Read and write", then open https://github.com/settings/installations, ' +
+        'configure your EqualView app, accept any permission upgrade, and ensure this ' +
+        'repo is selected. Sign out and sign in again.'
+      );
+    }
+    return err?.message || 'GitHub storage operation failed';
   }
 
   /** @private */
@@ -669,33 +884,46 @@ class StorageService {
   }
 
   /**
-   * Write multiple files in one GitHub commit. Retries on ref conflict (409/422).
-   * Files with `sha` are updates; omit `sha` to create.
+   * Prefer a single Git commit (atomic multi-file write). Fall back to the
+   * Contents API when the Git Database API is unavailable. Conflicts bubble up
+   * so callers (e.g. saveScanResults) can re-reconcile against scan truth —
+   * never rewrite caches with a refreshed sha and stale content.
    * @private
    */
   async _writeGitHubFiles(octokit, owner, repo, branch, files, message) {
-    const maxAttempts = 3;
-
-    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-      try {
-        return await this._attemptGitHubCommit(
-          octokit,
-          owner,
-          repo,
-          branch,
-          files,
-          message,
-        );
-      } catch (err) {
-        const canRetry = this._isRefConflict(err) && attempt < maxAttempts - 1;
-        if (!canRetry) {
-          throw err;
-        }
-        await this._refreshMutableFileShas(octokit, owner, repo, branch, files);
+    try {
+      return await this._writeGitHubFilesViaGit(
+        octokit,
+        owner,
+        repo,
+        branch,
+        files,
+        message,
+      );
+    } catch (err) {
+      if (!this._shouldFallbackToContentsApi(err)) {
+        throw Object.assign(new Error(this._formatGitHubStorageError(err)), {
+          status: err?.status,
+          cause: err,
+        });
       }
     }
 
-    throw new Error('GitHub write failed after retries');
+    try {
+      return await this._writeGitHubFilesViaContents(
+        octokit,
+        owner,
+        repo,
+        branch,
+        files,
+        message,
+      );
+    } catch (err) {
+      throw Object.assign(new Error(this._formatGitHubStorageError(err)), {
+        status: err?.status,
+        cause: err,
+      });
+    }
   }
 
   /** @private */
@@ -703,32 +931,28 @@ class StorageService {
     return err?.status === 409 || err?.status === 422;
   }
 
-  /**
-   * Re-read blob shas for files we are updating before a retry.
-   * @private
-   */
-  async _refreshMutableFileShas(octokit, owner, repo, branch, files) {
-    for (const file of files) {
-      if (!file.sha) {
-        continue;
-      }
-      const existing = await this._readGitHubFile(
-        octokit,
-        owner,
-        repo,
-        file.path,
-        branch,
-      );
-      if (existing) {
-        file.sha = existing.sha;
-      } else {
-        delete file.sha;
-      }
+  /** @private */
+  _shouldFallbackToContentsApi(err) {
+    const message = err?.response?.data?.message ?? err?.message ?? '';
+    // Brand-new repos have no refs yet — Contents API can create the first commit.
+    if (err?.status === 409 && /empty/i.test(message)) {
+      return true;
     }
+    if (this._isRefConflict(err)) {
+      return false;
+    }
+    return (
+      err?.status === 403 ||
+      /not accessible by integration/i.test(message) ||
+      /Resource not accessible/i.test(message)
+    );
   }
 
-  /** @private */
-  async _attemptGitHubCommit(octokit, owner, repo, branch, files, message) {
+  /**
+   * Atomic multi-file write via the Git Database API.
+   * @private
+   */
+  async _writeGitHubFilesViaGit(octokit, owner, repo, branch, files, message) {
     const { data: refData } = await octokit.rest.git.getRef({
       owner,
       repo,
@@ -781,6 +1005,62 @@ class StorageService {
     });
 
     return commit;
+  }
+
+  /**
+   * Sequential Contents API writes. Scan/immutable files first, then caches.
+   * On conflict, throw immediately so the caller can merge against truth.
+   * @private
+   */
+  async _writeGitHubFilesViaContents(octokit, owner, repo, branch, files, message) {
+    /** @type {object | null} */
+    let lastCommit = null;
+
+    for (let i = 0; i < files.length; i += 1) {
+      const file = files[i];
+      let sha = file.sha;
+      if (!sha) {
+        const existing = await this._readGitHubFile(
+          octokit,
+          owner,
+          repo,
+          file.path,
+          branch,
+        );
+        if (existing?.sha) {
+          sha = existing.sha;
+        }
+      }
+
+      const fileMessage =
+        files.length === 1
+          ? message
+          : `${message} (${i + 1}/${files.length})`;
+
+      try {
+        const { data } = await octokit.rest.repos.createOrUpdateFileContents({
+          owner,
+          repo,
+          path: file.path,
+          message: fileMessage,
+          content: Buffer.from(file.content, 'utf8').toString('base64'),
+          branch,
+          ...(sha ? { sha } : {}),
+        });
+
+        lastCommit = data.commit;
+        if (data.content?.sha) {
+          file.sha = data.content.sha;
+        }
+      } catch (err) {
+        if (this._isRefConflict(err)) {
+          throw err;
+        }
+        throw err;
+      }
+    }
+
+    return lastCommit;
   }
 }
 

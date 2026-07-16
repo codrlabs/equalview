@@ -95,3 +95,138 @@ test('POST /api/scan still succeeds when storage save fails', async () => {
   assert.equal(res.status, 200);
   assert.ok(res.body.problems);
 });
+
+test('postScan returns account snapshot when storage save succeeds', async () => {
+  const ScanController = require('../controllers/scanController');
+  const savedScans = [{
+    id: 'scan-1',
+    url: 'https://example.com',
+    host: 'example.com',
+    scannedAt: '2026-07-10T12:00:00Z',
+    score: 90,
+    issues: 1,
+    topSeverity: 'minor',
+  }];
+
+  const storageService = {
+    saveScanResults: async () => ({
+      scans: savedScans,
+      scanCount: 1,
+    }),
+  };
+  const authService = {
+    clientsFor: async () => ({ githubClient: {} }),
+    persistUser: async () => {},
+  };
+
+  const ctrl = new ScanController({
+    mockScanResults,
+    scanRunner: mockScanRunner,
+    authService,
+    storageService,
+  });
+
+  const req = {
+    body: { url: 'https://example.com' },
+    isAuthenticated: () => true,
+    user: {
+      storage: { full_name: 'sam/equalview-scans', id: 'R_kg' },
+      account: { scans: [], scanCount: 0 },
+    },
+  };
+
+  let body;
+  const res = {
+    json: (payload) => {
+      body = payload;
+    },
+    status() {
+      return this;
+    },
+  };
+
+  await ctrl.postScan(req, res);
+
+  assert.ok(body.problems);
+  assert.deepEqual(body.account, {
+    scanCount: 1,
+    scans: savedScans,
+  });
+  assert.equal(req.user.account.scanCount, 1);
+  assert.equal(req.user.account.scans.length, 1);
+});
+
+test('getSavedScan returns the stored report for an authenticated user', async () => {
+  const ScanController = require('../controllers/scanController');
+  const stored = {
+    id: 'scan-1',
+    url: 'https://example.com',
+    scannedAt: '2026-07-10T12:00:00Z',
+    result: mockScanResults,
+  };
+
+  const ctrl = new ScanController({
+    mockScanResults,
+    scanRunner: mockScanRunner,
+    authService: {
+      clientsFor: async () => ({ githubClient: {} }),
+    },
+    storageService: {
+      getScanById: async () => stored,
+    },
+  });
+
+  let statusCode = 200;
+  let body;
+  const res = {
+    status(code) {
+      statusCode = code;
+      return this;
+    },
+    json(payload) {
+      body = payload;
+    },
+  };
+
+  await ctrl.getSavedScan(
+    {
+      params: { id: 'scan-1' },
+      isAuthenticated: () => true,
+      user: { storage: { id: 'R_kg', full_name: 'sam/equalview-scans' } },
+    },
+    res,
+  );
+
+  assert.equal(statusCode, 200);
+  assert.deepEqual(body, stored);
+});
+
+test('getSavedScan requires auth and attached storage', async () => {
+  const ScanController = require('../controllers/scanController');
+  const ctrl = new ScanController({
+    mockScanResults,
+    scanRunner: mockScanRunner,
+    authService: {},
+    storageService: {},
+  });
+
+  let statusCode = 200;
+  const res = {
+    status(code) {
+      statusCode = code;
+      return this;
+    },
+    json() {},
+  };
+
+  await ctrl.getSavedScan(
+    {
+      params: { id: 'scan-1' },
+      isAuthenticated: () => false,
+      user: null,
+    },
+    res,
+  );
+
+  assert.equal(statusCode, 401);
+});
