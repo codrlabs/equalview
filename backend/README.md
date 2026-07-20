@@ -189,6 +189,7 @@ Sign-in flow: `GET /api/auth/google` → Google consent → callback → fronten
 | GET    | `/api/auth/google`        | start Google OAuth (`drive.file`)              |
 | GET    | `/api/auth/google/callback` | Google OAuth callback                        |
 | GET    | `/api/auth/config`        | `{ googleClientId, googlePickerApiKey }`       |
+| GET    | `/api/auth/google/token`  | session Google access token (Picker only)      |
 | GET    | `/api/auth/storages`      | list GitHub repos (`?provider=github`)         |
 | POST   | `/api/auth/storage/validate` | fit-check selected storage                  |
 | POST   | `/api/auth/storage`       | load or init account storage                   |

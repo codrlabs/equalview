@@ -89,6 +89,12 @@ test('GET /api/auth/config returns Google Picker settings', async () => {
   assert.equal(res.body.googlePickerApiKey, 'picker-key-test');
 });
 
+test('GET /api/auth/google/token requires authentication', async () => {
+  const app = createTestApp();
+  const res = await request(app).get('/api/auth/google/token');
+  assert.equal(res.status, 401);
+});
+
 test('GET /api/auth/storages requires authentication', async () => {
   const app = createTestApp();
   const res = await request(app).get('/api/auth/storages?provider=github');

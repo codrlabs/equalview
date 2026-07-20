@@ -71,6 +71,35 @@ function makeAuthRouter({ authService, storageService }) {
     });
   });
 
+  /**
+   * Short-lived Google access token for the Picker (session cookie auth).
+   * Never logged; only returned to the signed-in browser.
+   */
+  router.get('/google/token', requireAuth, async (req, res) => {
+    try {
+      if (req.user?.provider !== 'google') {
+        return res.status(400).json({ error: 'Not a Google session' });
+      }
+      if (!req.user?.tokens?.google?.accessToken) {
+        return res.status(400).json({ error: 'Google access token unavailable' });
+      }
+      if (req.user.tokens.google.refreshToken) {
+        try {
+          await authService.refreshGoogleToken(req.user);
+          await authService.persistUser(req);
+        } catch {
+          // Use the existing access token if refresh fails.
+        }
+      }
+      return res.json({
+        accessToken: authService.decrypt(req.user.tokens.google.accessToken),
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Failed to issue Google access token' });
+    }
+  });
+
   router.get('/storages', requireAuth, async (req, res) => {
     try {
       const provider = req.query.provider;

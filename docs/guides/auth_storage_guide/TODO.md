@@ -197,9 +197,9 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 
 ### Frontend
 
-- [ ] `googleLogin()` → full redirect to `/api/auth/google`
-- [ ] ConnectView: launch **Google Picker** for folder selection
-- [ ] Enable Google connect path in `App.jsx` / landing
+- [x] `googleLogin()` → full redirect to `/api/auth/google`
+- [x] ConnectView: launch **Google Picker** for folder selection
+- [x] Enable Google connect path in `App.jsx` / landing
 
 ---
 
