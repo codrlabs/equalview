@@ -188,7 +188,7 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 
 ### Backend
 
-- [ ] `npm install passport-google-oauth20 googleapis` (+ dev types)
+- [x] `npm install passport-google-oauth20 googleapis` (+ dev types)
 - [ ] Add Google OAuth vars + `GOOGLE_PICKER_API_KEY` to `.env.example` and `backend/README.md`
 - [ ] Passport Google strategy; wire `GET /google` + `GET /google/callback`
 - [ ] `getGoogleDriveClient(user)` + `refreshGoogleToken(user)` — real implementations
