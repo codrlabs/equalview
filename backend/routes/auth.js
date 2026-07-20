@@ -32,24 +32,57 @@ function makeAuthRouter({ authService, storageService }) {
     },
   );
 
-  router.get('/google', (_req, res) => {
-    res.status(501).json({
-      error: 'Google sign-in is not available until Phase 3',
-    });
+  router.get('/google', (req, res, next) => {
+    if (!authService.isGoogleConfigured()) {
+      return res.status(503).json({
+        error:
+          'Google sign-in is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI.',
+      });
+    }
+    req.session.authProvider = 'google';
+    return authService.authenticateGoogle()(req, res, next);
   });
 
-  router.get('/google/callback', (_req, res) => {
-    res.status(501).json({
-      error: 'Google sign-in is not available until Phase 3',
+  router.get(
+    '/google/callback',
+    (req, res, next) => {
+      if (!authService.isGoogleConfigured()) {
+        return res.status(503).json({
+          error: 'Google sign-in is not configured.',
+        });
+      }
+      return authService.authenticateGoogle({
+        failureRedirect: `${frontendOrigin}/connect?provider=google&error=auth_failed`,
+      })(req, res, next);
+    },
+    (req, res) => {
+      res.redirect(`${frontendOrigin}/connect?provider=google`);
+    },
+  );
+
+  /**
+   * Public config for client-side Google Picker (browser API key + OAuth client id).
+   * Restrict the key by HTTP referrer in Cloud Console.
+   */
+  router.get('/config', (_req, res) => {
+    return res.json({
+      googleClientId: authService.googleClientId || null,
+      googlePickerApiKey: authService.googlePickerApiKey || null,
     });
   });
 
   router.get('/storages', requireAuth, async (req, res) => {
     try {
       const provider = req.query.provider;
+      if (provider === 'google') {
+        return res.status(400).json({
+          error:
+            'Google folders are selected via Google Picker; listStorages is GitHub-only',
+        });
+      }
       if (provider !== 'github') {
         return res.status(400).json({
-          error: 'Only provider=github is supported in Phase 1',
+          error: 'Only provider=github is supported for listStorages',
         });
       }
 

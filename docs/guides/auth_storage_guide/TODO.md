@@ -189,11 +189,11 @@ One adapter behind the existing provider-neutral interface; no rewrite of Phases
 ### Backend
 
 - [x] `npm install passport-google-oauth20 googleapis` (+ dev types)
-- [ ] Add Google OAuth vars + `GOOGLE_PICKER_API_KEY` to `.env.example` and `backend/README.md`
-- [ ] Passport Google strategy; wire `GET /google` + `GET /google/callback`
-- [ ] `getGoogleDriveClient(user)` + `refreshGoogleToken(user)` — real implementations
-- [ ] Drive adapter in `storageService`: fit-check, load, init, save with generation/ETag
-- [ ] Backend scopes: `drive.file` only (per Phase 0 choice)
+- [x] Add Google OAuth vars + `GOOGLE_PICKER_API_KEY` to `.env.example` and `backend/README.md`
+- [x] Passport Google strategy; wire `GET /google` + `GET /google/callback`
+- [x] `getGoogleDriveClient(user)` + `refreshGoogleToken(user)` — real implementations
+- [x] Drive adapter in `storageService`: fit-check, load, init, save with generation/ETag
+- [x] Backend scopes: `drive.file` only (per Phase 0 choice)
 
 ### Frontend
 

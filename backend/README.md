@@ -78,8 +78,7 @@ via `tests/helpers/testEnv.js`; never commit real secrets to the repo.
 MemoryStore. Restarts log everyone out; multiple server instances do not share
 sessions. Switch to a persistent store (Redis, etc.) before production deploy.
 
-Google OAuth and `GOOGLE_PICKER_API_KEY` are deferred to Phase 3 — not read by
-the server yet. Phase 5 placeholders (`JWT_SECRET`, `DATABASE_URL`) remain in
+Phase 5 placeholders (`JWT_SECRET`, `DATABASE_URL`) remain in
 [`.env.example`](.env.example) comments only.
 
 ### GitHub App setup (Phase 1)
@@ -135,6 +134,51 @@ codrlabs/vizably org or equivalent) with:
 
 See also [`docs/guides/auth_storage_guide/githubGoogleAuthStorageImplementation.md`](../docs/guides/auth_storage_guide/githubGoogleAuthStorageImplementation.md) § OAuth App Configuration.
 
+### Google OAuth setup (Phase 3)
+
+Phase 0 locked **`drive.file` only** (no `drive.metadata.readonly`). Users pick
+an existing folder with the **Google Picker** (client-side); the backend never
+lists Drive folders.
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → create or select a project.
+2. **APIs & Services → Library** → enable **Google Drive API** and **Google Picker API**.
+3. **APIs & Services → OAuth consent screen** → External (or Internal for Workspace).
+   Add scopes: `openid`, `email`, `profile`, and
+   `https://www.googleapis.com/auth/drive.file`.
+4. **APIs & Services → Credentials → Create credentials → OAuth client ID** →
+   Application type **Web application**.
+   - Authorized JavaScript origins: `http://localhost:5173` (Vite) and
+     `http://localhost:3000` if needed.
+   - Authorized redirect URI:
+     `http://localhost:3000/api/auth/google/callback`
+5. Copy Client ID + Client secret into `backend/.env`:
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback`
+6. Create a **Browser API key** for Picker (see below) → `GOOGLE_PICKER_API_KEY`.
+
+`GET /api/auth/config` returns `{ googleClientId, googlePickerApiKey }` for the
+frontend Picker. Restrict the API key by HTTP referrer in Cloud Console.
+
+#### Getting `GOOGLE_PICKER_API_KEY`
+
+1. Cloud Console → **APIs & Services → Credentials → Create credentials → API key**.
+2. Open the new key → **Application restrictions → HTTP referrers (web sites)**.
+   Add:
+   - `http://localhost:5173/*`
+   - `http://localhost:3000/*`
+   - your production frontend origin when you deploy (e.g. `https://app.vizably.example/*`)
+3. **API restrictions → Restrict key** → select **Google Picker API** (and
+   optionally **Google Drive API** if the Picker docs for your setup require it).
+4. Save → copy the key into `backend/.env` as `GOOGLE_PICKER_API_KEY`.
+5. Never commit the key. Treat it as public-ish (it ships to the browser) but
+   always keep referrer + API restrictions on.
+
+Sign-in flow: `GET /api/auth/google` → Google consent → callback → frontend
+`/connect?provider=google`. Folder selection is Picker-only; then
+`POST /api/auth/storage/validate` and `POST /api/auth/storage` with
+`storageRef: { id: "<folderId>", name: "…" }`.
+
 ## Endpoints
 
 | Method | Path                      | Notes                                          |
@@ -142,7 +186,9 @@ See also [`docs/guides/auth_storage_guide/githubGoogleAuthStorageImplementation.
 | GET    | `/health`                 | liveness probe                                 |
 | GET    | `/api/auth/github`        | start GitHub OAuth                             |
 | GET    | `/api/auth/github/callback` | GitHub OAuth callback                        |
-| GET    | `/api/auth/google`        | stub (501) until Phase 3                       |
+| GET    | `/api/auth/google`        | start Google OAuth (`drive.file`)              |
+| GET    | `/api/auth/google/callback` | Google OAuth callback                        |
+| GET    | `/api/auth/config`        | `{ googleClientId, googlePickerApiKey }`       |
 | GET    | `/api/auth/storages`      | list GitHub repos (`?provider=github`)         |
 | POST   | `/api/auth/storage/validate` | fit-check selected storage                  |
 | POST   | `/api/auth/storage`       | load or init account storage                   |
