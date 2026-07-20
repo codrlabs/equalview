@@ -145,6 +145,16 @@ lists Drive folders.
 3. **APIs & Services → OAuth consent screen** → External (or Internal for Workspace).
    Add scopes: `openid`, `email`, `profile`, and
    `https://www.googleapis.com/auth/drive.file`.
+   Choose a **publishing status**:
+   - **Testing** — only emails under **Test users** can sign in. Add your own
+     Google account there (or use **Internal** for Workspace). Missing yourself
+     from Test users causes Google’s **`Error 403: access_denied`**.
+   - **In production** — any Google account can start the consent flow. Until
+     Google **verifies** the app for `drive.file` (a sensitive scope), users see
+     an **unverified app** warning; for local/dev click **Advanced → Go to
+     {app} (unsafe)** and continue. Real public traffic needs OAuth verification
+     (privacy policy, demo video, scope justification) — submit that before
+     shipping Vizably to end users.
 4. **APIs & Services → Credentials → Create credentials → OAuth client ID** →
    Application type **Web application**.
    - Authorized JavaScript origins: `http://localhost:5173` (Vite) and
@@ -156,6 +166,15 @@ lists Drive folders.
    - `GOOGLE_CLIENT_SECRET`
    - `GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback`
 6. Create a **Browser API key** for Picker (see below) → `GOOGLE_PICKER_API_KEY`.
+
+**Troubleshooting Google sign-in**
+
+| Symptom | Likely cause | Fix |
+| ------- | ------------ | --- |
+| `Error 403: access_denied` while status is **Testing** | Account not a test user | [Consent screen](https://console.cloud.google.com/apis/credentials/consent) → **Test users** → add your Gmail → retry (incognito if Google cached a deny) |
+| `Error 403: access_denied` after publish | Cached deny, wrong project, or scope not on consent screen | Confirm scopes include `drive.file`; redirect URI matches `.env`; retry in a fresh browser profile |
+| “Google hasn’t verified this app” | Published but unverified (`drive.file`) | Expected for local/dev — use **Advanced → Continue**; submit verification before production launch |
+| `redirect_uri_mismatch` | Callback URL not registered | Add exactly `http://localhost:3000/api/auth/google/callback` on the OAuth client |
 
 `GET /api/auth/config` returns `{ googleClientId, googlePickerApiKey }` for the
 frontend Picker. Restrict the API key by HTTP referrer in Cloud Console.
