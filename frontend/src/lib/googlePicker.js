@@ -1,68 +1,18 @@
 /**
- * Google Picker helpers — load the client library and open a folder picker.
- * Requires drive.file OAuth scope (backend) + GOOGLE_PICKER_API_KEY.
+ * Google Picker — folder selection via the official drive-picker web component.
  *
- * setAppId must be the Cloud **project number** (IAM & Admin → Settings), not
- * the project id string. Wrong appId → blank Picker with drive.file.
+ * Uses the session OAuth token (`drive.file`). We intentionally omit
+ * `developer-key` by default: restricted API keys commonly produce a blank
+ * Picker or “API developer key is invalid”. OAuth token + app id is enough.
+ *
+ * setAppId must be the Cloud **project number** (IAM & Admin → Settings).
+ * OAuth web client must list the Vite origin under Authorized JavaScript origins.
  */
 
-const GAPI_SCRIPT = 'https://apis.google.com/js/api.js'
-
-/**
- * @param {string} src
- * @returns {Promise<void>}
- */
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${src}"]`)
-    if (existing) {
-      if (existing.dataset.loaded === 'true' || globalThis.gapi) {
-        resolve()
-        return
-      }
-      existing.addEventListener('load', () => resolve(), { once: true })
-      existing.addEventListener('error', () => reject(new Error('Failed to load Google API script')), {
-        once: true,
-      })
-      return
-    }
-    const script = document.createElement('script')
-    script.src = src
-    script.async = true
-    script.onload = () => {
-      script.dataset.loaded = 'true'
-      resolve()
-    }
-    script.onerror = () => reject(new Error('Failed to load Google API script'))
-    document.head.appendChild(script)
-  })
-}
-
-/**
- * @returns {Promise<typeof globalThis.gapi>}
- */
-async function ensureGapiPicker() {
-  await loadScript(GAPI_SCRIPT)
-  const gapi = globalThis.gapi
-  if (!gapi) {
-    throw new Error('Google API failed to initialize')
-  }
-  if (gapi.picker) {
-    return gapi
-  }
-  await new Promise((resolve, reject) => {
-    gapi.load('picker', {
-      callback: resolve,
-      onerror: () => reject(new Error('Failed to load Google Picker')),
-    })
-  })
-  return gapi
-}
+import '@googleworkspace/drive-picker-element'
 
 /**
  * Resolve Cloud project number for PickerBuilder.setAppId.
- * Prefer an explicit project number; fall back to the OAuth client id prefix
- * (usually the same numeric project number).
  *
  * @param {string | null | undefined} projectNumber
  * @param {string} clientId
@@ -81,29 +31,41 @@ export function resolvePickerAppId(projectNumber, clientId) {
 }
 
 /**
+ * @param {unknown} detail
+ * @returns {string}
+ */
+function pickerErrorMessage(detail) {
+  if (!detail) return 'Google Picker failed'
+  if (typeof detail === 'string') return detail
+  if (typeof detail === 'object') {
+    const obj = /** @type {Record<string, unknown>} */ (detail)
+    if (typeof obj.message === 'string') return obj.message
+    if (typeof obj.error === 'string') return obj.error
+    if (typeof obj.error_description === 'string') return obj.error_description
+  }
+  return 'Google Picker failed'
+}
+
+/**
  * Open a folder-only Google Picker.
  *
  * @param {object} opts
- * @param {string} opts.apiKey GOOGLE_PICKER_API_KEY
- * @param {string} opts.clientId GOOGLE_CLIENT_ID (OAuth web client)
- * @param {string} opts.accessToken user access token with drive.file
+ * @param {string} opts.clientId GOOGLE_CLIENT_ID
+ * @param {string} opts.accessToken session access token with drive.file
  * @param {string} [opts.projectNumber] Cloud project number for setAppId
+ * @param {string} [opts.apiKey] optional; only used if `useDeveloperKey` is true
+ * @param {boolean} [opts.useDeveloperKey=false]
  * @param {string} [opts.title]
- * @param {string} [opts.origin] page origin (defaults to location.origin)
  * @returns {Promise<{ id: string, name: string, url: string | null } | null>}
- *   Resolves to the chosen folder, or null if the user cancelled.
  */
 export async function openDriveFolderPicker({
-  apiKey,
   clientId,
   accessToken,
   projectNumber,
+  apiKey,
+  useDeveloperKey = false,
   title = 'Choose a Drive folder for Vizably',
-  origin,
 }) {
-  if (!apiKey) {
-    throw new Error('Google Picker API key is not configured (GOOGLE_PICKER_API_KEY)')
-  }
   if (!clientId) {
     throw new Error('Google OAuth client id is not configured (GOOGLE_CLIENT_ID)')
   }
@@ -111,57 +73,67 @@ export async function openDriveFolderPicker({
     throw new Error('Google access token is required to open the Picker')
   }
 
-  await ensureGapiPicker()
-  const google = globalThis.google
-  if (!google?.picker) {
-    throw new Error('Google Picker is unavailable')
+  if (typeof document === 'undefined') {
+    throw new Error('Google Picker requires a browser environment')
   }
 
   const appId = resolvePickerAppId(projectNumber, clientId)
-  const pickerOrigin =
-    origin ||
-    (typeof globalThis.location !== 'undefined' ? globalThis.location.origin : undefined)
 
   return new Promise((resolve, reject) => {
-    try {
-      // Folder-only view. Avoid stacking FOLDERS + setMimeTypes (blank UI).
-      const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-        .setIncludeFolders(true)
-        .setSelectFolderEnabled(true)
+    const host = document.createElement('drive-picker')
+    host.setAttribute('app-id', appId)
+    host.setAttribute('client-id', clientId)
+    host.setAttribute('oauth-token', accessToken)
+    host.setAttribute('scope', 'https://www.googleapis.com/auth/drive.file')
+    host.setAttribute('title', title)
+    // Keep GIS from prompting when we already have a session token.
+    host.setAttribute('prompt', 'none')
 
-      const builder = new google.picker.PickerBuilder()
-        .setTitle(title)
-        .setAppId(appId)
-        .setDeveloperKey(apiKey)
-        .setOAuthToken(accessToken)
-        .addView(view)
-        .setCallback((data) => {
-          if (data.action === google.picker.Action.CANCEL) {
-            resolve(null)
-            return
-          }
-          if (data.action === google.picker.Action.PICKED) {
-            const doc = data.docs?.[0]
-            if (!doc?.id) {
-              resolve(null)
-              return
-            }
-            resolve({
-              id: doc.id,
-              name: doc.name || 'Drive folder',
-              url: doc.url || null,
-            })
-          }
-        })
-
-      if (pickerOrigin) {
-        builder.setOrigin(pickerOrigin)
-      }
-
-      const picker = builder.build()
-      picker.setVisible(true)
-    } catch (err) {
-      reject(err)
+    if (useDeveloperKey && apiKey) {
+      host.setAttribute('developer-key', apiKey)
     }
+
+    const view = document.createElement('drive-picker-docs-view')
+    view.setAttribute('view-id', 'FOLDERS')
+    view.setAttribute('include-folders', 'true')
+    view.setAttribute('select-folder-enabled', 'true')
+    view.setAttribute('parent', 'root')
+    host.appendChild(view)
+
+    const cleanup = () => {
+      host.remove()
+    }
+
+    host.addEventListener('picker-picked', (event) => {
+      const detail = /** @type {CustomEvent} */ (event).detail
+      const doc = detail?.docs?.[0]
+      cleanup()
+      if (!doc?.id) {
+        resolve(null)
+        return
+      }
+      resolve({
+        id: doc.id,
+        name: doc.name || 'Drive folder',
+        url: doc.url || null,
+      })
+    })
+
+    host.addEventListener('picker-canceled', () => {
+      cleanup()
+      resolve(null)
+    })
+
+    host.addEventListener('picker-error', (event) => {
+      cleanup()
+      reject(new Error(pickerErrorMessage(/** @type {CustomEvent} */ (event).detail)))
+    })
+
+    host.addEventListener('picker-oauth-error', (event) => {
+      cleanup()
+      reject(new Error(pickerErrorMessage(/** @type {CustomEvent} */ (event).detail)))
+    })
+
+    document.body.appendChild(host)
   })
 }

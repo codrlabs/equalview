@@ -249,8 +249,13 @@ export default function ConnectView({
         client.getAuthConfig(),
         client.getGoogleAccessToken(),
       ])
+      if (!config.googleClientId) {
+        throw new Error('Google OAuth client id is not configured on the server')
+      }
+      if (!tokenPayload.accessToken) {
+        throw new Error('Google access token unavailable — sign out and sign in again')
+      }
       const folder = await openFolderPicker({
-        apiKey: config.googlePickerApiKey,
         clientId: config.googleClientId,
         accessToken: tokenPayload.accessToken,
         projectNumber: config.googleCloudProjectNumber,

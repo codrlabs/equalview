@@ -157,8 +157,8 @@ lists Drive folders.
      shipping Vizably to end users.
 4. **APIs & Services → Credentials → Create credentials → OAuth client ID** →
    Application type **Web application**.
-   - Authorized JavaScript origins: `http://localhost:5173` (Vite) and
-     `http://localhost:3000` if needed.
+   - Authorized JavaScript origins: `http://localhost:5173` (required for
+     Picker) and `http://localhost:3000` if needed.
    - Authorized redirect URI:
      `http://localhost:3000/api/auth/google/callback`
 5. Copy Client ID + Client secret into `backend/.env`:
@@ -179,7 +179,8 @@ lists Drive folders.
 | `Error 403: access_denied` after publish | Cached deny, wrong project, or scope not on consent screen | Confirm scopes include `drive.file`; redirect URI matches `.env`; retry in a fresh browser profile |
 | “Google hasn’t verified this app” | Published but unverified (`drive.file`) | Expected for local/dev — use **Advanced → Continue**; submit verification before production launch |
 | `redirect_uri_mismatch` | Callback URL not registered | Add exactly `http://localhost:3000/api/auth/google/callback` on the OAuth client |
-| Picker opens **blank / white** | Wrong project number, API key referrers, or Picker API off | Set `GOOGLE_CLOUD_PROJECT_NUMBER`; enable **Google Picker API**; restrict API key referrers to `http://localhost:5173/*` (and restart backend) |
+| Picker opens **blank / white** | Restricted API key, wrong project number, or missing JS origin | Picker no longer sends `GOOGLE_PICKER_API_KEY` by default (session OAuth token is enough). Ensure `GOOGLE_CLOUD_PROJECT_NUMBER` and OAuth **Authorized JavaScript origins** include `http://localhost:5173`. Close DevTools if the iframe stays blank. |
+| Picker: **“The API developer key is invalid”** | Key restrictions reject the Vite origin | Leave `GOOGLE_PICKER_API_KEY` unused for Picker (current default). If you force `useDeveloperKey`, fix referrers / enable **Google Picker API**. Create-folder can still work (OAuth-only). |
 | `Invalid field selection etag` | Old Drive client requesting `fields=etag` | Fixed in storage service — Drive v3 returns ETag only on HTTP headers |
 
 `GET /api/auth/config` returns
@@ -188,17 +189,27 @@ frontend Picker. Restrict the API key by HTTP referrer in Cloud Console.
 
 #### Getting `GOOGLE_PICKER_API_KEY`
 
-1. Cloud Console → **APIs & Services → Credentials → Create credentials → API key**.
-2. Open the new key → **Application restrictions → HTTP referrers (web sites)**.
-   Add:
+This is a **browser API key** (Credentials → API key), not the OAuth client
+secret. Create-folder does not use it; only Google Picker does.
+
+1. Cloud Console → **APIs & Services → Library** → enable **Google Picker API**
+   (and **Google Drive API** if not already on) in the **same project** as your
+   OAuth client.
+2. **APIs & Services → Credentials → Create credentials → API key**.
+3. Open the new key → **Application restrictions → HTTP referrers (web sites)**.
+   Add exactly (Vite serves the Picker from the frontend origin):
    - `http://localhost:5173/*`
-   - `http://localhost:3000/*`
+   - `http://127.0.0.1:5173/*` (if you open the app that way)
+   - `http://localhost:3000/*` (optional)
    - your production frontend origin when you deploy (e.g. `https://app.vizably.example/*`)
-3. **API restrictions → Restrict key** → select **Google Picker API** (and
-   optionally **Google Drive API** if the Picker docs for your setup require it).
-4. Save → copy the key into `backend/.env` as `GOOGLE_PICKER_API_KEY`.
-5. Never commit the key. Treat it as public-ish (it ships to the browser) but
-   always keep referrer + API restrictions on.
+4. **API restrictions → Restrict key** → include at least **Google Picker API**.
+   If the Picker still fails, temporarily set API restrictions to **Don’t
+   restrict key** to confirm the key itself is fine, then re-add Picker (+ Drive
+   if needed).
+5. Save → wait a minute for Google to propagate → copy the key into
+   `backend/.env` as `GOOGLE_PICKER_API_KEY` → **restart the backend**.
+6. Never commit the key. Treat it as public-ish (it ships to the browser) but
+   always keep referrer + API restrictions on for real deploys.
 
 Sign-in flow: `GET /api/auth/google` → Google consent → callback → frontend
 `/connect?provider=google`. Folder selection is Picker-only; then

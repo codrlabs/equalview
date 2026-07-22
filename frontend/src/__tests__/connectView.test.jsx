@@ -172,7 +172,6 @@ describe('ConnectView', () => {
 
     await waitFor(() =>
       expect(openFolderPicker).toHaveBeenCalledWith({
-        apiKey: 'picker-key',
         clientId: '123456-abc.apps.googleusercontent.com',
         accessToken: 'ya29.token',
         projectNumber: '123456',
