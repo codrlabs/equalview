@@ -253,6 +253,7 @@ export default function ConnectView({
         apiKey: config.googlePickerApiKey,
         clientId: config.googleClientId,
         accessToken: tokenPayload.accessToken,
+        projectNumber: config.googleCloudProjectNumber,
       })
       if (folder) {
         setPickedFolder(folder)

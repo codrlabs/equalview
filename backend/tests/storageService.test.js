@@ -332,11 +332,18 @@ function createMockDriveClient(initial = {}) {
         if (alt === 'media') {
           return { data: file.content ?? '' };
         }
-        const data = { ...file };
-        if (fields?.includes('etag') && !data.etag) {
-          data.etag = `"etag-${fileId}"`;
+        // Drive v3: etag is HTTP-header only (fields=etag → 400).
+        if (!file.etag) {
+          file.etag = `"etag-${fileId}"`;
         }
-        return { data };
+        const data = { id: file.id, name: file.name, mimeType: file.mimeType };
+        if (fields?.includes('capabilities') && file.capabilities) {
+          data.capabilities = file.capabilities;
+        }
+        if (fields?.includes('webViewLink') && file.webViewLink) {
+          data.webViewLink = file.webViewLink;
+        }
+        return { data, headers: { etag: file.etag } };
       },
       list: async ({ q }) => {
         const match = /'([^']+)' in parents/.exec(q || '');
@@ -347,7 +354,7 @@ function createMockDriveClient(initial = {}) {
           },
         };
       },
-      create: async ({ requestBody, media, fields }) => {
+      create: async ({ requestBody, media }) => {
         const id = nextId('file');
         const parentId = requestBody.parents?.[0] || rootId;
         const content = media?.body ? await readStream(media.body) : '';
@@ -365,7 +372,10 @@ function createMockDriveClient(initial = {}) {
         if (entry.mimeType === 'application/vnd.google-apps.folder') {
           byParent[id] = byParent[id] || [];
         }
-        return { data: entry };
+        return {
+          data: { id: entry.id, name: entry.name },
+          headers: { etag: entry.etag },
+        };
       },
       update: async ({ fileId, media }, options) => {
         const file = byId[fileId];
@@ -385,7 +395,10 @@ function createMockDriveClient(initial = {}) {
           file.content = await readStream(media.body);
         }
         file.etag = `"etag-${fileId}-${Date.now()}"`;
-        return { data: { id: file.id, name: file.name, etag: file.etag } };
+        return {
+          data: { id: file.id, name: file.name },
+          headers: { etag: file.etag },
+        };
       },
     },
   };

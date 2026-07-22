@@ -166,6 +166,10 @@ lists Drive folders.
    - `GOOGLE_CLIENT_SECRET`
    - `GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback`
 6. Create a **Browser API key** for Picker (see below) → `GOOGLE_PICKER_API_KEY`.
+7. Copy the **Project number** from **IAM & Admin → Settings** into
+   `GOOGLE_CLOUD_PROJECT_NUMBER` (digits only). Picker `setAppId` needs this for
+   `drive.file`; a wrong value often shows a **blank white Picker**. The OAuth
+   client id prefix is usually the same number — set it explicitly if unsure.
 
 **Troubleshooting Google sign-in**
 
@@ -175,8 +179,11 @@ lists Drive folders.
 | `Error 403: access_denied` after publish | Cached deny, wrong project, or scope not on consent screen | Confirm scopes include `drive.file`; redirect URI matches `.env`; retry in a fresh browser profile |
 | “Google hasn’t verified this app” | Published but unverified (`drive.file`) | Expected for local/dev — use **Advanced → Continue**; submit verification before production launch |
 | `redirect_uri_mismatch` | Callback URL not registered | Add exactly `http://localhost:3000/api/auth/google/callback` on the OAuth client |
+| Picker opens **blank / white** | Wrong project number, API key referrers, or Picker API off | Set `GOOGLE_CLOUD_PROJECT_NUMBER`; enable **Google Picker API**; restrict API key referrers to `http://localhost:5173/*` (and restart backend) |
+| `Invalid field selection etag` | Old Drive client requesting `fields=etag` | Fixed in storage service — Drive v3 returns ETag only on HTTP headers |
 
-`GET /api/auth/config` returns `{ googleClientId, googlePickerApiKey }` for the
+`GET /api/auth/config` returns
+`{ googleClientId, googlePickerApiKey, googleCloudProjectNumber }` for the
 frontend Picker. Restrict the API key by HTTP referrer in Cloud Console.
 
 #### Getting `GOOGLE_PICKER_API_KEY`
@@ -207,7 +214,7 @@ Sign-in flow: `GET /api/auth/google` → Google consent → callback → fronten
 | GET    | `/api/auth/github/callback` | GitHub OAuth callback                        |
 | GET    | `/api/auth/google`        | start Google OAuth (`drive.file`)              |
 | GET    | `/api/auth/google/callback` | Google OAuth callback                        |
-| GET    | `/api/auth/config`        | `{ googleClientId, googlePickerApiKey }`       |
+| GET    | `/api/auth/config`        | `{ googleClientId, googlePickerApiKey, googleCloudProjectNumber }` |
 | GET    | `/api/auth/google/token`  | session Google access token (Picker only)      |
 | GET    | `/api/auth/storages`      | list GitHub repos (`?provider=github`)         |
 | POST   | `/api/auth/storage/validate` | fit-check selected storage                  |

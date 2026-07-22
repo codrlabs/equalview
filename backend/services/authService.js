@@ -35,6 +35,7 @@ class AuthService {
    * @param {string} [deps.googleClientSecret]
    * @param {string} [deps.googleCallbackUrl]
    * @param {string} [deps.googlePickerApiKey] browser key for Google Picker (frontend)
+   * @param {string} [deps.googleCloudProjectNumber] Cloud project number for Picker setAppId
    */
   constructor(deps = {}) {
     this.sessionSecret = deps.sessionSecret ?? process.env.SESSION_SECRET;
@@ -60,6 +61,10 @@ class AuthService {
       deps.googleCallbackUrl ?? process.env.GOOGLE_REDIRECT_URI;
     this.googlePickerApiKey =
       deps.googlePickerApiKey ?? process.env.GOOGLE_PICKER_API_KEY ?? null;
+    this.googleCloudProjectNumber =
+      deps.googleCloudProjectNumber ??
+      process.env.GOOGLE_CLOUD_PROJECT_NUMBER ??
+      null;
 
     this._encryptionKey = this._parseEncryptionKey(this.encryptionKeyB64);
     this._passportConfigured = false;

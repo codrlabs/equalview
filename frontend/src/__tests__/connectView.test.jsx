@@ -29,6 +29,7 @@ function mockClient(overrides = {}) {
     getAuthConfig: vi.fn().mockResolvedValue({
       googleClientId: '123456-abc.apps.googleusercontent.com',
       googlePickerApiKey: 'picker-key',
+      googleCloudProjectNumber: '123456',
     }),
     getGoogleAccessToken: vi.fn().mockResolvedValue({ accessToken: 'ya29.token' }),
     ...overrides,
@@ -174,6 +175,7 @@ describe('ConnectView', () => {
         apiKey: 'picker-key',
         clientId: '123456-abc.apps.googleusercontent.com',
         accessToken: 'ya29.token',
+        projectNumber: '123456',
       }),
     )
     await waitFor(() =>

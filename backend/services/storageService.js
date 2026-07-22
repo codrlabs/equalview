@@ -1656,6 +1656,36 @@ class StorageService {
   }
 
   /**
+   * Drive v3 does not expose `etag` as a fields= selection ("Invalid field
+   * selection etag"). Optimistic concurrency uses the HTTP ETag header.
+   * @private
+   */
+  _driveEtagFromResponse(res) {
+    if (!res) return undefined;
+    const headers = res.headers;
+    if (headers) {
+      if (typeof headers.get === 'function') {
+        return headers.get('etag') || headers.get('ETag') || undefined;
+      }
+      return headers.etag || headers.ETag || headers['etag'] || undefined;
+    }
+    return undefined;
+  }
+
+  /**
+   * @returns {Promise<{ id: string, name: string, etag?: string }>}
+   * @private
+   */
+  async _getDriveFileMeta(drive, fileId) {
+    const meta = await drive.files.get({ fileId, fields: 'id,name' });
+    return {
+      id: meta.data.id,
+      name: meta.data.name,
+      etag: this._driveEtagFromResponse(meta),
+    };
+  }
+
+  /**
    * @returns {Promise<{ id: string, name: string, content: string, etag?: string, legacy: boolean } | null>}
    * @private
    */
@@ -1663,24 +1693,24 @@ class StorageService {
     const current = await this._findDriveChild(drive, folderId, MANIFEST_PATH);
     if (current) {
       const content = await this._readDriveFileContent(drive, current.id);
-      const meta = await drive.files.get({ fileId: current.id, fields: 'id,name,etag' });
+      const meta = await this._getDriveFileMeta(drive, current.id);
       return {
         id: current.id,
         name: MANIFEST_PATH,
         content,
-        etag: meta.data.etag,
+        etag: meta.etag,
         legacy: false,
       };
     }
     const legacy = await this._findDriveChild(drive, folderId, LEGACY_MANIFEST_PATH);
     if (legacy) {
       const content = await this._readDriveFileContent(drive, legacy.id);
-      const meta = await drive.files.get({ fileId: legacy.id, fields: 'id,name,etag' });
+      const meta = await this._getDriveFileMeta(drive, legacy.id);
       return {
         id: legacy.id,
         name: LEGACY_MANIFEST_PATH,
         content,
-        etag: meta.data.etag,
+        etag: meta.etag,
         legacy: true,
       };
     }
@@ -1711,17 +1741,14 @@ class StorageService {
     if (existing?.id) {
       let etag = existing.etag;
       if (!etag) {
-        const meta = await drive.files.get({
-          fileId: existing.id,
-          fields: 'etag',
-        });
-        etag = meta.data.etag;
+        const meta = await this._getDriveFileMeta(drive, existing.id);
+        etag = meta.etag;
       }
       await drive.files.update(
         {
           fileId: existing.id,
           media,
-          fields: 'id,name,etag',
+          fields: 'id,name',
         },
         etag ? { headers: { 'If-Match': etag } } : undefined,
       );
@@ -1735,7 +1762,7 @@ class StorageService {
         mimeType: DRIVE_JSON_MIME,
       },
       media,
-      fields: 'id,name,etag',
+      fields: 'id,name',
     });
   }
 

@@ -81,12 +81,14 @@ test('GET /api/auth/config returns Google Picker settings', async () => {
     googleClientSecret: 'google-client-secret',
     googleCallbackUrl: 'http://localhost:3000/api/auth/google/callback',
     googlePickerApiKey: 'picker-key-test',
+    googleCloudProjectNumber: '1234567890',
   });
   const app = createTestApp({ authService });
   const res = await request(app).get('/api/auth/config');
   assert.equal(res.status, 200);
   assert.equal(res.body.googleClientId, 'google-client-id.apps.googleusercontent.com');
   assert.equal(res.body.googlePickerApiKey, 'picker-key-test');
+  assert.equal(res.body.googleCloudProjectNumber, '1234567890');
 });
 
 test('GET /api/auth/google/token requires authentication', async () => {

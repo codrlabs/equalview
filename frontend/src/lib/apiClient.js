@@ -70,8 +70,12 @@ export class ApiClient {
   }
 
   /**
-   * Public Google Picker config (client id + browser API key).
-   * @returns {Promise<{ googleClientId: string | null, googlePickerApiKey: string | null }>}
+   * Public Google Picker config (client id + browser API key + project number).
+   * @returns {Promise<{
+   *   googleClientId: string | null,
+   *   googlePickerApiKey: string | null,
+   *   googleCloudProjectNumber: string | null,
+   * }>}
    */
   getAuthConfig() {
     return this._request('/api/auth/config')

@@ -68,6 +68,7 @@ function makeAuthRouter({ authService, storageService }) {
     return res.json({
       googleClientId: authService.googleClientId || null,
       googlePickerApiKey: authService.googlePickerApiKey || null,
+      googleCloudProjectNumber: authService.googleCloudProjectNumber || null,
     });
   });
 
